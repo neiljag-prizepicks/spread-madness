@@ -40,12 +40,10 @@ Open the URL Vite prints (usually http://localhost:5173).
 
 After editing JSON in the repo root, copy into `public/data/` (or symlink) so the dev server picks it up.
 
-## Scores (POC)
+## Scores
 
-1. **Toolbar demos:** prefill **E-R64-1** (Duke vs Siena) for cover / no-cover.
-2. **Enter score (POC)** on any matchup → modal with side A/B team ids.
-3. **Import scores:** `node ../scripts/import-results.mjs` — see `../scripts/README.md`. Commissioner index: `../scripts/games_results_index.csv` (regenerate with `--write-index`). **Reset:** `node ../scripts/reset-results.mjs`.
-4. **ESPN poll (interim):** `node ../scripts/fetch-espn-results.mjs --dates auto` — updates `results.json`. **`node ../scripts/fetch-espn-spreads.mjs --dates auto`** — fills spread + favorite into `game_schedule_and_lines.json` when both teams are set. Combined loop: `../scripts/poll-espn-all.sh`. Reload the app to see changes.
+- **ESPN poll (interim):** `node ../scripts/fetch-espn-results.mjs --dates auto` — updates `results.json`. **`node ../scripts/fetch-espn-spreads.mjs --dates auto`** — fills spread + favorite into `game_schedule_and_lines.json` when both teams are set. Combined loop: `../scripts/poll-espn-all.sh`. Reload the app to see changes.
+- **Import / commissioner:** `node ../scripts/import-results.mjs` — see `../scripts/README.md`. Commissioner index: `../scripts/games_results_index.csv` (regenerate with `--write-index`). **Reset:** `node ../scripts/reset-results.mjs`.
 
 ## Build
 

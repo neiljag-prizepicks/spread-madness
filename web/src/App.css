@@ -148,23 +148,119 @@
 .app-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid var(--pp-border);
   background: var(--pp-bg-secondary);
   flex-wrap: wrap;
 }
 
+.app-header-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  min-width: 0;
+}
+
+.app-header-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.app-header-tab {
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--pp-fg-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.app-header-tab:hover {
+  color: var(--pp-fg-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-header-tab--active {
+  color: var(--pp-fg-primary);
+  box-shadow: inset 0 -2px 0 0 var(--pp-action);
+}
+
 .app-title {
   font-weight: 600;
   color: var(--pp-fg-secondary);
-  flex: 1;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.pool-rules-page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 0.15rem 1rem;
+}
+
+.pool-rules-page-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: var(--pp-fg-primary);
+}
+
+.pool-rules-page-lead {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  color: var(--pp-fg-secondary);
+  line-height: 1.4;
+}
+
+.pool-rules-section {
+  margin-bottom: 1.35rem;
+}
+
+.pool-rules-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--pp-fg-primary);
+}
+
+.pool-rules-p {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--pp-fg-secondary);
+}
+
+.pool-rules-p:last-child {
+  margin-bottom: 0;
+}
+
+.pool-rules-ul {
+  margin: 0 0 0.85rem;
+  padding-left: 1.15rem;
+  color: var(--pp-fg-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.pool-rules-li {
+  margin-bottom: 0.45rem;
+}
+
+.pool-rules-li:last-child {
+  margin-bottom: 0;
 }
 
 .session-label {
@@ -677,22 +773,6 @@
   font-size: 0.75rem;
   color: var(--pp-fg-secondary);
   line-height: 1.35;
-}
-
-.matchup-score-btn {
-  width: 100%;
-  margin-top: 0.35rem;
-  padding: 0.35rem;
-  font-size: 0.7rem;
-  background: transparent;
-  border: 1px dashed var(--pp-border);
-  color: var(--pp-fg-tertiary);
-  border-radius: 6px;
-}
-
-.matchup-score-btn:hover {
-  border-color: var(--pp-action);
-  color: var(--pp-link);
 }
 
 .final-rounds {
@@ -1322,6 +1402,18 @@
   color: var(--pp-fg-accent);
 }
 
+/* Live styling on the slot itself so yellow shows even if initials fail to render */
+.overview-slot--live {
+  border-color: rgba(255, 213, 79, 0.55);
+  background: rgba(255, 213, 79, 0.14);
+  color: #ffd54f;
+}
+
+.overview-slot--live .overview-slot-initials {
+  font-size: 5.5px;
+  letter-spacing: -0.06em;
+}
+
 .overview-slot--pending,
 .overview-slot--neutral:not(.overview-slot--has-initials) {
   /* empty / not final */
@@ -1339,6 +1431,11 @@
 
 .birdseye-hint .birdseye-legend-neutral {
   color: var(--pp-fg-accent);
+  font-weight: 700;
+}
+
+.birdseye-hint .birdseye-legend-live {
+  color: #ffd54f;
   font-weight: 700;
 }
 

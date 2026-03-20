@@ -36,7 +36,7 @@ function OverviewSlot({
   const { status, initials } = visual;
   const label =
     initials !== ""
-      ? `${game.id}: ${initials}`
+      ? `${game.id}: ${initials}${status === "live" ? " (live)" : ""}`
       : `${game.id}${status === "pending" ? " (pending)" : ""}`;
   return (
     <div
@@ -148,9 +148,10 @@ export function BracketBirdseye({ onOpenZone, ...ctx }: Base) {
   return (
     <div className="birdseye-wrap">
       <p className="birdseye-hint">
-        When games are final:{" "}
-        <strong className="birdseye-legend-hit">green</strong> = you won the
-        spread,{" "}
+        <strong className="birdseye-legend-live">Yellow</strong> = live — each
+        team’s current owner (initials). When final:{" "}
+        <strong className="birdseye-legend-hit">green</strong> = you won pool
+        control,{" "}
         <strong className="birdseye-legend-miss">red</strong> = someone beat
         you,{" "}
         <strong className="birdseye-legend-neutral">purple</strong> = winner

@@ -6,7 +6,12 @@ import { buildTeamToUserId } from "./ownershipMap";
 import { userInitialsFromDisplayName } from "./userInitials";
 import { gameMap, resolveTeamId } from "./resolveTeams";
 
-export type OverviewSlotStatus = "pending" | "hit" | "miss" | "neutral";
+export type OverviewSlotStatus =
+  | "pending"
+  | "live"
+  | "hit"
+  | "miss"
+  | "neutral";
 
 export type OverviewSlotVisual = {
   status: OverviewSlotStatus;
@@ -27,7 +32,39 @@ function isGameFinal(
 }
 
 /**
- * Overview birdseye cell: green you / red beat you / purple other winner / empty pending.
+ * True while the game is not pool-settled but the scoreboard has started
+ * (or status is explicitly in progress). Catches partial JSON and clock+scores
+ * rows that were previously mis-inferred as final.
+ */
+function isOverviewLiveResult(
+  r: GameResult | undefined,
+  ta: string,
+  tb: string
+): boolean {
+  if (!r) return false;
+  if (r.status === "in_progress") return true;
+  if (isPoolSettledForGame(r, ta, tb)) return false;
+  const sa = r.scores[ta];
+  const sb = r.scores[tb];
+  return sa != null || sb != null;
+}
+
+function ownerInitialsForTeam(
+  teamId: string,
+  teamToUser: ReturnType<typeof buildTeamToUserId>,
+  usersById: Map<string, User>,
+  displayName: (userId: string) => string
+): string {
+  const uid = teamToUser.get(teamId);
+  if (!uid) return "—";
+  const nm = usersById.get(uid)?.display_name ?? displayName(uid);
+  return (
+    userInitialsFromDisplayName(nm) || uid.slice(0, 2).toUpperCase()
+  );
+}
+
+/**
+ * Overview birdseye cell: yellow live / green you / red beat you / purple other / empty pending.
  */
 export function overviewSlotVisual(
   game: BracketGame,
@@ -40,10 +77,23 @@ export function overviewSlotVisual(
   displayName: (userId: string) => string
 ): OverviewSlotVisual {
   const gm = gameMap(allGames);
+  const ta = resolveTeamId(game, "side_a", gm, results, new Set());
+  const tb = resolveTeamId(game, "side_b", gm, results, new Set());
+  if (!ta || !tb) return { status: "pending", initials: "" };
+
+  const teamToUser = buildTeamToUserId(ownershipRows);
+  const r = results.get(game.id);
+
+  if (isOverviewLiveResult(r, ta, tb)) {
+    const ia = ownerInitialsForTeam(ta, teamToUser, usersById, displayName);
+    const ib = ownerInitialsForTeam(tb, teamToUser, usersById, displayName);
+    return { status: "live", initials: `${ia}·${ib}` };
+  }
+
   const sides = isGameFinal(game, gm, results);
   if (!sides) return { status: "pending", initials: "" };
 
-  const { ta, tb } = sides;
+  const { ta: fa, tb: fb } = sides;
   const outcome = computePoolOutcome(
     game,
     allGames,
@@ -61,8 +111,7 @@ export function overviewSlotVisual(
     userInitialsFromDisplayName(poolOwnerName) ||
     outcome.poolOwnerUserId.slice(0, 2).toUpperCase();
 
-  const teamToUser = buildTeamToUserId(ownershipRows);
-  const userSides = [ta, tb];
+  const userSides = [fa, fb];
   const userInGame = viewerId
     ? userSides.some((tid) => teamToUser.get(tid) === viewerId)
     : false;

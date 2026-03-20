@@ -18,7 +18,6 @@ type Props = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
-  onOpenScore?: (gameId: string) => void;
 };
 
 function spreadLabel(
@@ -137,7 +136,6 @@ export function Matchup({
   usersById,
   ownershipRows,
   results,
-  onOpenScore,
 }: Props) {
   const gm = gameMap(allGames);
   const ta = resolveTeamId(game, "side_a", gm, results, new Set());
@@ -290,15 +288,6 @@ export function Matchup({
           )}
           <p className="matchup-message">{outcome.message}</p>
         </div>
-      )}
-      {!final && onOpenScore && (
-        <button
-          type="button"
-          className="matchup-score-btn"
-          onClick={() => onOpenScore(game.id)}
-        >
-          Enter score (POC)
-        </button>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import type {
   BracketGame,
@@ -7,16 +7,14 @@ import type {
   Team,
   User,
 } from "./types";
-import {
-  finalGameResult,
-  mergeGameResultWithScoresTime,
-  normalizeResultsFileObject,
-} from "./lib/gameResult";
+import { normalizeResultsFileObject } from "./lib/gameResult";
 import { applyScheduleLineOverlayToGames } from "./lib/mergeGameOverlay";
 import type { OwnershipRow } from "./lib/ownershipMap";
 import { KalshiBracketArena } from "./components/KalshiBracketArena";
-import { ScoreModal } from "./components/ScoreModal";
+import { PoolRulesPage } from "./components/PoolRulesPage";
 import "./App.css";
+
+type MainTab = "bracket" | "rules";
 
 type Session =
   | { kind: "mock"; userId: string; label: string }
@@ -40,7 +38,7 @@ export default function App() {
   const [ownership, setOwnership] = useState<OwnershipRow[]>([]);
   const [results, setResults] = useState<Map<string, GameResult>>(new Map());
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [scoreGameId, setScoreGameId] = useState<string | null>(null);
+  const [mainTab, setMainTab] = useState<MainTab>("bracket");
 
   useEffect(() => {
     const base = "/data";
@@ -86,21 +84,6 @@ export default function App() {
     () => new Map(users.map((u) => [u.id, u])),
     [users]
   );
-
-  const onSaveScore = useCallback((gameId: string, scores: Record<string, number>) => {
-    setResults((prev) => {
-      const next = new Map(prev);
-      next.set(
-        gameId,
-        mergeGameResultWithScoresTime(prev.get(gameId), finalGameResult(scores))
-      );
-      return next;
-    });
-  }, []);
-
-  const scoreGame = scoreGameId
-    ? games.find((g) => g.id === scoreGameId) ?? null
-    : null;
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
@@ -200,11 +183,37 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="pp-brand pp-brand-sm">
-          <span className="pp-mark">P</span>
-          <span>PrizePicks</span>
+        <div className="app-header-cluster">
+          <div className="pp-brand pp-brand-sm">
+            <span className="pp-mark">P</span>
+            <span>PrizePicks</span>
+          </div>
+          <span className="app-title">Spread Madness</span>
+          <nav
+            className="app-header-tabs"
+            role="tablist"
+            aria-label="App sections"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mainTab === "bracket"}
+              className={`app-header-tab${mainTab === "bracket" ? " app-header-tab--active" : ""}`}
+              onClick={() => setMainTab("bracket")}
+            >
+              Bracket
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mainTab === "rules"}
+              className={`app-header-tab${mainTab === "rules" ? " app-header-tab--active" : ""}`}
+              onClick={() => setMainTab("rules")}
+            >
+              Rules
+            </button>
+          </nav>
         </div>
-        <span className="app-title">Spread Madness</span>
         <div className="header-right">
           <span className="session-label">{session.label}</span>
           <button
@@ -218,26 +227,20 @@ export default function App() {
       </header>
 
       <main className="bracket-main">
-        <KalshiBracketArena
-          games={games}
-          allGames={games}
-          teamsById={teamsById}
-          usersById={usersById}
-          ownershipRows={ownership}
-          results={results}
-          onOpenScore={setScoreGameId}
-          viewerUserId={session.kind === "mock" ? session.userId : null}
-        />
+        {mainTab === "bracket" ? (
+          <KalshiBracketArena
+            games={games}
+            allGames={games}
+            teamsById={teamsById}
+            usersById={usersById}
+            ownershipRows={ownership}
+            results={results}
+            viewerUserId={session.kind === "mock" ? session.userId : null}
+          />
+        ) : (
+          <PoolRulesPage />
+        )}
       </main>
-
-      <ScoreModal
-        game={scoreGame}
-        allGames={games}
-        teamsById={teamsById}
-        results={results}
-        onSave={onSaveScore}
-        onClose={() => setScoreGameId(null)}
-      />
     </div>
   );
 }

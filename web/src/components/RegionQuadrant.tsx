@@ -19,7 +19,6 @@ type MProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
-  onOpenScore: (gameId: string) => void;
 };
 
 export function RegionQuadrant({

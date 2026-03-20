@@ -24,10 +24,15 @@ function coerceScores(obj) {
   return out;
 }
 
-function inferStatusFromScores(scores) {
+/** Two scores + non-empty clock → in_progress when status omitted (live game). */
+function inferStatusWhenMissing(scores, raw) {
   const keys = Object.keys(scores).filter((k) => scores[k] != null);
   if (keys.length === 0) return "not_started";
-  if (keys.length >= 2) return "final";
+  if (keys.length >= 2) {
+    const ck = raw.clock;
+    if (ck != null && String(ck).trim() !== "") return "in_progress";
+    return "final";
+  }
   return "in_progress";
 }
 
@@ -45,7 +50,7 @@ export function normalizeGameResultEntry(raw) {
   ) {
     const scores = coerceScores(o.scores);
     const parsed = parseStatus(o.status);
-    const status = parsed ?? inferStatusFromScores(scores);
+    const status = parsed ?? inferStatusWhenMissing(scores, o);
     const clock =
       o.clock === undefined || o.clock === null ? null : String(o.clock);
     const out = { status, clock, scores };
@@ -70,7 +75,11 @@ export function normalizeGameResultEntry(raw) {
   if (Object.keys(scores).length === 0) {
     return { status: "not_started", clock: null, scores: {} };
   }
-  return { status: "final", clock: null, scores };
+  const parsed = parseStatus(o.status);
+  const status = parsed ?? inferStatusWhenMissing(scores, o);
+  const clock =
+    o.clock === undefined || o.clock === null ? null : String(o.clock);
+  return { status, clock, scores };
 }
 
 export function resultsMapFromFileObject(raw) {

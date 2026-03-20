@@ -9,7 +9,6 @@ type Props = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
-  onOpenScore: (gameId: string) => void;
 };
 
 export function FinalRounds({
@@ -19,7 +18,6 @@ export function FinalRounds({
   usersById,
   ownershipRows,
   results,
-  onOpenScore,
 }: Props) {
   const ff = games
     .filter((g) => g.round === "final_four")
@@ -51,7 +49,6 @@ export function FinalRounds({
                   usersById={usersById}
                   ownershipRows={ownershipRows}
                   results={results}
-                  onOpenScore={onOpenScore}
                 />
               ))}
             </div>
@@ -68,7 +65,6 @@ export function FinalRounds({
                   usersById={usersById}
                   ownershipRows={ownershipRows}
                   results={results}
-                  onOpenScore={onOpenScore}
                 />
               ))}
             </div>

@@ -24,10 +24,21 @@ function coerceScores(obj: Record<string, unknown>): Record<string, number> {
   return out;
 }
 
-function inferStatusFromScores(scores: Record<string, number>): GameStatus {
+/**
+ * When `status` is omitted: two scores + non-empty clock → treat as live (avoids
+ * marking in-progress ESPN rows as final). Two scores, no clock → final.
+ */
+function inferStatusWhenMissing(
+  scores: Record<string, number>,
+  raw: Record<string, unknown>
+): GameStatus {
   const keys = Object.keys(scores).filter((k) => scores[k] != null);
   if (keys.length === 0) return "not_started";
-  if (keys.length >= 2) return "final";
+  if (keys.length >= 2) {
+    const ck = raw.clock;
+    if (ck != null && String(ck).trim() !== "") return "in_progress";
+    return "final";
+  }
   return "in_progress";
 }
 
@@ -48,7 +59,7 @@ export function normalizeRawGameResultEntry(raw: unknown): GameResult {
   ) {
     const scores = coerceScores(o.scores as Record<string, unknown>);
     const parsed = parseStatus(o.status);
-    const status = parsed ?? inferStatusFromScores(scores);
+    const status = parsed ?? inferStatusWhenMissing(scores, o);
     const clock =
       o.clock === undefined || o.clock === null ? null : String(o.clock);
     const out: GameResult = { status, clock, scores };
@@ -73,7 +84,11 @@ export function normalizeRawGameResultEntry(raw: unknown): GameResult {
   if (Object.keys(scores).length === 0) {
     return { status: "not_started", clock: null, scores: {} };
   }
-  return { status: "final", clock: null, scores };
+  const parsed = parseStatus(o.status);
+  const status = parsed ?? inferStatusWhenMissing(scores, o);
+  const clock =
+    o.clock === undefined || o.clock === null ? null : String(o.clock);
+  return { status, clock, scores };
 }
 
 export function normalizeResultsFileObject(res: unknown): Map<string, GameResult> {

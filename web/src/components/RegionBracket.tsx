@@ -12,7 +12,6 @@ type Props = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
-  onOpenScore: (gameId: string) => void;
 };
 
 function sortByOrder(gs: BracketGame[]) {
@@ -29,7 +28,6 @@ export function RegionBracket({
   usersById,
   ownershipRows,
   results,
-  onOpenScore,
 }: Props) {
   const mprops: MProps = {
     allGames,
@@ -37,7 +35,6 @@ export function RegionBracket({
     usersById,
     ownershipRows,
     results,
-    onOpenScore,
   };
 
   const treeGames = withoutFirstFour(games);

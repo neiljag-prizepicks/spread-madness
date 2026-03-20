@@ -12,7 +12,6 @@ type MProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
-  onOpenScore: (gameId: string) => void;
 };
 
 type Props = MProps & {
@@ -32,7 +31,6 @@ export function KalshiBracketArena({
   usersById,
   ownershipRows,
   results,
-  onOpenScore,
   viewerUserId = null,
 }: Props) {
   const isMobile = useMediaQuery("(max-width: 699px)");
@@ -46,7 +44,6 @@ export function KalshiBracketArena({
         usersById={usersById}
         ownershipRows={ownershipRows}
         results={results}
-        onOpenScore={onOpenScore}
         viewerUserId={viewerUserId}
       />
     );
@@ -58,7 +55,6 @@ export function KalshiBracketArena({
     usersById,
     ownershipRows,
     results,
-    onOpenScore,
   };
 
   const east = games.filter((g) => g.region === "East");
@@ -120,7 +116,6 @@ export function KalshiBracketArena({
                 usersById={usersById}
                 ownershipRows={ownershipRows}
                 results={results}
-                onOpenScore={onOpenScore}
               />
             ))}
           </div>

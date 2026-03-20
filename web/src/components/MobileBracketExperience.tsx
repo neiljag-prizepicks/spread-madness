@@ -12,7 +12,6 @@ type MProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
-  onOpenScore: (gameId: string) => void;
 };
 
 type TabKey = Exclude<BracketPane, "overview">;
@@ -42,7 +41,6 @@ export function MobileBracketExperience({
   usersById,
   ownershipRows,
   results,
-  onOpenScore,
   viewerUserId,
 }: Props) {
   const [pane, setPane] = useState<BracketPane>("overview");
@@ -80,7 +78,6 @@ export function MobileBracketExperience({
     usersById,
     ownershipRows,
     results,
-    onOpenScore,
   };
 
   const openZone = useCallback((z: TabKey) => {
