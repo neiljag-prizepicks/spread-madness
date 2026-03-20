@@ -1,0 +1,46 @@
+:root {
+  --pp-bg-primary: #0e0e0e;
+  --pp-bg-secondary: #1a1a1a;
+  --pp-bg-tertiary: #242424;
+  --pp-bg-accent: #2c1a4d;
+  --pp-border: #333333;
+  --pp-action: #623cea;
+  --pp-action-hover: #4e30bb;
+  --pp-action-pressed: #39238b;
+  --pp-link: #00a3ff;
+  --pp-fg-primary: #ffffff;
+  --pp-fg-secondary: #b3b3b3;
+  --pp-fg-tertiary: #808080;
+  --pp-fg-accent: #9d7bff;
+  --pp-positive: #00e676;
+  --pp-negative: #ff4d4d;
+  --pp-warning: #ffc107;
+  --pp-font: "Inter", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--pp-font);
+  background: var(--pp-bg-primary);
+  color: var(--pp-fg-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--pp-link);
+}

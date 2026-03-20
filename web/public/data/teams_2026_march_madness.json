@@ -1,0 +1,548 @@
+{
+  "teams": [
+      {
+        "id": "E01",
+        "region": "East",
+        "seed": 1,
+        "school": "Duke",
+        "mascot": "Blue Devils",
+        "abbrev": "DUKE"
+      },
+      {
+        "id": "E16",
+        "region": "East",
+        "seed": 16,
+        "school": "Siena",
+        "mascot": "Saints",
+        "abbrev": "SIENA"
+      },
+      {
+        "id": "E08",
+        "region": "East",
+        "seed": 8,
+        "school": "Ohio State",
+        "mascot": "Buckeyes",
+        "abbrev": "OSU"
+      },
+      {
+        "id": "E09",
+        "region": "East",
+        "seed": 9,
+        "school": "TCU",
+        "mascot": "Horned Frogs",
+        "abbrev": "TCU"
+      },
+      {
+        "id": "E05",
+        "region": "East",
+        "seed": 5,
+        "school": "St. John's",
+        "mascot": "Red Storm",
+        "abbrev": "STJOHN"
+      },
+      {
+        "id": "E12",
+        "region": "East",
+        "seed": 12,
+        "school": "Northern Iowa",
+        "mascot": "Panthers",
+        "abbrev": "UNI"
+      },
+      {
+        "id": "E04",
+        "region": "East",
+        "seed": 4,
+        "school": "Kansas",
+        "mascot": "Jayhawks",
+        "abbrev": "KU"
+      },
+      {
+        "id": "E13",
+        "region": "East",
+        "seed": 13,
+        "school": "Cal Baptist",
+        "mascot": "Lancers",
+        "abbrev": "CBU"
+      },
+      {
+        "id": "E06",
+        "region": "East",
+        "seed": 6,
+        "school": "Louisville",
+        "mascot": "Cardinals",
+        "abbrev": "LOUIS"
+      },
+      {
+        "id": "E11",
+        "region": "East",
+        "seed": 11,
+        "school": "South Florida",
+        "mascot": "Bulls",
+        "abbrev": "USF"
+      },
+      {
+        "id": "E03",
+        "region": "East",
+        "seed": 3,
+        "school": "Michigan State",
+        "mascot": "Spartans",
+        "abbrev": "MSU"
+      },
+      {
+        "id": "E14",
+        "region": "East",
+        "seed": 14,
+        "school": "North Dakota State",
+        "mascot": "Bison",
+        "abbrev": "NDSU"
+      },
+      {
+        "id": "E07",
+        "region": "East",
+        "seed": 7,
+        "school": "UCLA",
+        "mascot": "Bruins",
+        "abbrev": "UCLA"
+      },
+      {
+        "id": "E10",
+        "region": "East",
+        "seed": 10,
+        "school": "UCF",
+        "mascot": "Knights",
+        "abbrev": "UCF"
+      },
+      {
+        "id": "E02",
+        "region": "East",
+        "seed": 2,
+        "school": "UConn",
+        "mascot": "Huskies",
+        "abbrev": "CONN"
+      },
+      {
+        "id": "E15",
+        "region": "East",
+        "seed": 15,
+        "school": "Furman",
+        "mascot": "Paladins",
+        "abbrev": "FUR"
+      },
+      {
+        "id": "W01",
+        "region": "West",
+        "seed": 1,
+        "school": "Arizona",
+        "mascot": "Wildcats",
+        "abbrev": "ZONA"
+      },
+      {
+        "id": "W16",
+        "region": "West",
+        "seed": 16,
+        "school": "Long Island",
+        "mascot": "Sharks",
+        "abbrev": "LIU"
+      },
+      {
+        "id": "W08",
+        "region": "West",
+        "seed": 8,
+        "school": "Villanova",
+        "mascot": "Wildcats",
+        "abbrev": "NOVA"
+      },
+      {
+        "id": "W09",
+        "region": "West",
+        "seed": 9,
+        "school": "Utah State",
+        "mascot": "Aggies",
+        "abbrev": "UTST"
+      },
+      {
+        "id": "W05",
+        "region": "West",
+        "seed": 5,
+        "school": "Wisconsin",
+        "mascot": "Badgers",
+        "abbrev": "WIS"
+      },
+      {
+        "id": "W12",
+        "region": "West",
+        "seed": 12,
+        "school": "High Point",
+        "mascot": "Panthers",
+        "abbrev": "HPU"
+      },
+      {
+        "id": "W04",
+        "region": "West",
+        "seed": 4,
+        "school": "Arkansas",
+        "mascot": "Razorbacks",
+        "abbrev": "ARK"
+      },
+      {
+        "id": "W13",
+        "region": "West",
+        "seed": 13,
+        "school": "Hawaii",
+        "mascot": "Rainbow Warriors",
+        "abbrev": "HAWAII"
+      },
+      {
+        "id": "W06",
+        "region": "West",
+        "seed": 6,
+        "school": "BYU",
+        "mascot": "Cougars",
+        "abbrev": "BYU"
+      },
+      {
+        "id": "W11A",
+        "region": "West",
+        "seed": 11,
+        "school": "Texas",
+        "mascot": "Longhorns",
+        "abbrev": "TEXAS"
+      },
+      {
+        "id": "W11B",
+        "region": "West",
+        "seed": 11,
+        "school": "NC State",
+        "mascot": "Wolfpack",
+        "abbrev": "NCST"
+      },
+      {
+        "id": "W03",
+        "region": "West",
+        "seed": 3,
+        "school": "Gonzaga",
+        "mascot": "Bulldogs",
+        "abbrev": "GONZ"
+      },
+      {
+        "id": "W14",
+        "region": "West",
+        "seed": 14,
+        "school": "Kennesaw State",
+        "mascot": "Owls",
+        "abbrev": "KENNST"
+      },
+      {
+        "id": "W07",
+        "region": "West",
+        "seed": 7,
+        "school": "Miami",
+        "mascot": "Hurricanes",
+        "abbrev": "MIAMI"
+      },
+      {
+        "id": "W10",
+        "region": "West",
+        "seed": 10,
+        "school": "Missouri",
+        "mascot": "Tigers",
+        "abbrev": "MIZZOU"
+      },
+      {
+        "id": "W02",
+        "region": "West",
+        "seed": 2,
+        "school": "Purdue",
+        "mascot": "Boilermakers",
+        "abbrev": "PUR"
+      },
+      {
+        "id": "W15",
+        "region": "West",
+        "seed": 15,
+        "school": "Queens",
+        "mascot": "Royals",
+        "abbrev": "QUEENS"
+      },
+      {
+        "id": "S01",
+        "region": "South",
+        "seed": 1,
+        "school": "Florida",
+        "mascot": "Gators",
+        "abbrev": "FLA"
+      },
+      {
+        "id": "S16A",
+        "region": "South",
+        "seed": 16,
+        "school": "Prairie View A&M",
+        "mascot": "Panthers",
+        "abbrev": "PVAMU"
+      },
+      {
+        "id": "S16B",
+        "region": "South",
+        "seed": 16,
+        "school": "Lehigh",
+        "mascot": "Mountain Hawks",
+        "abbrev": "LEHIGH"
+      },
+      {
+        "id": "S08",
+        "region": "South",
+        "seed": 8,
+        "school": "Clemson",
+        "mascot": "Tigers",
+        "abbrev": "CLEM"
+      },
+      {
+        "id": "S09",
+        "region": "South",
+        "seed": 9,
+        "school": "Iowa",
+        "mascot": "Hawkeyes",
+        "abbrev": "IOWA"
+      },
+      {
+        "id": "S05",
+        "region": "South",
+        "seed": 5,
+        "school": "Vanderbilt",
+        "mascot": "Commodores",
+        "abbrev": "VANDY"
+      },
+      {
+        "id": "S12",
+        "region": "South",
+        "seed": 12,
+        "school": "McNeese",
+        "mascot": "Cowboys",
+        "abbrev": "MCNEES"
+      },
+      {
+        "id": "S04",
+        "region": "South",
+        "seed": 4,
+        "school": "Nebraska",
+        "mascot": "Cornhuskers",
+        "abbrev": "NEB"
+      },
+      {
+        "id": "S13",
+        "region": "South",
+        "seed": 13,
+        "school": "Troy",
+        "mascot": "Trojans",
+        "abbrev": "TROY"
+      },
+      {
+        "id": "S06",
+        "region": "South",
+        "seed": 6,
+        "school": "North Carolina",
+        "mascot": "Tar Heels",
+        "abbrev": "UNC"
+      },
+      {
+        "id": "S11",
+        "region": "South",
+        "seed": 11,
+        "school": "VCU",
+        "mascot": "Rams",
+        "abbrev": "VCU"
+      },
+      {
+        "id": "S03",
+        "region": "South",
+        "seed": 3,
+        "school": "Illinois",
+        "mascot": "Fighting Illini",
+        "abbrev": "ILL"
+      },
+      {
+        "id": "S14",
+        "region": "South",
+        "seed": 14,
+        "school": "Penn",
+        "mascot": "Quakers",
+        "abbrev": "PENN"
+      },
+      {
+        "id": "S07",
+        "region": "South",
+        "seed": 7,
+        "school": "Saint Mary's",
+        "mascot": "Gaels",
+        "abbrev": "STMARY"
+      },
+      {
+        "id": "S10",
+        "region": "South",
+        "seed": 10,
+        "school": "Texas A&M",
+        "mascot": "Aggies",
+        "abbrev": "TXAM"
+      },
+      {
+        "id": "S02",
+        "region": "South",
+        "seed": 2,
+        "school": "Houston",
+        "mascot": "Cougars",
+        "abbrev": "HOU"
+      },
+      {
+        "id": "S15",
+        "region": "South",
+        "seed": 15,
+        "school": "Idaho",
+        "mascot": "Vandals",
+        "abbrev": "IDAHO"
+      },
+      {
+        "id": "MW01",
+        "region": "Midwest",
+        "seed": 1,
+        "school": "Michigan",
+        "mascot": "Wolverines",
+        "abbrev": "MICH"
+      },
+      {
+        "id": "MW16A",
+        "region": "Midwest",
+        "seed": 16,
+        "school": "Howard",
+        "mascot": "Bison",
+        "abbrev": "HOWARD"
+      },
+      {
+        "id": "MW16B",
+        "region": "Midwest",
+        "seed": 16,
+        "school": "UMBC",
+        "mascot": "Retrievers",
+        "abbrev": "UMBC"
+      },
+      {
+        "id": "MW08",
+        "region": "Midwest",
+        "seed": 8,
+        "school": "Georgia",
+        "mascot": "Bulldogs",
+        "abbrev": "UGA"
+      },
+      {
+        "id": "MW09",
+        "region": "Midwest",
+        "seed": 9,
+        "school": "Saint Louis",
+        "mascot": "Billikens",
+        "abbrev": "SLU"
+      },
+      {
+        "id": "MW05",
+        "region": "Midwest",
+        "seed": 5,
+        "school": "Texas Tech",
+        "mascot": "Red Raiders",
+        "abbrev": "TTU"
+      },
+      {
+        "id": "MW12",
+        "region": "Midwest",
+        "seed": 12,
+        "school": "Akron",
+        "mascot": "Zips",
+        "abbrev": "AKRON"
+      },
+      {
+        "id": "MW04",
+        "region": "Midwest",
+        "seed": 4,
+        "school": "Alabama",
+        "mascot": "Crimson Tide",
+        "abbrev": "BAMA"
+      },
+      {
+        "id": "MW13",
+        "region": "Midwest",
+        "seed": 13,
+        "school": "Hofstra",
+        "mascot": "Pride",
+        "abbrev": "HOF"
+      },
+      {
+        "id": "MW06",
+        "region": "Midwest",
+        "seed": 6,
+        "school": "Tennessee",
+        "mascot": "Volunteers",
+        "abbrev": "TENN"
+      },
+      {
+        "id": "MW11A",
+        "region": "Midwest",
+        "seed": 11,
+        "school": "Miami (Ohio)",
+        "mascot": "RedHawks",
+        "abbrev": "MIAOH"
+      },
+      {
+        "id": "MW11B",
+        "region": "Midwest",
+        "seed": 11,
+        "school": "SMU",
+        "mascot": "Mustangs",
+        "abbrev": "SMU"
+      },
+      {
+        "id": "MW03",
+        "region": "Midwest",
+        "seed": 3,
+        "school": "Virginia",
+        "mascot": "Cavaliers",
+        "abbrev": "UVA"
+      },
+      {
+        "id": "MW14",
+        "region": "Midwest",
+        "seed": 14,
+        "school": "Wright State",
+        "mascot": "Raiders",
+        "abbrev": "WRIGHT"
+      },
+      {
+        "id": "MW07",
+        "region": "Midwest",
+        "seed": 7,
+        "school": "Kentucky",
+        "mascot": "Wildcats",
+        "abbrev": "UK"
+      },
+      {
+        "id": "MW10",
+        "region": "Midwest",
+        "seed": 10,
+        "school": "Santa Clara",
+        "mascot": "Broncos",
+        "abbrev": "SCLARA"
+      },
+      {
+        "id": "MW02",
+        "region": "Midwest",
+        "seed": 2,
+        "school": "Iowa State",
+        "mascot": "Cyclones",
+        "abbrev": "IAST"
+      },
+      {
+        "id": "MW15",
+        "region": "Midwest",
+        "seed": 15,
+        "school": "Tennessee State",
+        "mascot": "Tigers",
+        "abbrev": "TNST"
+      }
+  ]
+}

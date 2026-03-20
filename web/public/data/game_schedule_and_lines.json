@@ -1,0 +1,138 @@
+{
+  "MW-FF-2": {
+    "favorite_team_id": "MW16A",
+    "spread_from_favorite_perspective": -1.5
+  },
+  "MW-FF-1": {
+    "favorite_team_id": "MW11B",
+    "spread_from_favorite_perspective": -6.5
+  },
+  "E-R64-1": {
+    "favorite_team_id": "E01",
+    "spread_from_favorite_perspective": -28.5
+  },
+  "MW-R64-1": {
+    "favorite_team_id": "MW01",
+    "spread_from_favorite_perspective": -30.5
+  },
+  "S-R64-8": {
+    "favorite_team_id": "S02",
+    "spread_from_favorite_perspective": -24.5
+  },
+  "E-R64-6": {
+    "favorite_team_id": "E03",
+    "spread_from_favorite_perspective": -16.5
+  },
+  "S-R64-6": {
+    "favorite_team_id": "S03",
+    "spread_from_favorite_perspective": -25.5
+  },
+  "W-R64-6": {
+    "favorite_team_id": "W03",
+    "spread_from_favorite_perspective": -20.5
+  },
+  "S-R64-4": {
+    "favorite_team_id": "S04",
+    "spread_from_favorite_perspective": -13.5
+  },
+  "W-R64-4": {
+    "favorite_team_id": "W04",
+    "spread_from_favorite_perspective": -14.5
+  },
+  "W-R64-3": {
+    "favorite_team_id": "W05",
+    "spread_from_favorite_perspective": -10.5
+  },
+  "S-R64-3": {
+    "favorite_team_id": "S05",
+    "spread_from_favorite_perspective": -12.5
+  },
+  "E-R64-5": {
+    "favorite_team_id": "E06",
+    "spread_from_favorite_perspective": -3.5
+  },
+  "S-R64-5": {
+    "favorite_team_id": "S06",
+    "spread_from_favorite_perspective": -2.5
+  },
+  "W-R64-5": {
+    "favorite_team_id": "W06",
+    "spread_from_favorite_perspective": -2.5
+  },
+  "S-R64-7": {
+    "favorite_team_id": "S07",
+    "spread_from_favorite_perspective": -2.5
+  },
+  "E-R64-2": {
+    "favorite_team_id": "E08",
+    "spread_from_favorite_perspective": -2.5
+  },
+  "MW-R64-2": {
+    "favorite_team_id": "MW08",
+    "spread_from_favorite_perspective": -1.5
+  },
+  "W-R64-1": {
+    "favorite_team_id": "W01",
+    "spread_from_favorite_perspective": -30.5
+  },
+  "MW-R64-8": {
+    "favorite_team_id": "MW02",
+    "spread_from_favorite_perspective": -24.5
+  },
+  "MW-R64-6": {
+    "favorite_team_id": "MW03",
+    "spread_from_favorite_perspective": -17.5
+  },
+  "MW-R64-4": {
+    "favorite_team_id": "MW04",
+    "spread_from_favorite_perspective": -11.5
+  },
+  "MW-R64-3": {
+    "favorite_team_id": "MW05",
+    "spread_from_favorite_perspective": -6.5
+  },
+  "MW-R64-7": {
+    "favorite_team_id": "MW07",
+    "spread_from_favorite_perspective": -3.5
+  },
+  "W-R64-2": {
+    "favorite_team_id": "W09",
+    "spread_from_favorite_perspective": -1.5
+  },
+  "MW-R64-5": {
+    "favorite_team_id": "MW06",
+    "spread_from_favorite_perspective": -12.5
+  },
+  "S-R64-2": {
+    "favorite_team_id": "S09",
+    "spread_from_favorite_perspective": -1.5
+  },
+  "E-R64-3": {
+    "favorite_team_id": "E05",
+    "spread_from_favorite_perspective": -10.5
+  },
+  "E-R64-7": {
+    "favorite_team_id": "E07",
+    "spread_from_favorite_perspective": -5.5
+  },
+  "W-R64-8": {
+    "favorite_team_id": "W02",
+    "spread_from_favorite_perspective": -25.5
+  },
+  "S-R64-1": {
+    "favorite_team_id": "S01",
+    "spread_from_favorite_perspective": -35.5
+  },
+  "E-R64-4": {
+    "favorite_team_id": "E04",
+    "spread_from_favorite_perspective": -14.5
+  },
+  "E-R64-8": {
+    "favorite_team_id": "E02",
+    "spread_from_favorite_perspective": -20.5
+  },
+  "W-R64-7": {
+    "favorite_team_id": "W07",
+    "spread_from_favorite_perspective": -1.5
+  }
+}

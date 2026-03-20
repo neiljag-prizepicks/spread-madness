@@ -1,0 +1,23 @@
+{
+    "S-FF-1": {
+      "status": "final",
+      "clock": null,
+      "scores": { "S16A": 67, "S16B": 55 }
+    },
+    "MW-FF-1": {
+      "status": "final",
+      "clock": null,
+      "scores": { "MW11A": 89, "MW11B": 79 }
+    },
+    "W-FF-1": {
+      "status": "final",
+      "clock": null,
+      "scores": { "W11A": 68, "W11B": 66 }
+    },
+    "MW-FF-2": {
+      "status": "final",
+      "clock": null,
+      "scores": { "MW16A": 83, "MW16B": 86 }
+    }
+  }
+  

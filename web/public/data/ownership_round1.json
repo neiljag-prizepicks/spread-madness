@@ -1,0 +1,274 @@
+[
+  {
+    "user_id": "1",
+    "team_id": "E13"
+  },
+  {
+    "user_id": "1",
+    "team_id": "E09"
+  },
+  {
+    "user_id": "2",
+    "team_id": "E03"
+  },
+  {
+    "user_id": "2",
+    "team_id": "E14"
+  },
+  {
+    "user_id": "3",
+    "team_id": "E07"
+  },
+  {
+    "user_id": "3",
+    "team_id": "E08"
+  },
+  {
+    "user_id": "4",
+    "team_id": "E02"
+  },
+  {
+    "user_id": "4",
+    "team_id": "E05"
+  },
+  {
+    "user_id": "5",
+    "team_id": "E12"
+  },
+  {
+    "user_id": "5",
+    "team_id": "E01"
+  },
+  {
+    "user_id": "6",
+    "team_id": "E11"
+  },
+  {
+    "user_id": "6",
+    "team_id": "E15"
+  },
+  {
+    "user_id": "7",
+    "team_id": "E06"
+  },
+  {
+    "user_id": "7",
+    "team_id": "E10"
+  },
+  {
+    "user_id": "8",
+    "team_id": "E16"
+  },
+  {
+    "user_id": "8",
+    "team_id": "E04"
+  },
+  {
+    "user_id": "1",
+    "team_id": "MW03"
+  },
+  {
+    "user_id": "1",
+    "team_id": "MW09"
+  },
+  {
+    "user_id": "2",
+    "team_id": "MW15"
+  },
+  {
+    "user_id": "2",
+    "team_id": "MW10"
+  },
+  {
+    "user_id": "3",
+    "team_id": "MW01"
+  },
+  {
+    "user_id": "3",
+    "team_id": "MW02"
+  },
+  {
+    "user_id": "4",
+    "team_id": "MW12"
+  },
+  {
+    "user_id": "4",
+    "team_id": "MW05"
+  },
+  {
+    "user_id": "5",
+    "team_id": "MW14"
+  },
+  {
+    "user_id": "5",
+    "team_id": "MW11A"
+  },
+  {
+    "user_id": "5",
+    "team_id": "MW11B"
+  },
+  {
+    "user_id": "6",
+    "team_id": "MW04"
+  },
+  {
+    "user_id": "6",
+    "team_id": "MW06"
+  },
+  {
+    "user_id": "7",
+    "team_id": "MW07"
+  },
+  {
+    "user_id": "7",
+    "team_id": "MW16A"
+  },
+  {
+    "user_id": "7",
+    "team_id": "MW16B"
+  },
+  {
+    "user_id": "8",
+    "team_id": "MW08"
+  },
+  {
+    "user_id": "8",
+    "team_id": "MW13"
+  },
+  {
+    "user_id": "1",
+    "team_id": "S09"
+  },
+  {
+    "user_id": "1",
+    "team_id": "S05"
+  },
+  {
+    "user_id": "2",
+    "team_id": "S13"
+  },
+  {
+    "user_id": "2",
+    "team_id": "S01"
+  },
+  {
+    "user_id": "3",
+    "team_id": "S11"
+  },
+  {
+    "user_id": "3",
+    "team_id": "S16A"
+  },
+  {
+    "user_id": "3",
+    "team_id": "S16B"
+  },
+  {
+    "user_id": "4",
+    "team_id": "S12"
+  },
+  {
+    "user_id": "4",
+    "team_id": "S03"
+  },
+  {
+    "user_id": "5",
+    "team_id": "S14"
+  },
+  {
+    "user_id": "5",
+    "team_id": "S08"
+  },
+  {
+    "user_id": "6",
+    "team_id": "S02"
+  },
+  {
+    "user_id": "6",
+    "team_id": "S07"
+  },
+  {
+    "user_id": "7",
+    "team_id": "S04"
+  },
+  {
+    "user_id": "7",
+    "team_id": "S06"
+  },
+  {
+    "user_id": "8",
+    "team_id": "S10"
+  },
+  {
+    "user_id": "8",
+    "team_id": "S15"
+  },
+  {
+    "user_id": "1",
+    "team_id": "W16"
+  },
+  {
+    "user_id": "1",
+    "team_id": "W03"
+  },
+  {
+    "user_id": "2",
+    "team_id": "W04"
+  },
+  {
+    "user_id": "2",
+    "team_id": "W11A"
+  },
+  {
+    "user_id": "2",
+    "team_id": "W11B"
+  },
+  {
+    "user_id": "3",
+    "team_id": "W15"
+  },
+  {
+    "user_id": "3",
+    "team_id": "W09"
+  },
+  {
+    "user_id": "4",
+    "team_id": "W13"
+  },
+  {
+    "user_id": "4",
+    "team_id": "W07"
+  },
+  {
+    "user_id": "5",
+    "team_id": "W12"
+  },
+  {
+    "user_id": "5",
+    "team_id": "W08"
+  },
+  {
+    "user_id": "6",
+    "team_id": "W01"
+  },
+  {
+    "user_id": "6",
+    "team_id": "W06"
+  },
+  {
+    "user_id": "7",
+    "team_id": "W14"
+  },
+  {
+    "user_id": "7",
+    "team_id": "W02"
+  },
+  {
+    "user_id": "8",
+    "team_id": "W05"
+  },
+  {
+    "user_id": "8",
+    "team_id": "W10"
+  }
+]

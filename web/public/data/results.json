@@ -1,0 +1,222 @@
+{
+  "S-FF-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S16A": 67,
+      "S16B": 55
+    }
+  },
+  "MW-FF-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW11A": 89,
+      "MW11B": 79
+    }
+  },
+  "W-FF-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W11A": 68,
+      "W11B": 66
+    }
+  },
+  "MW-FF-2": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW16A": 83,
+      "MW16B": 86
+    }
+  },
+  "E-R64-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E01": 71,
+      "E16": 65
+    }
+  },
+  "E-R64-2": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E08": 64,
+      "E09": 66
+    }
+  },
+  "E-R64-5": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E06": 83,
+      "E11": 79
+    }
+  },
+  "E-R64-6": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E03": 92,
+      "E14": 67
+    }
+  },
+  "W-R64-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W01": 92,
+      "W16": 58
+    }
+  },
+  "W-R64-2": {
+    "status": "in_progress",
+    "clock": "16:33 - 1st Half",
+    "scores": {
+      "W08": 6,
+      "W09": 8
+    },
+    "scores_updated_at": "2026-03-20T20:20:15.909Z"
+  },
+  "W-R64-3": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W05": 82,
+      "W12": 83
+    }
+  },
+  "W-R64-4": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W04": 97,
+      "W13": 78
+    }
+  },
+  "W-R64-5": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W06": 71,
+      "W11A": 79
+    }
+  },
+  "W-R64-6": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W03": 73,
+      "W14": 64
+    }
+  },
+  "S-R64-3": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S05": 78,
+      "S12": 68
+    }
+  },
+  "S-R64-4": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S04": 76,
+      "S13": 47
+    }
+  },
+  "S-R64-5": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S06": 78,
+      "S11": 82
+    }
+  },
+  "S-R64-6": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S03": 105,
+      "S14": 70
+    }
+  },
+  "S-R64-7": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S07": 50,
+      "S10": 63
+    }
+  },
+  "S-R64-8": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S02": 78,
+      "S15": 47
+    }
+  },
+  "MW-R64-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW01": 101,
+      "MW16A": 80
+    }
+  },
+  "MW-R64-2": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW08": 77,
+      "MW09": 102
+    }
+  },
+  "MW-R64-3": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW05": 91,
+      "MW12": 71
+    }
+  },
+  "MW-R64-4": {
+    "status": "in_progress",
+    "clock": "Halftime",
+    "scores": {
+      "MW04": 37,
+      "MW13": 35
+    },
+    "scores_updated_at": "2026-03-20T20:08:08.229Z"
+  },
+  "MW-R64-6": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW03": 82,
+      "MW14": 73
+    },
+    "scores_updated_at": "2026-03-20T20:00:04.560Z"
+  },
+  "MW-R64-7": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW07": 89,
+      "MW10": 84
+    }
+  },
+  "MW-R64-8": {
+    "status": "in_progress",
+    "clock": "Halftime",
+    "scores": {
+      "MW02": 55,
+      "MW15": 29
+    },
+    "scores_updated_at": "2026-03-20T20:06:07.234Z"
+  }
+}

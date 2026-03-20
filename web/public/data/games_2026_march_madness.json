@@ -1,0 +1,1409 @@
+{
+  "games": [
+    {
+      "id": "S-FF-1",
+      "round": "first_four",
+      "region": "South",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-03-18T22:40:00.000Z",
+      "side_a": {
+        "team_id": "S16A",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S16B",
+        "label": "top"
+      },
+      "favorite_team_id": "S16B",
+      "spread_from_favorite_perspective": -3.5,
+      "feeds_into": {
+        "game_id": "S-R64-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-FF-1",
+      "round": "first_four",
+      "region": "Midwest",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-03-19T01:15:00.000Z",
+      "side_a": {
+        "team_id": "MW11A",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW11B",
+        "label": "top"
+      },
+      "favorite_team_id": "MW11B",
+      "spread_from_favorite_perspective": -7.5,
+      "feeds_into": {
+        "game_id": "MW-R64-5",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-FF-1",
+      "round": "first_four",
+      "region": "West",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-03-17T23:00:00.000Z",
+      "side_a": {
+        "team_id": "W11A",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W11B",
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "W-R64-5",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-FF-2",
+      "round": "first_four",
+      "region": "Midwest",
+      "bracket_order": 2,
+      "scheduled_tip_utc": "2026-03-17T22:40:00.000Z",
+      "side_a": {
+        "team_id": "MW16A",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW16B",
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-R64-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-R64-1",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-03-19T18:50:00.000Z",
+      "side_a": {
+        "team_id": "E16",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E01",
+        "label": "top"
+      },
+      "favorite_team_id": "E01",
+      "spread_from_favorite_perspective": -28.5,
+      "feeds_into": {
+        "game_id": "E-R32-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-R64-2",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 2,
+      "scheduled_tip_utc": "2026-03-19T16:15:00.000Z",
+      "side_a": {
+        "team_id": "E09",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E08",
+        "label": "top"
+      },
+      "favorite_team_id": "E08",
+      "spread_from_favorite_perspective": -2.5,
+      "feeds_into": {
+        "game_id": "E-R32-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "E-R64-3",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 3,
+      "scheduled_tip_utc": "2026-03-20T23:10:00.000Z",
+      "side_a": {
+        "team_id": "E12",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E05",
+        "label": "top"
+      },
+      "favorite_team_id": "E05",
+      "spread_from_favorite_perspective": -9.5,
+      "feeds_into": {
+        "game_id": "E-R32-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-R64-4",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 4,
+      "scheduled_tip_utc": "2026-03-21T01:45:00.000Z",
+      "side_a": {
+        "team_id": "E13",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E04",
+        "label": "top"
+      },
+      "favorite_team_id": "E04",
+      "spread_from_favorite_perspective": -14.5,
+      "feeds_into": {
+        "game_id": "E-R32-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "E-R64-5",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 5,
+      "scheduled_tip_utc": "2026-03-19T17:30:00.000Z",
+      "side_a": {
+        "team_id": "E11",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E06",
+        "label": "top"
+      },
+      "favorite_team_id": "E06",
+      "spread_from_favorite_perspective": -4.5,
+      "feeds_into": {
+        "game_id": "E-R32-3",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-R64-6",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 6,
+      "scheduled_tip_utc": "2026-03-19T20:05:00.000Z",
+      "side_a": {
+        "team_id": "E14",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E03",
+        "label": "top"
+      },
+      "favorite_team_id": "E03",
+      "spread_from_favorite_perspective": -16.5,
+      "feeds_into": {
+        "game_id": "E-R32-3",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "E-R64-7",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 7,
+      "scheduled_tip_utc": "2026-03-20T23:25:00.000Z",
+      "side_a": {
+        "team_id": "E10",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E07",
+        "label": "top"
+      },
+      "favorite_team_id": "E07",
+      "spread_from_favorite_perspective": -5.5,
+      "feeds_into": {
+        "game_id": "E-R32-4",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-R64-8",
+      "round": "round_of_64",
+      "region": "East",
+      "bracket_order": 8,
+      "scheduled_tip_utc": "2026-03-21T02:00:00.000Z",
+      "side_a": {
+        "team_id": "E15",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "E02",
+        "label": "top"
+      },
+      "favorite_team_id": "E02",
+      "spread_from_favorite_perspective": -20.5,
+      "feeds_into": {
+        "game_id": "E-R32-4",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "W-R64-1",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-03-20T17:35:00.000Z",
+      "side_a": {
+        "team_id": "W16",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W01",
+        "label": "top"
+      },
+      "favorite_team_id": "W01",
+      "spread_from_favorite_perspective": -30.5,
+      "feeds_into": {
+        "game_id": "W-R32-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-R64-2",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 2,
+      "scheduled_tip_utc": "2026-03-20T20:10:00.000Z",
+      "side_a": {
+        "team_id": "W09",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W08",
+        "label": "top"
+      },
+      "favorite_team_id": "W09",
+      "spread_from_favorite_perspective": -1.5,
+      "feeds_into": {
+        "game_id": "W-R32-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "W-R64-3",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 3,
+      "scheduled_tip_utc": "2026-03-19T17:50:00.000Z",
+      "side_a": {
+        "team_id": "W12",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W05",
+        "label": "top"
+      },
+      "favorite_team_id": "W05",
+      "spread_from_favorite_perspective": -10.5,
+      "feeds_into": {
+        "game_id": "W-R32-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-R64-4",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 4,
+      "scheduled_tip_utc": "2026-03-19T20:25:00.000Z",
+      "side_a": {
+        "team_id": "W13",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W04",
+        "label": "top"
+      },
+      "favorite_team_id": "W04",
+      "spread_from_favorite_perspective": -15.5,
+      "feeds_into": {
+        "game_id": "W-R32-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "W-R64-5",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 5,
+      "scheduled_tip_utc": "2026-03-19T23:25:00.000Z",
+      "side_a": {
+        "team_id": "W11A",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W06",
+        "label": "top"
+      },
+      "favorite_team_id": "W06",
+      "spread_from_favorite_perspective": -2.5,
+      "feeds_into": {
+        "game_id": "W-R32-3",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-R64-6",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 6,
+      "scheduled_tip_utc": "2026-03-20T02:00:00.000Z",
+      "side_a": {
+        "team_id": "W14",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W03",
+        "label": "top"
+      },
+      "favorite_team_id": "W03",
+      "spread_from_favorite_perspective": -21.5,
+      "feeds_into": {
+        "game_id": "W-R32-3",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "W-R64-7",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 7,
+      "scheduled_tip_utc": "2026-03-21T02:10:00.000Z",
+      "side_a": {
+        "team_id": "W10",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W07",
+        "label": "top"
+      },
+      "favorite_team_id": "W07",
+      "spread_from_favorite_perspective": -1.5,
+      "feeds_into": {
+        "game_id": "W-R32-4",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-R64-8",
+      "round": "round_of_64",
+      "region": "West",
+      "bracket_order": 8,
+      "scheduled_tip_utc": "2026-03-20T23:35:00.000Z",
+      "side_a": {
+        "team_id": "W15",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "W02",
+        "label": "top"
+      },
+      "favorite_team_id": "W02",
+      "spread_from_favorite_perspective": -25.5,
+      "feeds_into": {
+        "game_id": "W-R32-4",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "S-R64-1",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-03-19T23:10:00.000Z",
+      "side_a": {
+        "team_id": null,
+        "label": "bottom",
+        "source_game_id": "S-FF-1"
+      },
+      "side_b": {
+        "team_id": "S01",
+        "label": "top"
+      },
+      "favorite_team_id": "S01",
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "S-R32-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-R64-2",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 2,
+      "scheduled_tip_utc": "2026-03-20T22:50:00.000Z",
+      "side_a": {
+        "team_id": "S09",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S08",
+        "label": "top"
+      },
+      "favorite_team_id": "S09",
+      "spread_from_favorite_perspective": -2.5,
+      "feeds_into": {
+        "game_id": "S-R32-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "S-R64-3",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 3,
+      "scheduled_tip_utc": "2026-03-19T19:15:00.000Z",
+      "side_a": {
+        "team_id": "S12",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S05",
+        "label": "top"
+      },
+      "favorite_team_id": "S05",
+      "spread_from_favorite_perspective": -11.5,
+      "feeds_into": {
+        "game_id": "S-R32-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-R64-4",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 4,
+      "scheduled_tip_utc": "2026-03-19T16:40:00.000Z",
+      "side_a": {
+        "team_id": "S13",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S04",
+        "label": "top"
+      },
+      "favorite_team_id": "S04",
+      "spread_from_favorite_perspective": -12.5,
+      "feeds_into": {
+        "game_id": "S-R32-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "S-R64-5",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 5,
+      "scheduled_tip_utc": "2026-03-19T22:50:00.000Z",
+      "side_a": {
+        "team_id": "S11",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S06",
+        "label": "top"
+      },
+      "favorite_team_id": "S06",
+      "spread_from_favorite_perspective": -2.5,
+      "feeds_into": {
+        "game_id": "S-R32-3",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-R64-6",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 6,
+      "scheduled_tip_utc": "2026-03-20T01:25:00.000Z",
+      "side_a": {
+        "team_id": "S14",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S03",
+        "label": "top"
+      },
+      "favorite_team_id": "S03",
+      "spread_from_favorite_perspective": -24.5,
+      "feeds_into": {
+        "game_id": "S-R32-3",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "S-R64-7",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 7,
+      "scheduled_tip_utc": "2026-03-19T23:35:00.000Z",
+      "side_a": {
+        "team_id": "S10",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S07",
+        "label": "top"
+      },
+      "favorite_team_id": "S07",
+      "spread_from_favorite_perspective": -3.5,
+      "feeds_into": {
+        "game_id": "S-R32-4",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-R64-8",
+      "round": "round_of_64",
+      "region": "South",
+      "bracket_order": 8,
+      "scheduled_tip_utc": "2026-03-20T02:10:00.000Z",
+      "side_a": {
+        "team_id": "S15",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "S02",
+        "label": "top"
+      },
+      "favorite_team_id": "S02",
+      "spread_from_favorite_perspective": -23.5,
+      "feeds_into": {
+        "game_id": "S-R32-4",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-R64-1",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-03-19T23:10:00.000Z",
+      "side_a": {
+        "team_id": "MW16A",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW01",
+        "label": "top"
+      },
+      "favorite_team_id": "MW01",
+      "spread_from_favorite_perspective": -30.5,
+      "feeds_into": {
+        "game_id": "MW-R32-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-R64-2",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 2,
+      "scheduled_tip_utc": "2026-03-20T01:45:00.000Z",
+      "side_a": {
+        "team_id": "MW09",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW08",
+        "label": "top"
+      },
+      "favorite_team_id": "MW08",
+      "spread_from_favorite_perspective": -2.5,
+      "feeds_into": {
+        "game_id": "MW-R32-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-R64-3",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 3,
+      "scheduled_tip_utc": "2026-03-20T16:40:00.000Z",
+      "side_a": {
+        "team_id": "MW12",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW05",
+        "label": "top"
+      },
+      "favorite_team_id": "MW05",
+      "spread_from_favorite_perspective": -7.5,
+      "feeds_into": {
+        "game_id": "MW-R32-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-R64-4",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 4,
+      "scheduled_tip_utc": "2026-03-20T19:15:00.000Z",
+      "side_a": {
+        "team_id": "MW13",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW04",
+        "label": "top"
+      },
+      "favorite_team_id": "MW04",
+      "spread_from_favorite_perspective": -11.5,
+      "feeds_into": {
+        "game_id": "MW-R32-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-R64-5",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 5,
+      "scheduled_tip_utc": "2026-03-20T16:15:00.000Z",
+      "side_a": {
+        "team_id": null,
+        "label": "bottom",
+        "source_game_id": "MW-FF-1"
+      },
+      "side_b": {
+        "team_id": "MW06",
+        "label": "top"
+      },
+      "favorite_team_id": "MW06",
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-R32-3",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-R64-6",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 6,
+      "scheduled_tip_utc": "2026-03-20T17:50:00.000Z",
+      "side_a": {
+        "team_id": "MW14",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW03",
+        "label": "top"
+      },
+      "favorite_team_id": "MW03",
+      "spread_from_favorite_perspective": -18.5,
+      "feeds_into": {
+        "game_id": "MW-R32-3",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-R64-7",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 7,
+      "scheduled_tip_utc": "2026-03-20T16:15:00.000Z",
+      "side_a": {
+        "team_id": "MW10",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW07",
+        "label": "top"
+      },
+      "favorite_team_id": "MW07",
+      "spread_from_favorite_perspective": -2.5,
+      "feeds_into": {
+        "game_id": "MW-R32-4",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-R64-8",
+      "round": "round_of_64",
+      "region": "Midwest",
+      "bracket_order": 8,
+      "scheduled_tip_utc": "2026-03-20T18:50:00.000Z",
+      "side_a": {
+        "team_id": "MW15",
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": "MW02",
+        "label": "top"
+      },
+      "favorite_team_id": "MW02",
+      "spread_from_favorite_perspective": -24.5,
+      "feeds_into": {
+        "game_id": "MW-R32-4",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "E-R32-1",
+      "round": "round_of_32",
+      "region": "East",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "E-S16-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-R32-2",
+      "round": "round_of_32",
+      "region": "East",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "E-S16-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "E-R32-3",
+      "round": "round_of_32",
+      "region": "East",
+      "bracket_order": 3,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "E-S16-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-R32-4",
+      "round": "round_of_32",
+      "region": "East",
+      "bracket_order": 4,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "E-S16-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "E-S16-1",
+      "round": "sweet_16",
+      "region": "East",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "E-E8-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "E-S16-2",
+      "round": "sweet_16",
+      "region": "East",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "E-E8-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "E-E8-1",
+      "round": "elite_8",
+      "region": "East",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "FF-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-R32-1",
+      "round": "round_of_32",
+      "region": "West",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "W-S16-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-R32-2",
+      "round": "round_of_32",
+      "region": "West",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "W-S16-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "W-R32-3",
+      "round": "round_of_32",
+      "region": "West",
+      "bracket_order": 3,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "W-S16-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-R32-4",
+      "round": "round_of_32",
+      "region": "West",
+      "bracket_order": 4,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "W-S16-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "W-S16-1",
+      "round": "sweet_16",
+      "region": "West",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "W-E8-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "W-S16-2",
+      "round": "sweet_16",
+      "region": "West",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "W-E8-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "W-E8-1",
+      "round": "elite_8",
+      "region": "West",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "FF-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-R32-1",
+      "round": "round_of_32",
+      "region": "South",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "S-S16-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-R32-2",
+      "round": "round_of_32",
+      "region": "South",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "S-S16-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "S-R32-3",
+      "round": "round_of_32",
+      "region": "South",
+      "bracket_order": 3,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "S-S16-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-R32-4",
+      "round": "round_of_32",
+      "region": "South",
+      "bracket_order": 4,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "S-S16-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "S-S16-1",
+      "round": "sweet_16",
+      "region": "South",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "S-E8-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "S-S16-2",
+      "round": "sweet_16",
+      "region": "South",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "S-E8-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "S-E8-1",
+      "round": "elite_8",
+      "region": "South",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "FF-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-R32-1",
+      "round": "round_of_32",
+      "region": "Midwest",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-S16-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-R32-2",
+      "round": "round_of_32",
+      "region": "Midwest",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-S16-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-R32-3",
+      "round": "round_of_32",
+      "region": "Midwest",
+      "bracket_order": 3,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-S16-2",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-R32-4",
+      "round": "round_of_32",
+      "region": "Midwest",
+      "bracket_order": 4,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-S16-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-S16-1",
+      "round": "sweet_16",
+      "region": "Midwest",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-E8-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "MW-S16-2",
+      "round": "sweet_16",
+      "region": "Midwest",
+      "bracket_order": 2,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "MW-E8-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "MW-E8-1",
+      "round": "elite_8",
+      "region": "Midwest",
+      "bracket_order": 1,
+      "scheduled_tip_utc": null,
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "FF-2",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "FF-1",
+      "round": "final_four",
+      "region": "Final Four",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-04-04T22:00:00.000Z",
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "NCG-1",
+        "winner_slot": "side_a"
+      }
+    },
+    {
+      "id": "FF-2",
+      "round": "final_four",
+      "region": "Final Four",
+      "bracket_order": 2,
+      "scheduled_tip_utc": "2026-04-05T00:30:00.000Z",
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null,
+      "feeds_into": {
+        "game_id": "NCG-1",
+        "winner_slot": "side_b"
+      }
+    },
+    {
+      "id": "NCG-1",
+      "round": "championship",
+      "region": "National Championship",
+      "bracket_order": 1,
+      "scheduled_tip_utc": "2026-04-07T00:50:00.000Z",
+      "side_a": {
+        "team_id": null,
+        "label": "bottom"
+      },
+      "side_b": {
+        "team_id": null,
+        "label": "top"
+      },
+      "favorite_team_id": null,
+      "spread_from_favorite_perspective": null
+    }
+  ]
+}
