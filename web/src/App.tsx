@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import type {
   BracketGame,
@@ -28,6 +28,86 @@ function decodeJwtPayload(credential: string): { email?: string; name?: string }
   } catch {
     return {};
   }
+}
+
+function UserAccountMenu({
+  displayName,
+  onSignOut,
+}: {
+  displayName: string;
+  onSignOut: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerId = "app-header-account-trigger";
+  const menuId = "app-header-account-menu";
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocPointer = (e: PointerEvent) => {
+      if (rootRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDocPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDocPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="app-header-user-menu" ref={rootRef}>
+      <button
+        id={triggerId}
+        type="button"
+        className="app-header-user-trigger"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="app-header-user-name">{displayName}</span>
+        <svg
+          className="app-header-user-chevron"
+          viewBox="0 0 12 12"
+          aria-hidden
+        >
+          <path
+            d="M3 4.5 L6 7.5 L9 4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open ? (
+        <div
+          id={menuId}
+          className="app-header-user-dropdown"
+          role="menu"
+          aria-labelledby={triggerId}
+        >
+          <button
+            type="button"
+            className="app-header-user-menu-item"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              onSignOut();
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 export default function App() {
@@ -116,11 +196,11 @@ export default function App() {
     return (
       <div className="login-screen">
         <div className="login-card">
+          <h1 className="sr-only">Spread Madness</h1>
           <div className="pp-brand">
             <span className="pp-mark">P</span>
-            <span>PrizePicks</span>
+            <span>Spread Madness</span>
           </div>
-          <h1>Spread Madness</h1>
           <p className="login-sub">POC — March Madness pool (ATS)</p>
 
           <div className="login-section">
@@ -183,47 +263,40 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="app-header-cluster">
+        <div className="app-header-top">
           <div className="pp-brand pp-brand-sm">
             <span className="pp-mark">P</span>
-            <span>PrizePicks</span>
+            <span>Spread Madness</span>
           </div>
-          <span className="app-title">Spread Madness</span>
-          <nav
-            className="app-header-tabs"
-            role="tablist"
-            aria-label="App sections"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mainTab === "bracket"}
-              className={`app-header-tab${mainTab === "bracket" ? " app-header-tab--active" : ""}`}
-              onClick={() => setMainTab("bracket")}
-            >
-              Bracket
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mainTab === "rules"}
-              className={`app-header-tab${mainTab === "rules" ? " app-header-tab--active" : ""}`}
-              onClick={() => setMainTab("rules")}
-            >
-              Rules
-            </button>
-          </nav>
+          <UserAccountMenu
+            displayName={session.label}
+            onSignOut={() => setSession(null)}
+          />
         </div>
-        <div className="header-right">
-          <span className="session-label">{session.label}</span>
+        <nav
+          className="app-header-tabs"
+          role="tablist"
+          aria-label="App sections"
+        >
           <button
             type="button"
-            className="btn-ghost"
-            onClick={() => setSession(null)}
+            role="tab"
+            aria-selected={mainTab === "bracket"}
+            className={`app-header-tab${mainTab === "bracket" ? " app-header-tab--active" : ""}`}
+            onClick={() => setMainTab("bracket")}
           >
-            Sign out
+            Bracket
           </button>
-        </div>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mainTab === "rules"}
+            className={`app-header-tab${mainTab === "rules" ? " app-header-tab--active" : ""}`}
+            onClick={() => setMainTab("rules")}
+          >
+            Rules
+          </button>
+        </nav>
       </header>
 
       <main className="bracket-main">

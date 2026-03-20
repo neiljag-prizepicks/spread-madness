@@ -54,4 +54,4 @@ npm run preview   # serve production build
 
 ## Brand
 
-Semantic colors match PrizePicks dark tokens (`index.css` / `App.css`). Swap logo mark in `App.tsx` for official assets when available.
+Semantic colors use the same dark token palette as the reference design (`index.css` / `App.css`). Swap the `P` mark in `App.tsx` for official assets when available.

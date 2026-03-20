@@ -60,9 +60,9 @@
   font-size: 1rem;
 }
 
-.login-card h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.75rem;
+.login-card .pp-brand {
+  font-size: 1.65rem;
+  margin-bottom: 0.35rem;
 }
 
 .login-sub {
@@ -147,21 +147,30 @@
 
 .app-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem 1rem;
-  padding: 0.75rem 1.25rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0.65rem 1.25rem 0.55rem;
   border-bottom: 1px solid var(--pp-border);
   background: var(--pp-bg-secondary);
-  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.app-header-cluster {
+.app-header-top {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.5rem 1rem;
+  justify-content: space-between;
+  /* Let space-between own the middle; keep a small floor so text never touches */
+  gap: 0.5rem;
+  width: 100%;
   min-width: 0;
+}
+
+/* Login card uses .pp-brand { margin-bottom: 1rem }; header must not inherit that */
+.app-header-top .pp-brand {
+  margin-bottom: 0;
 }
 
 .app-header-tabs {
@@ -192,17 +201,82 @@
   box-shadow: inset 0 -2px 0 0 var(--pp-action);
 }
 
-.app-title {
-  font-weight: 600;
-  color: var(--pp-fg-secondary);
+.app-header-user-menu {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.header-right {
-  display: flex;
+.app-header-user-trigger {
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.35rem;
+  max-width: min(14rem, 42vw);
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--pp-fg-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.app-header-user-trigger:hover,
+.app-header-user-trigger[aria-expanded="true"] {
+  color: var(--pp-fg-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-header-user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: inherit;
+  line-height: 1.2;
+}
+
+/* 1em square uses trigger font-size — same nominal size as the user name */
+.app-header-user-chevron {
   flex-shrink: 0;
-  margin-left: auto;
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
+  display: block;
+  opacity: 0.88;
+}
+
+.app-header-user-dropdown {
+  position: absolute;
+  top: calc(100% + 0.2rem);
+  right: 0;
+  min-width: 10rem;
+  padding: 0.25rem;
+  background: var(--pp-bg-secondary);
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+}
+
+.app-header-user-menu-item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  text-align: left;
+  color: var(--pp-fg-primary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.app-header-user-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .pool-rules-page {
@@ -261,11 +335,6 @@
 
 .pool-rules-li:last-child {
   margin-bottom: 0;
-}
-
-.session-label {
-  font-size: 0.85rem;
-  color: var(--pp-fg-accent);
 }
 
 .bracket-main {
