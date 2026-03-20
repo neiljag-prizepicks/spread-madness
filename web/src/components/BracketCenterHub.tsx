@@ -21,6 +21,7 @@ type HubProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
+  viewerUserId?: string | null;
   /** Optional class on outer triptych wrapper (desktop vs mobile spacing). */
   className?: string;
 };
@@ -34,6 +35,7 @@ export function BracketCenterHub({
   usersById,
   ownershipRows,
   results,
+  viewerUserId = null,
   className = "",
 }: HubProps) {
   const m = {
@@ -42,6 +44,7 @@ export function BracketCenterHub({
     usersById,
     ownershipRows,
     results,
+    viewerUserId,
   };
 
   return (

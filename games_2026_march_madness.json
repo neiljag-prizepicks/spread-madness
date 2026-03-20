@@ -596,8 +596,9 @@
       "bracket_order": 1,
       "scheduled_tip_utc": "2026-03-19T23:10:00.000Z",
       "side_a": {
-        "team_id": "MW16A",
-        "label": "bottom"
+        "team_id": null,
+        "label": "bottom",
+        "source_game_id": "MW-FF-2"
       },
       "side_b": {
         "team_id": "MW01",

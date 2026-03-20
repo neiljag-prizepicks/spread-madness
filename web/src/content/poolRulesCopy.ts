@@ -1,11 +1,27 @@
 /**
  * Pool rules (Rules tab). Use **double asterisks** for bold segments in strings.
  */
+/** Legend label colors — match `.birdseye-legend-*` in App.css */
+export type PoolRulesLegendClass =
+  | "pool-rules-legend-live"
+  | "pool-rules-legend-hit"
+  | "pool-rules-legend-miss"
+  | "pool-rules-legend-neutral";
+
+export type PoolRulesColorKeyBullet = {
+  legendClass: PoolRulesLegendClass;
+  label: string;
+  /** Text after the label; may use **bold** like other rules copy */
+  rest: string;
+};
+
 export type PoolRulesSection = {
   /** Optional h2 under the page title */
   heading?: string;
   paragraphs?: string[];
   bullets?: string[];
+  /** Color key lines: colored label + rest (same hues as bracket overview). */
+  colorKeyBullets?: PoolRulesColorKeyBullet[];
   /** Rendered after bullets when both exist (e.g. closing paragraph). */
   paragraphsAfterBullets?: string[];
 };
@@ -32,15 +48,31 @@ export const POOL_RULES_SECTIONS: PoolRulesSection[] = [
     ],
   },
   {
-    heading: "Color Key (after the game is final)",
+    heading: "Color Key",
     paragraphs: [
       "This matches the line above the bracket:",
     ],
-    bullets: [
-      "**Green** — You won pool control for that game (great for you on that square).",
-      "**Red** — You had a team in that game, but **someone else** won pool control; their initials are shown.",
-      "**Purple** — The game is final and **you weren’t** on either side in that matchup; initials are the pool winner for that game.",
-      "**Yellow** — The game is actively in progress and each team is controlled by their current owner.",
+    colorKeyBullets: [
+      {
+        legendClass: "pool-rules-legend-hit",
+        label: "Green",
+        rest: " — You won pool control for that game (great for you on that square).",
+      },
+      {
+        legendClass: "pool-rules-legend-miss",
+        label: "Red",
+        rest: " — You had a team in that game, but **someone else** won pool control; their initials are shown.",
+      },
+      {
+        legendClass: "pool-rules-legend-neutral",
+        label: "Purple",
+        rest: " — The game is final and **you weren’t** on either side in that matchup; initials are the pool winner for that game.",
+      },
+      {
+        legendClass: "pool-rules-legend-live",
+        label: "Yellow",
+        rest: " — The game is actively in progress and each team is controlled by their current owner.",
+      },
     ],
   },
 ];

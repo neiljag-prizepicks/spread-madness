@@ -19,6 +19,26 @@ export type OverviewSlotVisual = {
   initials: string;
 };
 
+/** Matches overview colors: green won pool / red lost ATS / purple not involved. */
+export type ViewerPoolOutcomeTone = "hit" | "miss" | "neutral";
+
+export function viewerPoolOutcomeTone(
+  viewerId: string | null | undefined,
+  poolOwnerUserId: string,
+  ta: string,
+  tb: string,
+  ownershipRows: OwnershipRow[]
+): ViewerPoolOutcomeTone {
+  const teamToUser = buildTeamToUserId(ownershipRows);
+  const userSides = [ta, tb];
+  const userInGame = viewerId
+    ? userSides.some((tid) => teamToUser.get(tid) === viewerId)
+    : false;
+  if (viewerId && poolOwnerUserId === viewerId) return "hit";
+  if (viewerId && userInGame) return "miss";
+  return "neutral";
+}
+
 function isGameFinal(
   game: BracketGame,
   gm: Map<string, BracketGame>,
@@ -111,12 +131,15 @@ export function overviewSlotVisual(
     userInitialsFromDisplayName(poolOwnerName) ||
     outcome.poolOwnerUserId.slice(0, 2).toUpperCase();
 
-  const userSides = [fa, fb];
-  const userInGame = viewerId
-    ? userSides.some((tid) => teamToUser.get(tid) === viewerId)
-    : false;
+  const tone = viewerPoolOutcomeTone(
+    viewerId,
+    outcome.poolOwnerUserId,
+    fa,
+    fb,
+    ownershipRows
+  );
 
-  if (viewerId && outcome.poolOwnerUserId === viewerId) {
+  if (tone === "hit" && viewerId) {
     const selfName =
       usersById.get(viewerId)?.display_name ?? displayName(viewerId);
     const ini =
@@ -128,7 +151,7 @@ export function overviewSlotVisual(
     };
   }
 
-  if (viewerId && userInGame) {
+  if (tone === "miss") {
     return { status: "miss", initials: poolOwnerInitials };
   }
 

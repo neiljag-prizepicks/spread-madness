@@ -1,5 +1,7 @@
+import { useLayoutEffect } from "react";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
+import { scrollHorizontallyToElement } from "../lib/regionBracketNavigation";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { BracketCenterHub } from "./BracketCenterHub";
 import { Matchup } from "./Matchup";
@@ -12,12 +14,14 @@ type MProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
+  viewerUserId?: string | null;
 };
 
-type Props = MProps & {
+/** Bracket shell + optional deep-link focus from My Teams (mock `viewerUserId` for overview picks). */
+export type KalshiBracketArenaProps = MProps & {
   games: BracketGame[];
-  /** Mock users contribute ✓/✕ on the mobile overview; Google sessions may omit. */
-  viewerUserId?: string | null;
+  focusGameId?: string | null;
+  onFocusGameConsumed?: () => void;
 };
 
 function sortByOrder(gs: BracketGame[]) {
@@ -32,8 +36,73 @@ export function KalshiBracketArena({
   ownershipRows,
   results,
   viewerUserId = null,
-}: Props) {
+  focusGameId = null,
+  onFocusGameConsumed,
+}: KalshiBracketArenaProps) {
   const isMobile = useMediaQuery("(max-width: 699px)");
+
+  useLayoutEffect(() => {
+    if (isMobile || !focusGameId || !onFocusGameConsumed) return;
+    const g = allGames.find((x) => x.id === focusGameId);
+    if (!g) {
+      onFocusGameConsumed();
+      return;
+    }
+
+    const finish = () => {
+      if (g.round === "first_four") {
+        const sec = document.querySelector(".first-four-section");
+        const el = sec?.querySelector(
+          `[data-game-id="${CSS.escape(g.id)}"]`
+        );
+        sec?.scrollIntoView({ behavior: "smooth", block: "start" });
+        el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        onFocusGameConsumed();
+        return;
+      }
+      if (g.round === "final_four" || g.round === "championship") {
+        const hub = document.querySelector(".kalshi-cell--center");
+        const el = hub?.querySelector(
+          `[data-game-id="${CSS.escape(g.id)}"]`
+        );
+        hub?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        onFocusGameConsumed();
+        return;
+      }
+      const reg = g.region;
+      if (
+        reg === "East" ||
+        reg === "South" ||
+        reg === "West" ||
+        reg === "Midwest"
+      ) {
+        const section = document.querySelector(
+          `section[data-kalshi-region="${CSS.escape(reg)}"]`
+        );
+        const scrollEl = section?.querySelector(
+          ".kalshi-quadrant-scroll"
+        ) as HTMLElement | null;
+        const target = scrollEl?.querySelector(
+          `[data-game-id="${CSS.escape(g.id)}"]`
+        ) as HTMLElement | null;
+        section?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        if (scrollEl && target) {
+          scrollHorizontallyToElement(scrollEl, target, {
+            behavior: "smooth",
+            align: "center",
+          });
+        }
+        onFocusGameConsumed();
+        return;
+      }
+      onFocusGameConsumed();
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(finish);
+    });
+  }, [isMobile, focusGameId, onFocusGameConsumed, allGames]);
 
   if (isMobile) {
     return (
@@ -45,6 +114,8 @@ export function KalshiBracketArena({
         ownershipRows={ownershipRows}
         results={results}
         viewerUserId={viewerUserId}
+        focusGameId={focusGameId}
+        onFocusGameConsumed={onFocusGameConsumed}
       />
     );
   }
@@ -55,6 +126,7 @@ export function KalshiBracketArena({
     usersById,
     ownershipRows,
     results,
+    viewerUserId,
   };
 
   const east = games.filter((g) => g.region === "East");
@@ -116,6 +188,7 @@ export function KalshiBracketArena({
                 usersById={usersById}
                 ownershipRows={ownershipRows}
                 results={results}
+                viewerUserId={viewerUserId}
               />
             ))}
           </div>

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   POOL_RULES_PAGE_TITLE,
   POOL_RULES_SECTIONS,
+  type PoolRulesColorKeyBullet,
 } from "../content/poolRulesCopy";
 
 function RichText({ text }: { text: string }) {
@@ -41,6 +42,16 @@ export function PoolRulesPage() {
                 <RichText text={p} />
               </p>
             ))}
+            {sec.colorKeyBullets && sec.colorKeyBullets.length > 0 ? (
+              <ul className="pool-rules-ul">
+                {sec.colorKeyBullets.map((b: PoolRulesColorKeyBullet, i) => (
+                  <li key={i} className="pool-rules-li">
+                    <strong className={b.legendClass}>{b.label}</strong>
+                    <RichText text={b.rest} />
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {sec.bullets && sec.bullets.length > 0 ? (
               <ul className="pool-rules-ul">
                 {sec.bullets.map((b, i) => (

@@ -19,6 +19,7 @@ type MProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
+  viewerUserId?: string | null;
 };
 
 export function RegionQuadrant({
@@ -78,6 +79,7 @@ export function RegionQuadrant({
     <section
       className={`kalshi-quadrant kalshi-quadrant--${flow}`}
       data-region={title}
+      data-kalshi-region={title}
     >
       <h2 className="kalshi-quadrant-title">{title}</h2>
       <nav

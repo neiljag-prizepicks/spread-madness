@@ -12,6 +12,7 @@ type MProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
+  viewerUserId?: string | null;
 };
 
 type TabKey = Exclude<BracketPane, "overview">;
@@ -29,9 +30,31 @@ function sortByOrder(gs: BracketGame[]) {
   return [...gs].sort((a, b) => a.bracket_order - b.bracket_order);
 }
 
+function mobilePaneForGame(
+  game: BracketGame,
+  hasFirstFourTab: boolean
+): Exclude<BracketPane, "overview"> {
+  if (game.round === "first_four") {
+    if (hasFirstFourTab) return "first-four";
+    const r = game.region;
+    if (r === "East" || r === "South" || r === "West" || r === "Midwest")
+      return r;
+    return "East";
+  }
+  if (game.round === "final_four" || game.round === "championship") {
+    return "final-four";
+  }
+  const r = game.region;
+  if (r === "East" || r === "South" || r === "West" || r === "Midwest")
+    return r;
+  return "East";
+}
+
 type Props = MProps & {
   games: BracketGame[];
   viewerUserId: string | null;
+  focusGameId?: string | null;
+  onFocusGameConsumed?: () => void;
 };
 
 export function MobileBracketExperience({
@@ -42,6 +65,8 @@ export function MobileBracketExperience({
   ownershipRows,
   results,
   viewerUserId,
+  focusGameId = null,
+  onFocusGameConsumed,
 }: Props) {
   const [pane, setPane] = useState<BracketPane>("overview");
 
@@ -68,6 +93,30 @@ export function MobileBracketExperience({
     }
   }, [pane, firstFourGames.length]);
 
+  useEffect(() => {
+    if (!focusGameId || !onFocusGameConsumed) return;
+    const g = allGames.find((x) => x.id === focusGameId);
+    if (!g) {
+      onFocusGameConsumed();
+      return;
+    }
+    const target = mobilePaneForGame(g, firstFourGames.length > 0);
+    setPane(target);
+    const id = g.id;
+    const tid = window.setTimeout(() => {
+      document
+        .querySelector(`[data-game-id="${CSS.escape(id)}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      onFocusGameConsumed();
+    }, 150);
+    return () => clearTimeout(tid);
+  }, [
+    focusGameId,
+    onFocusGameConsumed,
+    allGames,
+    firstFourGames.length,
+  ]);
+
   const ff1 = games.find((g) => g.id === "FF-1");
   const ff2 = games.find((g) => g.id === "FF-2");
   const ncg = games.filter((g) => g.round === "championship");
@@ -78,6 +127,7 @@ export function MobileBracketExperience({
     usersById,
     ownershipRows,
     results,
+    viewerUserId,
   };
 
   const openZone = useCallback((z: TabKey) => {

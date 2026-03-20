@@ -72,13 +72,13 @@
     }
   },
   "W-R64-2": {
-    "status": "in_progress",
-    "clock": "16:33 - 1st Half",
+    "status": "final",
+    "clock": null,
     "scores": {
-      "W08": 6,
-      "W09": 8
+      "W08": 76,
+      "W09": 86
     },
-    "scores_updated_at": "2026-03-20T20:20:15.909Z"
+    "scores_updated_at": "2026-03-20T22:29:14.397Z"
   },
   "W-R64-3": {
     "status": "final",
@@ -165,7 +165,7 @@
     "clock": null,
     "scores": {
       "MW01": 101,
-      "MW16A": 80
+      "MW16B": 80
     }
   },
   "MW-R64-2": {
@@ -185,13 +185,22 @@
     }
   },
   "MW-R64-4": {
-    "status": "in_progress",
-    "clock": "Halftime",
+    "status": "final",
+    "clock": null,
     "scores": {
-      "MW04": 37,
-      "MW13": 35
+      "MW04": 90,
+      "MW13": 70
     },
-    "scores_updated_at": "2026-03-20T20:08:08.229Z"
+    "scores_updated_at": "2026-03-20T21:26:47.124Z"
+  },
+  "MW-R64-5": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW06": 78,
+      "MW11A": 56
+    },
+    "scores_updated_at": "2026-03-20T22:33:16.268Z"
   },
   "MW-R64-6": {
     "status": "final",
@@ -211,12 +220,12 @@
     }
   },
   "MW-R64-8": {
-    "status": "in_progress",
-    "clock": "Halftime",
+    "status": "final",
+    "clock": null,
     "scores": {
-      "MW02": 55,
-      "MW15": 29
+      "MW02": 108,
+      "MW15": 74
     },
-    "scores_updated_at": "2026-03-20T20:06:07.234Z"
+    "scores_updated_at": "2026-03-20T21:20:44.362Z"
   }
 }

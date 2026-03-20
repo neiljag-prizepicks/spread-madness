@@ -148,12 +148,12 @@ export function BracketBirdseye({ onOpenZone, ...ctx }: Base) {
   return (
     <div className="birdseye-wrap">
       <p className="birdseye-hint">
-        <strong className="birdseye-legend-live">Yellow</strong> = live — each
-        team’s current owner (initials). When final:{" "}
-        <strong className="birdseye-legend-hit">green</strong> = you won pool
+        <strong className="birdseye-legend-live">Yellow</strong> = game is
+        actively in progress. When final:{" "}
+        <strong className="birdseye-legend-hit">green</strong> = you won
         control,{" "}
-        <strong className="birdseye-legend-miss">red</strong> = someone beat
-        you,{" "}
+        <strong className="birdseye-legend-miss">red</strong> = you lost
+        control,{" "}
         <strong className="birdseye-legend-neutral">purple</strong> = winner
         didn’t involve you.
       </p>

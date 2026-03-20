@@ -10,11 +10,15 @@ import type {
 import { normalizeResultsFileObject } from "./lib/gameResult";
 import { applyScheduleLineOverlayToGames } from "./lib/mergeGameOverlay";
 import type { OwnershipRow } from "./lib/ownershipMap";
-import { KalshiBracketArena } from "./components/KalshiBracketArena";
+import {
+  KalshiBracketArena,
+  type KalshiBracketArenaProps,
+} from "./components/KalshiBracketArena";
+import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
 import "./App.css";
 
-type MainTab = "bracket" | "rules";
+type MainTab = "bracket" | "my-teams" | "rules";
 
 type Session =
   | { kind: "mock"; userId: string; label: string }
@@ -119,6 +123,9 @@ export default function App() {
   const [results, setResults] = useState<Map<string, GameResult>>(new Map());
   const [loadError, setLoadError] = useState<string | null>(null);
   const [mainTab, setMainTab] = useState<MainTab>("bracket");
+  const [bracketFocusGameId, setBracketFocusGameId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const base = "/data";
@@ -290,6 +297,15 @@ export default function App() {
           <button
             type="button"
             role="tab"
+            aria-selected={mainTab === "my-teams"}
+            className={`app-header-tab${mainTab === "my-teams" ? " app-header-tab--active" : ""}`}
+            onClick={() => setMainTab("my-teams")}
+          >
+            My Teams
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={mainTab === "rules"}
             className={`app-header-tab${mainTab === "rules" ? " app-header-tab--active" : ""}`}
             onClick={() => setMainTab("rules")}
@@ -302,13 +318,32 @@ export default function App() {
       <main className="bracket-main">
         {mainTab === "bracket" ? (
           <KalshiBracketArena
+            {...({
+              games,
+              allGames: games,
+              teamsById,
+              usersById,
+              ownershipRows: ownership,
+              results,
+              viewerUserId:
+                session.kind === "mock" ? session.userId : null,
+              focusGameId: bracketFocusGameId,
+              onFocusGameConsumed: () => setBracketFocusGameId(null),
+            } satisfies KalshiBracketArenaProps)}
+          />
+        ) : mainTab === "my-teams" ? (
+          <MyTeamsPage
+            viewerUserId={session.kind === "mock" ? session.userId : null}
             games={games}
-            allGames={games}
+            results={results}
+            ownershipRows={ownership}
             teamsById={teamsById}
             usersById={usersById}
-            ownershipRows={ownership}
-            results={results}
-            viewerUserId={session.kind === "mock" ? session.userId : null}
+            onOpenGameInBracket={(gameId) => {
+              setMainTab("bracket");
+              setBracketFocusGameId(null);
+              requestAnimationFrame(() => setBracketFocusGameId(gameId));
+            }}
           />
         ) : (
           <PoolRulesPage />

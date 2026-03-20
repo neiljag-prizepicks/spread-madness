@@ -12,6 +12,7 @@ export type RegionalTreeProps = {
   usersById: Map<string, User>;
   ownershipRows: OwnershipRow[];
   results: Map<string, GameResult>;
+  viewerUserId?: string | null;
   roundAnchorRefs?: MutableRefObject<
     Partial<Record<RegionTreeRound, HTMLElement | null>>
   >;
@@ -44,6 +45,7 @@ function MatchupCol(props: { game: BracketGame } & MProps) {
       usersById={props.usersById}
       ownershipRows={props.ownershipRows}
       results={props.results}
+      viewerUserId={props.viewerUserId}
     />
   );
 }
