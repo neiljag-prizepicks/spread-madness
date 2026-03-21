@@ -4,6 +4,7 @@ import {
   RESULTS_PATHNAME,
   readLiveJson,
 } from "../lib/blobLive.mjs";
+import { blobReadWriteToken } from "../lib/blobToken.mjs";
 
 /** Prefer incoming request host so serverless fetch hits the same deployment / alias as the client. */
 function originFromReq(req) {
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = blobReadWriteToken();
   const site = originFromReq(req);
 
   let results =

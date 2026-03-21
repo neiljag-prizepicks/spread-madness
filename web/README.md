@@ -64,7 +64,7 @@ Deployment uses the **repo root** (`spreadMadness/`) so Vercel can run `api/` se
 
    | Variable | Purpose |
    |----------|---------|
-   | `BLOB_READ_WRITE_TOKEN` | Read/write live JSON in Blob (usually auto from linked store). |
+   | `BLOB_READ_WRITE_TOKEN` | Read/write live JSON in Blob (usually auto from linked store). If you only have a custom name, **`SPREAD_MADNESS_READ_WRITE_TOKEN`** is also accepted (same token value). |
    | `CRON_SECRET` | Long random string. Secures `/api/cron/update`; Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`. |
    | `SITE_URL` | Canonical public URL, e.g. `https://your-app.vercel.app` (used to fetch `/data/*.json` during cron). Recommended so cron always hits the right host. |
    | `VITE_LIVE_POLL=1` | **Build-time** — enables the app to poll **`/api/live/data`** every ~90s (override interval with `VITE_LIVE_POLL_MS` in ms). Redeploy after changing. |

@@ -10,6 +10,7 @@ import {
   readLiveJson,
   writeLiveJson,
 } from "../lib/blobLive.mjs";
+import { blobReadWriteToken } from "../lib/blobToken.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -49,12 +50,13 @@ export default async function handler(req, res) {
     return;
   }
 
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = blobReadWriteToken();
   if (!token) {
     res.statusCode = 500;
     res.end(
       JSON.stringify({
-        error: "Missing BLOB_READ_WRITE_TOKEN — link Vercel Blob in project storage.",
+        error:
+          "Missing Blob token — set BLOB_READ_WRITE_TOKEN (link Blob store) or SPREAD_MADNESS_READ_WRITE_TOKEN in project env.",
       })
     );
     return;
