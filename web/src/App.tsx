@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import {
   Link,
+  matchPath,
   Navigate,
   NavLink,
   Route,
@@ -30,11 +31,22 @@ import {
 import { auth, db, isFirebaseConfigured } from "./lib/firebase";
 import { normalizeResultsFileObject } from "./lib/gameResult";
 import {
+  subscribeGroupDocument,
   subscribeGroupMembers,
   subscribeGroupOwnership,
   subscribeUserGroups,
+  type GroupDoc,
   type UserGroupLinkDoc,
 } from "./lib/firestore/groupsApi";
+import { PHYSICAL_TEAM_ID_COUNT } from "./lib/groupConstants";
+import {
+  groupAssignPath,
+  groupBracketPath,
+  groupLeaderboardPath,
+  groupMyTeamsPath,
+  groupMyTeamsUserPath,
+  groupSettingsPath,
+} from "./lib/groupPaths";
 import { applyScheduleLineOverlayToGames } from "./lib/mergeGameOverlay";
 import type { OwnershipRow } from "./lib/ownershipMap";
 import {
@@ -43,6 +55,7 @@ import {
 } from "./components/KalshiBracketArena";
 import { GroupAssignmentPage } from "./components/GroupAssignmentPage";
 import { GroupHubPage } from "./components/GroupHubPage";
+import { GroupLeagueSettingsPage } from "./components/GroupLeagueSettingsPage";
 import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
@@ -65,6 +78,12 @@ function decodeJwtPayload(credential: string): { email?: string; name?: string }
   } catch {
     return {};
   }
+}
+
+/** Old `/group/:id/assign` → `/group/:id/settings/assign` */
+function LegacyGroupAssignToSettingsAssignRedirect() {
+  const { groupId } = useParams<{ groupId: string }>();
+  return <Navigate to={groupAssignPath(groupId ?? "")} replace />;
 }
 
 function UserAccountMenu({
@@ -282,7 +301,7 @@ function SpreadMadnessBrandMenu({
                   onClick={() => {
                     setOpen(false);
                     onSelectGroup(r.id);
-                    navigate("/bracket", { replace: true });
+                    navigate(groupBracketPath(r.id), { replace: true });
                   }}
                 >
                   {r.data.name}
@@ -301,6 +320,30 @@ const LIVE_POLL_MS = Number(
 );
 
 type BracketLocationState = { focusGameId?: string };
+
+function LegacyMyTeamsUserRedirect({
+  activeGroupId,
+}: {
+  activeGroupId: string | null;
+}) {
+  const { userId } = useParams<{ userId: string }>();
+  if (!activeGroupId || !userId) {
+    return <Navigate to="/groups" replace />;
+  }
+  return (
+    <Navigate to={groupMyTeamsUserPath(activeGroupId, userId)} replace />
+  );
+}
+
+function RedirectMockGroupMyTeamsUser() {
+  const { userId } = useParams<{ userId: string }>();
+  return (
+    <Navigate
+      to={`/my-teams/user/${encodeURIComponent(userId ?? "")}`}
+      replace
+    />
+  );
+}
 
 type MyTeamsRouteProps = {
   session: Session;
@@ -323,7 +366,10 @@ function MyTeamsRoute({
   rosterUsers: rosterUsersProp,
 }: MyTeamsRouteProps) {
   const navigate = useNavigate();
-  const { userId: userIdParam } = useParams<{ userId: string }>();
+  const { groupId: groupIdParam, userId: userIdParam } = useParams<{
+    groupId?: string;
+    userId?: string;
+  }>();
 
   const resolved = useMemo(() => {
     if (userIdParam !== undefined) {
@@ -383,15 +429,24 @@ function MyTeamsRoute({
           (session.kind === "mock" && session.userId === userId) ||
           (session.kind === "google" && session.uid === userId)
         ) {
-          navigate("/my-teams");
+          navigate(
+            groupIdParam ? groupMyTeamsPath(groupIdParam) : "/my-teams"
+          );
         } else {
-          navigate(`/my-teams/user/${encodeURIComponent(userId)}`);
+          navigate(
+            groupIdParam
+              ? groupMyTeamsUserPath(groupIdParam, userId)
+              : `/my-teams/user/${encodeURIComponent(userId)}`
+          );
         }
       }}
       onOpenGameInBracket={(gameId) => {
-        navigate("/bracket", {
-          state: { focusGameId: gameId },
-        });
+        navigate(
+          groupIdParam ? groupBracketPath(groupIdParam) : "/bracket",
+          {
+            state: { focusGameId: gameId },
+          }
+        );
       }}
     />
   );
@@ -424,10 +479,49 @@ export default function App() {
     OwnershipRow[]
   >([]);
   const [memberUsers, setMemberUsers] = useState<Map<string, User>>(new Map());
+  const [activeGroupDoc, setActiveGroupDoc] = useState<GroupDoc | null>(null);
+
+  const mockRowRef = useRef<HTMLDivElement>(null);
+  const loginCardRef = useRef<HTMLDivElement>(null);
+  const [googleLoginWidth, setGoogleLoginWidth] = useState(200);
+
+  /**
+   * Match GSI button width to the mock **row** (same as full-width dropdown on mobile, and
+   * dropdown + “Enter league” on desktop). Measuring only the `<select>` was too narrow when
+   * the button sat beside it. Clamp to card content width to avoid horizontal bleed.
+   */
+  useLayoutEffect(() => {
+    if (session !== null) return;
+    const rowEl = mockRowRef.current;
+    const cardEl = loginCardRef.current;
+    if (!rowEl || !cardEl) return;
+
+    const cardContentWidth = (card: HTMLElement) => {
+      const s = getComputedStyle(card);
+      return (
+        card.clientWidth -
+        parseFloat(s.paddingLeft) -
+        parseFloat(s.paddingRight)
+      );
+    };
+
+    const sync = () => {
+      const inner = cardContentWidth(cardEl);
+      const rowW = rowEl.getBoundingClientRect().width;
+      const w = Math.min(rowW, inner, 400);
+      setGoogleLoginWidth(Math.round(Math.max(160, w)));
+    };
+
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(rowEl);
+    ro.observe(cardEl);
+    return () => ro.disconnect();
+  }, [session]);
 
   /** Apply focus from router state (e.g. My Teams → bracket) and clear state so refresh/back behave. */
   useEffect(() => {
-    if (location.pathname !== "/bracket") return;
+    if (!location.pathname.endsWith("/bracket")) return;
     const focus = (location.state as BracketLocationState | null)?.focusGameId;
     if (!focus) return;
     setBracketFocusGameId(null);
@@ -537,13 +631,26 @@ export default function App() {
       writeStoredActiveGroupId(null);
       return;
     }
+    const m = matchPath(
+      { path: "/group/:groupId/*", end: false },
+      location.pathname
+    );
+    const urlId = m?.params.groupId;
+    if (urlId) {
+      if (userGroupRows.some((r) => r.id === urlId)) {
+        setActiveGroupId(urlId);
+      } else {
+        navigate("/groups", { replace: true });
+      }
+      return;
+    }
     setActiveGroupId((prev) => {
       if (prev && userGroupRows.some((r) => r.id === prev)) return prev;
       const stored = readStoredActiveGroupId();
       if (stored && userGroupRows.some((r) => r.id === stored)) return stored;
       return userGroupRows[0].id;
     });
-  }, [session, userGroupRows]);
+  }, [session, userGroupRows, location.pathname, navigate]);
 
   useEffect(() => {
     if (session?.kind !== "google") return;
@@ -578,10 +685,32 @@ export default function App() {
     return () => unsub();
   }, [db, activeGroupId, session?.kind]);
 
+  useEffect(() => {
+    if (!db || !activeGroupId || session?.kind !== "google") {
+      setActiveGroupDoc(null);
+      return;
+    }
+    const unsub = subscribeGroupDocument(db, activeGroupId, setActiveGroupDoc);
+    return () => {
+      unsub();
+      setActiveGroupDoc(null);
+    };
+  }, [db, activeGroupId, session?.kind]);
+
   const firebaseGroupMode =
     isFirebaseConfigured() &&
     session?.kind === "google" &&
     Boolean(session.uid);
+
+  const bracketPrivateInvite = useMemo(() => {
+    if (!firebaseGroupMode || !activeGroupDoc) return null;
+    if (activeGroupDoc.visibility !== "private") return null;
+    if (activeGroupDoc.memberCount >= activeGroupDoc.maxMembers) return null;
+    return {
+      joinCode: activeGroupDoc.joinCode?.trim() || "—",
+      password: activeGroupDoc.joinPassword || "—",
+    };
+  }, [firebaseGroupMode, activeGroupDoc]);
 
   useEffect(() => {
     if (!firebaseGroupMode || userGroupRows.length > 0) return;
@@ -590,7 +719,8 @@ export default function App() {
     if (
       p.startsWith("/bracket") ||
       p.startsWith("/my-teams") ||
-      p.startsWith("/leaderboard")
+      p.startsWith("/leaderboard") ||
+      p.startsWith("/group/")
     ) {
       navigate("/groups", { replace: true });
     }
@@ -623,6 +753,31 @@ export default function App() {
     }
     return ownership;
   }, [session, ownership, firestoreOwnership, activeGroupId]);
+
+  const groupTeamsUnassigned = useMemo(() => {
+    if (
+      !firebaseGroupMode ||
+      !activeGroupId ||
+      effectiveOwnership.length >= PHYSICAL_TEAM_ID_COUNT
+    ) {
+      return null;
+    }
+    const row = userGroupRows.find((r) => r.id === activeGroupId);
+    return {
+      joined: memberUsers.size,
+      max: row?.data.memberCap ?? memberUsers.size,
+      isAdmin: row?.data.role === "admin",
+      assignPath: groupAssignPath(activeGroupId),
+      privateInvite: bracketPrivateInvite ?? undefined,
+    };
+  }, [
+    firebaseGroupMode,
+    activeGroupId,
+    effectiveOwnership,
+    userGroupRows,
+    memberUsers,
+    bracketPrivateInvite,
+  ]);
 
   const leaderboardUsers = useMemo(() => {
     if (
@@ -673,7 +828,7 @@ export default function App() {
         kind: "google",
         label: p.name ?? p.email ?? "Google user",
       });
-      navigate("/bracket", { replace: true });
+      navigate("/groups", { replace: true });
     }
   };
 
@@ -701,9 +856,22 @@ export default function App() {
     );
   }
 
-  const myTeamsTabActive =
-    location.pathname === "/my-teams" ||
-    location.pathname.startsWith("/my-teams/user/");
+  const groupNavBase =
+    firebaseGroupMode && activeGroupId ? activeGroupId : null;
+
+  const myTeamsTabActive = groupNavBase
+    ? Boolean(
+        matchPath(
+          { path: "/group/:groupId/my-teams", end: true },
+          location.pathname
+        ) ||
+          matchPath(
+            { path: "/group/:groupId/my-teams/user/:userId", end: true },
+            location.pathname
+          )
+      )
+    : location.pathname === "/my-teams" ||
+      location.pathname.startsWith("/my-teams/user/");
 
   const isRulesPage = location.pathname === "/rules";
   const isGroupsHome = location.pathname === "/groups";
@@ -712,7 +880,7 @@ export default function App() {
   if (!session) {
     return (
       <div className="login-screen">
-        <div className="login-card">
+        <div ref={loginCardRef} className="login-card">
           <h1 className="sr-only">Spread Madness</h1>
           <div className="pp-brand">
             <span className="pp-mark">P</span>
@@ -722,7 +890,7 @@ export default function App() {
 
           <div className="login-section">
             <h2>Mock login (internal demo)</h2>
-            <div className="mock-row">
+            <div ref={mockRowRef} className="mock-row">
               <select
                 id="mock-user"
                 className="mock-select"
@@ -750,7 +918,7 @@ export default function App() {
                         userId: u.id,
                         label: u.display_name,
                       });
-                      navigate("/bracket", { replace: true });
+                      navigate("/groups", { replace: true });
                     })();
                   }
                 }}
@@ -763,11 +931,14 @@ export default function App() {
           {googleClientId && (
             <div className="login-section">
               <h2>Google</h2>
-              <GoogleLogin
-                onSuccess={onGoogleSuccess}
-                onError={() => console.warn("Google login failed")}
-                useOneTap={false}
-              />
+              <div className="login-google-button-host">
+                <GoogleLogin
+                  onSuccess={onGoogleSuccess}
+                  onError={() => console.warn("Google login failed")}
+                  useOneTap={false}
+                  width={googleLoginWidth}
+                />
+              </div>
             </div>
           )}
 
@@ -788,6 +959,53 @@ export default function App() {
     writeStoredActiveGroupId(null);
   };
 
+  const bracketArenaProps = {
+    games,
+    allGames: games,
+    teamsById,
+    usersById: mergedUsersById,
+    ownershipRows: effectiveOwnership,
+    results,
+    viewerUserId:
+      session.kind === "mock" ? session.userId : session.uid ?? null,
+    focusGameId: bracketFocusGameId,
+    onFocusGameConsumed: () => setBracketFocusGameId(null),
+    groupTeamsUnassigned,
+    bracketPrivateInvite: groupTeamsUnassigned ? null : bracketPrivateInvite,
+  } satisfies KalshiBracketArenaProps;
+
+  const bracketNavPath = groupNavBase
+    ? groupBracketPath(groupNavBase)
+    : "/bracket";
+  const myTeamsNavPath = groupNavBase
+    ? groupMyTeamsPath(groupNavBase)
+    : "/my-teams";
+  const leaderboardNavPath = groupNavBase
+    ? groupLeaderboardPath(groupNavBase)
+    : "/leaderboard";
+  const settingsNavPath = groupNavBase
+    ? groupSettingsPath(groupNavBase)
+    : "/groups";
+
+  const isActiveGroupAdmin = Boolean(
+    groupNavBase &&
+      userGroupRows.some(
+        (r) => r.id === groupNavBase && r.data.role === "admin"
+      )
+  );
+
+  const bracketTabActive = groupNavBase
+    ? location.pathname === bracketNavPath
+    : location.pathname === "/bracket";
+  const leaderboardTabActive = groupNavBase
+    ? location.pathname === leaderboardNavPath
+    : location.pathname === "/leaderboard";
+  const settingsTabActive = Boolean(
+    groupNavBase &&
+      (location.pathname === settingsNavPath ||
+        location.pathname === groupAssignPath(groupNavBase))
+  );
+
   return (
     <div className="app">
       <header
@@ -804,7 +1022,7 @@ export default function App() {
                   if (typeof window !== "undefined" && window.history.length > 1) {
                     navigate(-1);
                   } else {
-                    navigate("/bracket");
+                    navigate(bracketNavPath);
                   }
                 }}
               >
@@ -856,17 +1074,17 @@ export default function App() {
             aria-label="App sections"
           >
             <NavLink
-              to="/bracket"
+              to={bracketNavPath}
               role="tab"
-              aria-selected={location.pathname === "/bracket"}
-              className={({ isActive }) =>
-                `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+              aria-selected={bracketTabActive}
+              className={() =>
+                `app-header-tab${bracketTabActive ? " app-header-tab--active" : ""}`
               }
             >
               Bracket
             </NavLink>
             <NavLink
-              to="/my-teams"
+              to={myTeamsNavPath}
               role="tab"
               aria-selected={myTeamsTabActive}
               className={() =>
@@ -876,15 +1094,27 @@ export default function App() {
               My Teams
             </NavLink>
             <NavLink
-              to="/leaderboard"
+              to={leaderboardNavPath}
               role="tab"
-              aria-selected={location.pathname === "/leaderboard"}
-              className={({ isActive }) =>
-                `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+              aria-selected={leaderboardTabActive}
+              className={() =>
+                `app-header-tab${leaderboardTabActive ? " app-header-tab--active" : ""}`
               }
             >
               Leaderboard
             </NavLink>
+            {isActiveGroupAdmin ? (
+              <NavLink
+                to={settingsNavPath}
+                role="tab"
+                aria-selected={settingsTabActive}
+                className={() =>
+                  `app-header-tab${settingsTabActive ? " app-header-tab--active" : ""}`
+                }
+              >
+                Settings
+              </NavLink>
+            ) : null}
           </nav>
         ) : null}
       </header>
@@ -925,7 +1155,13 @@ export default function App() {
         <Routes>
           <Route
             path="/"
-            element={<Navigate to="/bracket" replace />}
+            element={
+              firebaseGroupMode ? (
+                <Navigate to="/groups" replace />
+              ) : (
+                <Navigate to="/bracket" replace />
+              )
+            }
           />
           <Route
             path="/groups"
@@ -936,7 +1172,7 @@ export default function App() {
                   displayName={session.label}
                   onEnterGroup={(id) => {
                     setActiveGroupId(id);
-                    navigate("/bracket", { replace: true });
+                    navigate(groupBracketPath(id), { replace: true });
                   }}
                 />
               ) : (
@@ -945,7 +1181,7 @@ export default function App() {
             }
           />
           <Route
-            path="/groups/:groupId/assign"
+            path="/group/:groupId/settings/assign"
             element={
               session.kind === "google" && session.uid ? (
                 <GroupAssignmentPage
@@ -960,70 +1196,165 @@ export default function App() {
             }
           />
           <Route
+            path="/group/:groupId/assign"
+            element={<LegacyGroupAssignToSettingsAssignRedirect />}
+          />
+          <Route
+            path="/group/:groupId/settings"
+            element={
+              session.kind === "google" && session.uid ? (
+                <GroupLeagueSettingsPage uid={session.uid} />
+              ) : (
+                <Navigate to="/groups" replace />
+              )
+            }
+          />
+          <Route
+            path="/group/:groupId/bracket"
+            element={
+              session.kind === "mock" || !firebaseGroupMode ? (
+                <Navigate to="/bracket" replace />
+              ) : (
+                <KalshiBracketArena {...bracketArenaProps} />
+              )
+            }
+          />
+          <Route
+            path="/group/:groupId/my-teams/user/:userId"
+            element={
+              session.kind === "mock" || !firebaseGroupMode ? (
+                <RedirectMockGroupMyTeamsUser />
+              ) : (
+                <MyTeamsRoute
+                  session={session}
+                  games={games}
+                  results={results}
+                  ownership={effectiveOwnership}
+                  teamsById={teamsById}
+                  usersById={mergedUsersById}
+                  rosterUsers={rosterUsersForGroup}
+                />
+              )
+            }
+          />
+          <Route
+            path="/group/:groupId/my-teams"
+            element={
+              session.kind === "mock" || !firebaseGroupMode ? (
+                <Navigate to="/my-teams" replace />
+              ) : (
+                <MyTeamsRoute
+                  session={session}
+                  games={games}
+                  results={results}
+                  ownership={effectiveOwnership}
+                  teamsById={teamsById}
+                  usersById={mergedUsersById}
+                  rosterUsers={rosterUsersForGroup}
+                />
+              )
+            }
+          />
+          <Route
+            path="/group/:groupId/leaderboard"
+            element={
+              session.kind === "mock" || !firebaseGroupMode ? (
+                <Navigate to="/leaderboard" replace />
+              ) : (
+                <LeaderboardPage
+                  users={leaderboardUsers}
+                  games={games}
+                  results={results}
+                  ownershipRows={effectiveOwnership}
+                  teamsById={teamsById}
+                />
+              )
+            }
+          />
+          <Route
             path="/bracket"
             element={
-              <KalshiBracketArena
-                {...({
-                  games,
-                  allGames: games,
-                  teamsById,
-                  usersById: mergedUsersById,
-                  ownershipRows: effectiveOwnership,
-                  results,
-                  viewerUserId:
-                    session.kind === "mock"
-                      ? session.userId
-                      : session.uid ?? null,
-                  focusGameId: bracketFocusGameId,
-                  onFocusGameConsumed: () => setBracketFocusGameId(null),
-                } satisfies KalshiBracketArenaProps)}
-              />
+              firebaseGroupMode ? (
+                activeGroupId ? (
+                  <Navigate to={groupBracketPath(activeGroupId)} replace />
+                ) : (
+                  <Navigate to="/groups" replace />
+                )
+              ) : (
+                <KalshiBracketArena {...bracketArenaProps} />
+              )
             }
           />
           <Route
             path="/my-teams/user/:userId"
             element={
-              <MyTeamsRoute
-                session={session}
-                games={games}
-                results={results}
-                ownership={effectiveOwnership}
-                teamsById={teamsById}
-                usersById={mergedUsersById}
-                rosterUsers={rosterUsersForGroup}
-              />
+              firebaseGroupMode ? (
+                <LegacyMyTeamsUserRedirect activeGroupId={activeGroupId} />
+              ) : (
+                <MyTeamsRoute
+                  session={session}
+                  games={games}
+                  results={results}
+                  ownership={effectiveOwnership}
+                  teamsById={teamsById}
+                  usersById={mergedUsersById}
+                  rosterUsers={rosterUsersForGroup}
+                />
+              )
             }
           />
           <Route
             path="/my-teams"
             element={
-              <MyTeamsRoute
-                session={session}
-                games={games}
-                results={results}
-                ownership={effectiveOwnership}
-                teamsById={teamsById}
-                usersById={mergedUsersById}
-                rosterUsers={rosterUsersForGroup}
-              />
+              firebaseGroupMode ? (
+                activeGroupId ? (
+                  <Navigate to={groupMyTeamsPath(activeGroupId)} replace />
+                ) : (
+                  <Navigate to="/groups" replace />
+                )
+              ) : (
+                <MyTeamsRoute
+                  session={session}
+                  games={games}
+                  results={results}
+                  ownership={effectiveOwnership}
+                  teamsById={teamsById}
+                  usersById={mergedUsersById}
+                  rosterUsers={rosterUsersForGroup}
+                />
+              )
             }
           />
           <Route
             path="/leaderboard"
             element={
-              <LeaderboardPage
-                users={leaderboardUsers}
-                games={games}
-                results={results}
-                ownershipRows={effectiveOwnership}
-                teamsById={teamsById}
-              />
+              firebaseGroupMode ? (
+                activeGroupId ? (
+                  <Navigate to={groupLeaderboardPath(activeGroupId)} replace />
+                ) : (
+                  <Navigate to="/groups" replace />
+                )
+              ) : (
+                <LeaderboardPage
+                  users={leaderboardUsers}
+                  games={games}
+                  results={results}
+                  ownershipRows={effectiveOwnership}
+                  teamsById={teamsById}
+                />
+              )
             }
           />
           <Route path="/rules" element={<PoolRulesPage />} />
           <Route
             path="*"
-            element={<Navigate to="/bracket" replace />}
+            element={
+              firebaseGroupMode ? (
+                <Navigate to="/groups" replace />
+              ) : (
+                <Navigate to="/bracket" replace />
+              )
+            }
           />
         </Routes>
       </main>

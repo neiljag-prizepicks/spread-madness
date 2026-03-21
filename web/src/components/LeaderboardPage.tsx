@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { groupMyTeamsUserPath } from "../lib/groupPaths";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import {
@@ -97,6 +98,7 @@ export function LeaderboardPage({
   ownershipRows,
   teamsById,
 }: Props) {
+  const { groupId } = useParams<{ groupId?: string }>();
   const rows = useMemo(
     () =>
       buildLeaderboardRows(users, games, results, ownershipRows, teamsById),
@@ -165,7 +167,11 @@ export function LeaderboardPage({
                 <td className="leaderboard-col-player">
                   <Link
                     className="leaderboard-col-player-link"
-                    to={`/my-teams/user/${encodeURIComponent(r.userId)}`}
+                    to={
+                      groupId
+                        ? groupMyTeamsUserPath(groupId, r.userId)
+                        : `/my-teams/user/${encodeURIComponent(r.userId)}`
+                    }
                   >
                     <span className="leaderboard-col-player-link-text">
                       {r.displayName}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { groupLeaderboardPath } from "../lib/groupPaths";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import { buildMyTeamsSections, type MyTeamRow } from "../lib/myTeams";
@@ -8,7 +9,7 @@ type MyTeamsPerspective = "self" | "peer";
 
 type Props = {
   viewerUserId: string | null;
-  /** True when `/my-teams/user/:id` does not match a roster user. */
+  /** True when my-teams peer route does not match a roster user. */
   userNotFound?: boolean;
   /** First-person vs third-person section copy. */
   perspective?: MyTeamsPerspective;
@@ -196,6 +197,7 @@ export function MyTeamsPage({
   onSelectRosterUser,
   onOpenGameInBracket,
 }: Props) {
+  const { groupId } = useParams<{ groupId?: string }>();
   const { active, changedControl, lost } = useMemo(() => {
     if (!viewerUserId) {
       return {
@@ -220,7 +222,12 @@ export function MyTeamsPage({
         <h1 className="my-teams-page-title">My Teams</h1>
         <p className="my-teams-page-lead">
           No player found with that ID.{" "}
-          <Link className="my-teams-inline-link" to="/leaderboard">
+          <Link
+            className="my-teams-inline-link"
+            to={
+              groupId ? groupLeaderboardPath(groupId) : "/leaderboard"
+            }
+          >
             Back to Leaderboard
           </Link>
         </p>

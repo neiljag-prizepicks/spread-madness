@@ -3,6 +3,11 @@ import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import { scrollHorizontallyToElement } from "../lib/regionBracketNavigation";
 import { useMediaQuery } from "../hooks/useMediaQuery";
+import {
+  BracketPrivateInviteLines,
+  GroupTeamsUnassignedHint,
+  type GroupTeamsUnassignedHintProps,
+} from "./BracketBirdseye";
 import { BracketCenterHub } from "./BracketCenterHub";
 import { Matchup } from "./Matchup";
 import { MobileBracketExperience } from "./MobileBracketExperience";
@@ -22,6 +27,10 @@ export type KalshiBracketArenaProps = MProps & {
   games: BracketGame[];
   focusGameId?: string | null;
   onFocusGameConsumed?: () => void;
+  /** Firestore group: show setup message instead of overview color key until all teams are assigned. */
+  groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
+  /** Private group not full: show invite lines when teams are already assigned (no unassigned hint). */
+  bracketPrivateInvite?: { joinCode: string; password: string } | null;
 };
 
 function sortByOrder(gs: BracketGame[]) {
@@ -38,6 +47,8 @@ export function KalshiBracketArena({
   viewerUserId = null,
   focusGameId = null,
   onFocusGameConsumed,
+  groupTeamsUnassigned = null,
+  bracketPrivateInvite = null,
 }: KalshiBracketArenaProps) {
   const isMobile = useMediaQuery("(max-width: 699px)");
 
@@ -116,6 +127,8 @@ export function KalshiBracketArena({
         viewerUserId={viewerUserId}
         focusGameId={focusGameId}
         onFocusGameConsumed={onFocusGameConsumed}
+        groupTeamsUnassigned={groupTeamsUnassigned}
+        bracketPrivateInvite={bracketPrivateInvite}
       />
     );
   }
@@ -144,6 +157,11 @@ export function KalshiBracketArena({
 
   return (
     <>
+      {groupTeamsUnassigned ? (
+        <GroupTeamsUnassignedHint {...groupTeamsUnassigned} />
+      ) : bracketPrivateInvite ? (
+        <BracketPrivateInviteLines {...bracketPrivateInvite} />
+      ) : null}
       <div className="kalshi-arena" data-layout="kalshi">
         <div className="kalshi-cell kalshi-cell--east">
           <RegionQuadrant title="East" games={east} flow="ltr" {...mprops} />

@@ -21,6 +21,7 @@ import {
   type GroupMemberCap,
 } from "../lib/groupConstants";
 import type { OwnershipRow } from "../lib/ownershipMap";
+import { groupBracketPath, groupSettingsPath } from "../lib/groupPaths";
 
 type Props = {
   uid: string;
@@ -153,6 +154,13 @@ export function GroupAssignmentPage({
     return true;
   }, [local, memberCap, members, ffPairMap, allTeamIds.length]);
 
+  /** Same condition as the “Waiting for … more member(s)” line — group not full yet. */
+  const waitingForMoreMembers = Boolean(
+    members.length > 0 &&
+      memberCap != null &&
+      members.length !== memberCap
+  );
+
   const handleRandomize = () => {
     setError(null);
     try {
@@ -200,7 +208,7 @@ export function GroupAssignmentPage({
     setError(null);
     try {
       await setGroupOwnership(db, groupId, local);
-      navigate("/bracket", { replace: true });
+      navigate(groupBracketPath(groupId), { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -259,12 +267,12 @@ export function GroupAssignmentPage({
             type="button"
             className="btn-primary"
             onClick={() => void handleSave()}
-            disabled={!countsOk || saving}
+            disabled={!countsOk || saving || waitingForMoreMembers}
           >
             {saving ? "Saving…" : "Save & go to bracket"}
           </button>
-          <Link to="/groups" className="btn-ghost">
-            Back
+          <Link to={groupSettingsPath(groupId)} className="btn-ghost">
+            League settings
           </Link>
         </div>
       </header>
@@ -275,11 +283,9 @@ export function GroupAssignmentPage({
         </div>
       ) : null}
 
-      {members.length > 0 &&
-      memberCap &&
-      members.length !== memberCap ? (
+      {waitingForMoreMembers ? (
         <p className="group-hub-error">
-          Waiting for {memberCap - members.length} more member(s) before
+          Waiting for {(memberCap ?? 0) - members.length} more member(s) before
           assignment is valid.
         </p>
       ) : null}

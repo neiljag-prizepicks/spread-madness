@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
-import { BracketBirdseye, type BracketPane } from "./BracketBirdseye";
+import {
+  BracketBirdseye,
+  BracketPrivateInviteLines,
+  type BracketPane,
+  type GroupTeamsUnassignedHintProps,
+} from "./BracketBirdseye";
 import { BracketCenterHub } from "./BracketCenterHub";
 import { Matchup } from "./Matchup";
 import { RegionQuadrant } from "./RegionQuadrant";
@@ -55,6 +60,8 @@ type Props = MProps & {
   viewerUserId: string | null;
   focusGameId?: string | null;
   onFocusGameConsumed?: () => void;
+  groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
+  bracketPrivateInvite?: { joinCode: string; password: string } | null;
 };
 
 export function MobileBracketExperience({
@@ -67,6 +74,8 @@ export function MobileBracketExperience({
   viewerUserId,
   focusGameId = null,
   onFocusGameConsumed,
+  groupTeamsUnassigned = null,
+  bracketPrivateInvite = null,
 }: Props) {
   const [pane, setPane] = useState<BracketPane>("overview");
 
@@ -143,11 +152,15 @@ export function MobileBracketExperience({
     results,
     viewerUserId,
     onOpenZone: openZone,
+    groupTeamsUnassigned,
   };
 
   if (pane === "overview") {
     return (
       <div className="mobile-bracket-root mobile-bracket-root--overview">
+        {bracketPrivateInvite && !groupTeamsUnassigned ? (
+          <BracketPrivateInviteLines {...bracketPrivateInvite} />
+        ) : null}
         <BracketBirdseye {...ctx} />
       </div>
     );
@@ -180,6 +193,11 @@ export function MobileBracketExperience({
       </div>
 
       <div className="mobile-bracket-detail" role="tabpanel">
+        {bracketPrivateInvite ? (
+          <div className="mobile-bracket-private-invite">
+            <BracketPrivateInviteLines {...bracketPrivateInvite} />
+          </div>
+        ) : null}
         {pane === "East" && (
           <RegionQuadrant title="East" games={east} flow="ltr" {...mprops} />
         )}

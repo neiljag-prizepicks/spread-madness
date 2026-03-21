@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   increment,
   limit,
@@ -8,8 +9,10 @@ import {
   query,
   runTransaction,
   Timestamp,
+  updateDoc,
   where,
   writeBatch,
+  type DocumentReference,
   type Firestore,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -265,6 +268,52 @@ export function subscribeGroupMembers(
   );
 }
 
+/** Live group document (visibility, join code/password, counts). */
+export function subscribeGroupDocument(
+  firestore: Firestore,
+  groupId: string,
+  onNext: (data: GroupDoc | null) => void,
+  onError?: (e: Error) => void
+): Unsubscribe {
+  return onSnapshot(
+    doc(firestore, "groups", groupId),
+    (snap) => {
+      if (!snap.exists()) {
+        onNext(null);
+        return;
+      }
+      onNext(snap.data() as GroupDoc);
+    },
+    onError
+  );
+}
+
+export async function updatePrivateGroupPassword(
+  firestore: Firestore,
+  groupId: string,
+  adminUid: string,
+  newPassword: string
+): Promise<void> {
+  const trimmed = newPassword.trim();
+  if (!trimmed) throw new Error("Password cannot be empty.");
+
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only group admins can change the password.");
+  }
+
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+  const g = gSnap.data() as GroupDoc;
+  if (g.visibility !== "private") {
+    throw new Error("This group is not private.");
+  }
+
+  await updateDoc(gRef, { joinPassword: trimmed });
+}
+
 export async function setGroupOwnership(
   firestore: Firestore,
   groupId: string,
@@ -276,4 +325,94 @@ export async function setGroupOwnership(
     batch.set(ref, { userId: user_id });
   }
   await batch.commit();
+}
+
+/** Admin removes another member. Fails if the player still has teams in ownership. */
+export async function removeGroupMember(
+  firestore: Firestore,
+  groupId: string,
+  targetUid: string,
+  adminUid: string
+): Promise<void> {
+  if (targetUid === adminUid) {
+    throw new Error("You cannot remove yourself here.");
+  }
+
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only group admins can remove members.");
+  }
+
+  const membersSnap = await getDocs(
+    collection(firestore, "groups", groupId, "members")
+  );
+  const targetDoc = membersSnap.docs.find((d) => d.id === targetUid);
+  if (!targetDoc) throw new Error("That player is not in this group.");
+
+  const adminCount = membersSnap.docs.filter(
+    (d) => (d.data() as MemberDoc).role === "admin"
+  ).length;
+  const targetRole = (targetDoc.data() as MemberDoc).role;
+  if (targetRole === "admin" && adminCount <= 1) {
+    throw new Error("Cannot remove the only admin.");
+  }
+
+  const ownershipQ = query(
+    collection(firestore, "groups", groupId, "ownership"),
+    where("userId", "==", targetUid)
+  );
+  const ownSnap = await getDocs(ownershipQ);
+  if (!ownSnap.empty) {
+    throw new Error(
+      "This player still has teams assigned. Reassign their teams in Assign teams before removing them."
+    );
+  }
+
+  const gRef = doc(firestore, "groups", groupId);
+  await runTransaction(firestore, async (transaction) => {
+    const gSnap = await transaction.get(gRef);
+    if (!gSnap.exists()) throw new Error("Group not found.");
+    transaction.update(gRef, { memberCount: increment(-1) });
+    transaction.delete(doc(firestore, "groups", groupId, "members", targetUid));
+    transaction.delete(doc(firestore, "users", targetUid, "groups", groupId));
+  });
+}
+
+/** Deletes the group and all member links, ownership rows, and the group document. */
+export async function deleteGroup(
+  firestore: Firestore,
+  groupId: string,
+  adminUid: string
+): Promise<void> {
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only group admins can delete the group.");
+  }
+
+  const membersSnap = await getDocs(
+    collection(firestore, "groups", groupId, "members")
+  );
+  const ownershipSnap = await getDocs(
+    collection(firestore, "groups", groupId, "ownership")
+  );
+
+  const refsToDelete: DocumentReference[] = [
+    ...ownershipSnap.docs.map((d) => d.ref),
+    ...membersSnap.docs.map((d) => d.ref),
+    ...membersSnap.docs.map((d) =>
+      doc(firestore, "users", d.id, "groups", groupId)
+    ),
+    doc(firestore, "groups", groupId),
+  ];
+
+  const chunkSize = 450;
+  for (let i = 0; i < refsToDelete.length; i += chunkSize) {
+    const batch = writeBatch(firestore);
+    for (const ref of refsToDelete.slice(i, i + chunkSize)) {
+      batch.delete(ref);
+    }
+    await batch.commit();
+  }
 }

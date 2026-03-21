@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import { regionGamesByColumn } from "../lib/regionRoundColumns";
@@ -15,6 +17,107 @@ export type BracketPane =
   | "first-four"
   | "final-four";
 
+export type GroupTeamsUnassignedHintProps = {
+  joined: number;
+  max: number;
+  isAdmin: boolean;
+  assignPath: string;
+  /** Private group, not full: show join code/password under the player count. */
+  privateInvite?: { joinCode: string; password: string } | null;
+};
+
+function CopyableInviteValue({
+  value,
+  name,
+}: {
+  value: string;
+  name: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard may be unavailable */
+    }
+  };
+  return (
+    <button
+      type="button"
+      className={`birdseye-copyable-value${copied ? " birdseye-copyable-value--copied" : ""}`}
+      onClick={() => void copy()}
+      title={copied ? "Copied" : `Copy ${name}`}
+      aria-label={`Copy ${name}: ${value}`}
+    >
+      {value}
+    </button>
+  );
+}
+
+export function BracketPrivateInviteLines({
+  joinCode,
+  password,
+}: {
+  joinCode: string;
+  password: string;
+}) {
+  return (
+    <p className="birdseye-hint birdseye-hint--private-invite">
+      <span className="birdseye-private-invite-line">
+        Join Code: <CopyableInviteValue value={joinCode} name="join code" />
+        {" "}
+        - Group Password:{" "}
+        <CopyableInviteValue value={password} name="group password" />
+      </span>
+    </p>
+  );
+}
+
+export function GroupTeamsUnassignedHint({
+  joined,
+  max,
+  isAdmin,
+  assignPath,
+  privateInvite = null,
+}: GroupTeamsUnassignedHintProps) {
+  return (
+    <p className="birdseye-hint birdseye-hint--unassigned">
+      <span className="birdseye-unassigned-line1">
+        <strong>{joined}</strong> / <strong>{max}</strong> players joined.
+        {privateInvite ? (
+          <>
+            {" "}
+            Join Code:{" "}
+            <CopyableInviteValue
+              value={privateInvite.joinCode}
+              name="join code"
+            />
+            {" "}
+            - Group Password:{" "}
+            <CopyableInviteValue
+              value={privateInvite.password}
+              name="group password"
+            />
+          </>
+        ) : null}
+      </span>
+      <br />
+      {isAdmin ? (
+        <>
+          <Link to={assignPath} className="birdseye-hint-assign-link">
+            Assign teams
+          </Link>{" "}
+          once the group is full.
+        </>
+      ) : (
+        <>Teams will be assigned once group is full.</>
+      )}
+    </p>
+  );
+}
+
 type Base = {
   games: BracketGame[];
   allGames: BracketGame[];
@@ -24,6 +127,8 @@ type Base = {
   results: Map<string, GameResult>;
   viewerUserId: string | null;
   onOpenZone: (pane: Exclude<BracketPane, "overview">) => void;
+  /** When set, replaces the overview color key (teams not saved for this group yet). */
+  groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
 };
 
 function OverviewSlot({
@@ -139,7 +244,11 @@ function CenterMini({
   );
 }
 
-export function BracketBirdseye({ onOpenZone, ...ctx }: Base) {
+export function BracketBirdseye({
+  onOpenZone,
+  groupTeamsUnassigned = null,
+  ...ctx
+}: Base) {
   const { allGames } = ctx;
   const ff1 = allGames.find((g) => g.id === "FF-1");
   const ff2 = allGames.find((g) => g.id === "FF-2");
@@ -147,16 +256,20 @@ export function BracketBirdseye({ onOpenZone, ...ctx }: Base) {
 
   return (
     <div className="birdseye-wrap">
-      <p className="birdseye-hint">
-        <strong className="birdseye-legend-live">Yellow</strong> = game is
-        actively in progress. When final:{" "}
-        <strong className="birdseye-legend-hit">green</strong> = you won
-        control,{" "}
-        <strong className="birdseye-legend-miss">red</strong> = you lost
-        control,{" "}
-        <strong className="birdseye-legend-neutral">purple</strong> = winner
-        didn’t involve you.
-      </p>
+      {groupTeamsUnassigned ? (
+        <GroupTeamsUnassignedHint {...groupTeamsUnassigned} />
+      ) : (
+        <p className="birdseye-hint">
+          <strong className="birdseye-legend-live">Yellow</strong> = game is
+          actively in progress. When final:{" "}
+          <strong className="birdseye-legend-hit">green</strong> = you won
+          control,{" "}
+          <strong className="birdseye-legend-miss">red</strong> = you lost
+          control,{" "}
+          <strong className="birdseye-legend-neutral">purple</strong> = winner
+          didn’t involve you.
+        </p>
+      )}
       <div className="birdseye-arena" role="presentation">
         <button
           type="button"

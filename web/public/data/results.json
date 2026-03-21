@@ -301,13 +301,13 @@
     "scores_updated_at": "2026-03-20T21:20:44.362Z"
   },
   "E-R32-1": {
-    "status": "in_progress",
-    "clock": "2:37 - 1st Half",
+    "status": "final",
+    "clock": null,
     "scores": {
-      "E01": 34,
-      "E09": 29
+      "E01": 81,
+      "E09": 58
     },
-    "scores_updated_at": "2026-03-21T22:18:52.264Z"
+    "scores_updated_at": "2026-03-21T23:41:39.797Z"
   },
   "E-R32-3": {
     "status": "final",
@@ -318,14 +318,23 @@
     },
     "scores_updated_at": "2026-03-21T21:04:12.688Z"
   },
+  "W-R32-3": {
+    "status": "in_progress",
+    "clock": "Halftime",
+    "scores": {
+      "W03": 33,
+      "W11A": 35
+    },
+    "scores_updated_at": "2026-03-21T23:53:46.448Z"
+  },
   "S-R32-4": {
     "status": "in_progress",
-    "clock": "15:11 - 1st Half",
+    "clock": "10:19 - 2nd Half",
     "scores": {
-      "S02": 9,
-      "S10": 10
+      "S02": 67,
+      "S10": 43
     },
-    "scores_updated_at": "2026-03-21T22:18:52.265Z"
+    "scores_updated_at": "2026-03-21T23:55:47.460Z"
   },
   "MW-R32-1": {
     "status": "final",
