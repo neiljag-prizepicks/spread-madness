@@ -7,6 +7,12 @@ import "./index.css";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
+if (import.meta.env.DEV) {
+  console.log("[spread-madness] VITE_GOOGLE_CLIENT_ID", clientId || "(empty)", {
+    length: clientId.length,
+  });
+}
+
 const root = document.getElementById("root")!;
 const app = (
   <StrictMode>

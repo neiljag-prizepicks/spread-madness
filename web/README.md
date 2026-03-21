@@ -18,14 +18,22 @@ Open the URL Vite prints (usually http://localhost:5173).
 
 ## Auth
 
-- **Mock login:** pick any of the 8 league users → full bracket.
-- **Google:** create `web/.env`:
+- **Mock login:** pick any of the 8 league users → full bracket (static `ownership_round1.json`).
+- **Google:** create `web/.env` (see `.env.example`):
 
   ```env
   VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
   ```
 
   Add authorized JavaScript origins (e.g. `http://localhost:5173`). `main.tsx` wraps the app in `GoogleOAuthProvider` when this is set.
+
+### Firebase pools (optional)
+
+If you set **`VITE_FIREBASE_*`** variables from the Firebase Console (same project as Auth), Google sign-in uses **Firebase Auth** (`signInWithCredential`) and **Cloud Firestore** for pools: create/join public or private pools, per-pool team ownership, and an admin **Assign teams** flow. Without these vars, Google sign-in still works as before (static JSON ownership).
+
+1. Enable **Authentication → Google** and create **Firestore** (test mode is fine for local dev).
+2. Deploy permissive rules for signed-in users only, e.g. copy [`firestore.rules`](../firestore.rules) into the Firebase Console → Firestore → Rules (tighten before any production data).
+3. Add the same `VITE_FIREBASE_*` keys to Vercel (Preview + Production) if you deploy there.
 
 ## Data
 
