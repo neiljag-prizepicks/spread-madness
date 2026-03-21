@@ -68,7 +68,7 @@ Deployment uses the **repo root** (`spreadMadness/`) so Vercel can run `api/` se
    | `CRON_SECRET` | Long random string. Secures `/api/cron/update`; Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`. |
    | `SITE_URL` | Canonical public URL, e.g. `https://your-app.vercel.app` (used to fetch `/data/*.json` during cron). Recommended so cron always hits the right host. |
    | `VITE_LIVE_POLL=1` | **Build-time** — enables the app to poll **`/api/live/data`** every ~90s (override interval with `VITE_LIVE_POLL_MS` in ms). Redeploy after changing. |
-   | `ESPN_DATES` | Optional. Default `auto` for cron (today + yesterday ET). |
+   | `ESPN_DATES` | Optional. Default `auto` for cron (yesterday + today + tomorrow ET). |
 
 4. **Deploy.** After the first deploy, **trigger the updater once** so Blob is seeded (either wait for the cron schedule or open in a browser, with auth header if using a REST client):
 

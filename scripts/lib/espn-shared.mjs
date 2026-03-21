@@ -40,11 +40,17 @@ export function ymdPartsEt(date) {
   return `${y}${m}${d}`;
 }
 
+/**
+ * YYYYMMDD strings for ESPN `dates=` (US/Eastern calendar day).
+ * Includes yesterday, today, and tomorrow so late-evening runs still see games
+ * whose ESPN row is dated the next local day (common for R32+ tip times).
+ */
 export function defaultDatesEt() {
   const now = Date.now();
   const today = ymdPartsEt(new Date(now));
   const yest = ymdPartsEt(new Date(now - 86400000));
-  return today === yest ? [today] : [today, yest];
+  const tom = ymdPartsEt(new Date(now + 86400000));
+  return [...new Set([yest, today, tom])].sort();
 }
 
 export function loadAbbrevToTeamId(teamsPath) {

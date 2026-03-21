@@ -302,11 +302,11 @@
   },
   "MW-R32-1": {
     "status": "in_progress",
-    "clock": "5:35 - 1st Half",
+    "clock": "2:42 - 1st Half",
     "scores": {
-      "MW01": 40,
-      "MW09": 31
+      "MW01": 42,
+      "MW09": 34
     },
-    "scores_updated_at": "2026-03-21T16:45:53.866Z"
+    "scores_updated_at": "2026-03-21T16:53:57.092Z"
   }
 }

@@ -154,7 +154,7 @@ Usage:
   node scripts/fetch-espn-results.mjs --dates auto --dry-run --verbose
 
 Options:
-  --dates auto     Today + yesterday (US/Eastern calendar dates)
+  --dates auto     Yesterday, today, and tomorrow (US/Eastern calendar dates)
   --include-pre    Write not_started rows for scheduled games (default: skip)
   --aliases PATH   ESPN abbrev → our abbrev (default: scripts/espn-abbrev-aliases.json)
   --dry-run        Print JSON only; do not write results.json

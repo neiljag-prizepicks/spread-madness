@@ -136,7 +136,10 @@
     "spread_from_favorite_perspective": -1.5
   },
   "MW-R32-1": {
-    "scheduled_tip_utc": "2026-03-21T16:10Z"
+    "scheduled_tip_utc": "2026-03-21T16:10Z",
+    "favorite_team_id": "MW01",
+    "spread_from_favorite_perspective": -12.5,
+    "spread_updated_at": "2026-03-21T16:51:33.324Z"
   },
   "E-R32-3": {
     "scheduled_tip_utc": "2026-03-21T18:45Z",
@@ -179,5 +182,53 @@
     "favorite_team_id": "W04",
     "spread_from_favorite_perspective": -11.5,
     "spread_updated_at": "2026-03-21T16:35:49.931Z"
+  },
+  "W-R32-4": {
+    "scheduled_tip_utc": "2026-03-22T16:10Z",
+    "favorite_team_id": "W02",
+    "spread_from_favorite_perspective": -7.5,
+    "spread_updated_at": "2026-03-21T16:55:25.130Z"
+  },
+  "MW-R32-4": {
+    "scheduled_tip_utc": "2026-03-22T18:45Z",
+    "favorite_team_id": "MW02",
+    "spread_from_favorite_perspective": -4.5,
+    "spread_updated_at": "2026-03-21T16:55:25.335Z"
+  },
+  "E-R32-2": {
+    "scheduled_tip_utc": "2026-03-22T21:15Z",
+    "favorite_team_id": "E05",
+    "spread_from_favorite_perspective": -3.5,
+    "spread_updated_at": "2026-03-21T16:55:25.582Z"
+  },
+  "MW-R32-3": {
+    "scheduled_tip_utc": "2026-03-22T22:10Z",
+    "favorite_team_id": "MW06",
+    "spread_from_favorite_perspective": -1.5,
+    "spread_updated_at": "2026-03-21T16:55:26.104Z"
+  },
+  "S-R32-1": {
+    "scheduled_tip_utc": "2026-03-22T23:10Z",
+    "favorite_team_id": "S01",
+    "spread_from_favorite_perspective": -10.5,
+    "spread_updated_at": "2026-03-21T16:55:26.296Z"
+  },
+  "W-R32-1": {
+    "scheduled_tip_utc": "2026-03-22T23:50Z",
+    "favorite_team_id": "W01",
+    "spread_from_favorite_perspective": -12.5,
+    "spread_updated_at": "2026-03-21T16:55:26.474Z"
+  },
+  "E-R32-4": {
+    "scheduled_tip_utc": "2026-03-23T00:45Z",
+    "favorite_team_id": "E02",
+    "spread_from_favorite_perspective": -4.5,
+    "spread_updated_at": "2026-03-21T16:55:26.722Z"
+  },
+  "MW-R32-2": {
+    "scheduled_tip_utc": "2026-03-23T01:45Z",
+    "favorite_team_id": "MW05",
+    "spread_from_favorite_perspective": -1.5,
+    "spread_updated_at": "2026-03-21T16:55:26.910Z"
   }
 }

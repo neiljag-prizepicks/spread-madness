@@ -144,6 +144,19 @@ function isBeforeScheduledTip(tipIso, nowMs = Date.now()) {
   return nowMs < t;
 }
 
+/** Matches UI “has a line”: both favorite and spread present (see Matchup.tsx noLine). */
+function overlayHasCompleteSpread(overlayEntry) {
+  if (!overlayEntry || typeof overlayEntry !== "object") return false;
+  const s = overlayEntry.spread_from_favorite_perspective;
+  const f = overlayEntry.favorite_team_id;
+  return (
+    f != null &&
+    String(f).trim() !== "" &&
+    typeof s === "number" &&
+    !Number.isNaN(s)
+  );
+}
+
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -163,7 +176,7 @@ Usage:
   node scripts/fetch-espn-spreads.mjs --dates auto --force
 
 Options:
-  --dates auto          Today + yesterday (US/Eastern)
+  --dates auto          Yesterday, today, and tomorrow (US/Eastern)
   --force               Overwrite spread in overlay even if already set
   --always-update       Same as --force
   --only-missing        Default: skip games that already have spread in overlay
@@ -173,7 +186,9 @@ Options:
 
 For each ESPN event that maps to a bracket game: if the overlay and games template have no
 scheduled_tip_utc, the script stores ESPN’s event time as scheduled_tip_utc. Spread lock order is
-overlay tip → template tip → that same ESPN event time. Spreads are not written on or after tip.
+overlay tip → template tip → that same ESPN event time. After tip, existing overlay lines are not
+refetched (locked); if the overlay never got a line, the script still fetches pickcenter so live
+games are not stuck with “spread not set”.
 
 Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your pool rules.
 `);
@@ -194,7 +209,7 @@ Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your poo
 
   let dateList;
   if (!args.dates || args.dates === "auto") {
-    dateList = defaultDatesEt();
+    dateList = defaultDatesEt(); // yesterday + today + tomorrow (ET)
   } else {
     dateList = args.dates.split(",").map((s) => s.trim()).filter(Boolean);
   }
@@ -277,11 +292,16 @@ Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your poo
         continue;
       }
 
-      if (!isBeforeScheduledTip(lockTip, Date.now())) {
+      // After tip: do not refetch if we already stored a line (locks the number).
+      // If we never got a line before tip, still fetch so the app is not stuck on "Spread not set".
+      if (
+        !isBeforeScheduledTip(lockTip, Date.now()) &&
+        overlayHasCompleteSpread(prev)
+      ) {
         overlay[gid] = next;
         if (opts.verbose)
           console.warn(
-            `Skip ${gid}: on or after scheduled tip (${lockTip ?? "no tip"})`
+            `Skip ${gid}: on or after scheduled tip, line already set (${lockTip ?? "no tip"})`
           );
         continue;
       }

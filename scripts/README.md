@@ -111,7 +111,7 @@ ESPN serves a **public JSON scoreboard** (same data their site loads). `fetch-es
 node scripts/fetch-espn-results.mjs --dates 20260320
 node scripts/fetch-espn-results.mjs --dates 20260319,20260320 --dry-run --verbose
 
-# Today + yesterday (US/Eastern calendar)
+# Yesterday, today, and tomorrow (US/Eastern calendar)
 node scripts/fetch-espn-results.mjs --dates auto
 
 # Loop (writes results.json every POLL_SECONDS)
@@ -140,7 +140,7 @@ node scripts/fetch-espn-spreads.mjs --dates auto --force
 
 Defaults: reads [`results.json`](../web/public/data/results.json), writes [`game_schedule_and_lines.json`](../web/public/data/game_schedule_and_lines.json). Uses the same abbrev map as the results poll. **By default** it **does not** overwrite a game that already has `spread_from_favorite_perspective` in the overlay (use `--force`).
 
-For each mapped ESPN event, if the games template and overlay have **no** `scheduled_tip_utc`, the script **writes ESPN’s event time** into the overlay so the web app can show tip-off. Spread eligibility uses the same ordering: **overlay tip → template tip → ESPN event time**; spreads are only written while `now` is before that instant (UTC). `spread_updated_at` in the overlay is bumped **only** when the favorite or spread value changes.
+For each mapped ESPN event, if the games template and overlay have **no** `scheduled_tip_utc`, the script **writes ESPN’s event time** into the overlay so the web app can show tip-off. Spread eligibility uses the same ordering: **overlay tip → template tip → ESPN event time**. Once the overlay already has both `favorite_team_id` and `spread_from_favorite_perspective`, the script **does not** refetch after that tip instant (line is locked). If there was **no** line in the overlay before tip, the script **still** calls pickcenter after tip so matchups are not stuck showing “Spread not set” in the UI. `spread_updated_at` is bumped **only** when the favorite or spread value changes.
 
 One summary request per game (small `--delay-ms` between calls). Run **after** `fetch-espn-results` (or in the same loop) so advancement + lines stay aligned.
 
