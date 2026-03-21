@@ -32,6 +32,7 @@ export function PoolRulesPage() {
       <p className="pool-rules-p pool-rules-tldr">
         <RichText text={POOL_RULES_TLDR} />
       </p>
+      <hr className="pool-rules-divider" aria-hidden />
       <div className="pool-rules-sections">
         {POOL_RULES_SECTIONS.map((sec, si) => (
           <section

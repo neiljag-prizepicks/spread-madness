@@ -302,12 +302,12 @@
   },
   "E-R32-3": {
     "status": "in_progress",
-    "clock": "3:46 - 1st Half",
+    "clock": "16:04 - 2nd Half",
     "scores": {
-      "E03": 30,
-      "E06": 23
+      "E03": 42,
+      "E06": 37
     },
-    "scores_updated_at": "2026-03-21T19:23:17.386Z"
+    "scores_updated_at": "2026-03-21T20:07:41.155Z"
   },
   "MW-R32-1": {
     "status": "final",

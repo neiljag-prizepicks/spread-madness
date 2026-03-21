@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import {
@@ -161,7 +162,36 @@ export function LeaderboardPage({
           <tbody>
             {sorted.map((r) => (
               <tr key={r.userId}>
-                <td className="leaderboard-col-player">{r.displayName}</td>
+                <td className="leaderboard-col-player">
+                  <Link
+                    className="leaderboard-col-player-link"
+                    to={`/my-teams/user/${encodeURIComponent(r.userId)}`}
+                  >
+                    <span className="leaderboard-col-player-link-text">
+                      {r.displayName}
+                    </span>
+                    <span
+                      className="leaderboard-col-player-link-chevron"
+                      aria-hidden
+                    >
+                      <svg
+                        className="leaderboard-col-player-link-chevron-svg"
+                        viewBox="0 0 10 10"
+                        width="10"
+                        height="10"
+                      >
+                        <path
+                          d="M3.25 2.5 L6.25 5 L3.25 7.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.25"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </Link>
+                </td>
                 <td>{r.teamsInControl}</td>
                 <td>{formatPct(r.coverRate)}</td>
                 <td>{formatRoundCell(r.roundOf32)}</td>

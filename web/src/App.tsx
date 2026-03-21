@@ -6,6 +6,7 @@ import {
   Routes,
   useLocation,
   useNavigate,
+  useParams,
 } from "react-router-dom";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import type {
@@ -126,6 +127,90 @@ const LIVE_POLL_MS = Number(
 );
 
 type BracketLocationState = { focusGameId?: string };
+
+type MyTeamsRouteProps = {
+  session: Session;
+  games: BracketGame[];
+  results: Map<string, GameResult>;
+  ownership: OwnershipRow[];
+  teamsById: Map<string, Team>;
+  usersById: Map<string, User>;
+};
+
+function MyTeamsRoute({
+  session,
+  games,
+  results,
+  ownership,
+  teamsById,
+  usersById,
+}: MyTeamsRouteProps) {
+  const navigate = useNavigate();
+  const { userId: userIdParam } = useParams<{ userId: string }>();
+
+  const resolved = useMemo(() => {
+    if (userIdParam !== undefined) {
+      const u = usersById.get(userIdParam);
+      if (!u) {
+        return {
+          viewerUserId: null as string | null,
+          userNotFound: true as const,
+          perspective: "self" as const,
+          peerName: "",
+        };
+      }
+      const isOwn =
+        session.kind === "mock" && session.userId === userIdParam;
+      return {
+        viewerUserId: userIdParam,
+        userNotFound: false as const,
+        perspective: isOwn ? ("self" as const) : ("peer" as const),
+        peerName: u.display_name,
+      };
+    }
+    return {
+      viewerUserId: session.kind === "mock" ? session.userId : null,
+      userNotFound: false as const,
+      perspective: "self" as const,
+      peerName: "",
+    };
+  }, [userIdParam, session, usersById]);
+
+  const rosterUsers = useMemo(
+    () =>
+      [...usersById.values()].sort((a, b) =>
+        a.display_name.localeCompare(b.display_name)
+      ),
+    [usersById]
+  );
+
+  return (
+    <MyTeamsPage
+      viewerUserId={resolved.viewerUserId}
+      userNotFound={resolved.userNotFound}
+      perspective={resolved.perspective}
+      peerName={resolved.peerName}
+      games={games}
+      results={results}
+      ownershipRows={ownership}
+      teamsById={teamsById}
+      usersById={usersById}
+      rosterUsers={rosterUsers}
+      onSelectRosterUser={(userId) => {
+        if (session.kind === "mock" && session.userId === userId) {
+          navigate("/my-teams");
+        } else {
+          navigate(`/my-teams/user/${encodeURIComponent(userId)}`);
+        }
+      }}
+      onOpenGameInBracket={(gameId) => {
+        navigate("/bracket", {
+          state: { focusGameId: gameId },
+        });
+      }}
+    />
+  );
+}
 
 export default function App() {
   const navigate = useNavigate();
@@ -256,6 +341,10 @@ export default function App() {
     );
   }
 
+  const myTeamsTabActive =
+    location.pathname === "/my-teams" ||
+    location.pathname.startsWith("/my-teams/user/");
+
   if (!session) {
     return (
       <div className="login-screen">
@@ -357,9 +446,9 @@ export default function App() {
           <NavLink
             to="/my-teams"
             role="tab"
-            aria-selected={location.pathname === "/my-teams"}
-            className={({ isActive }) =>
-              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            aria-selected={myTeamsTabActive}
+            className={() =>
+              `app-header-tab${myTeamsTabActive ? " app-header-tab--active" : ""}`
             }
           >
             My Teams
@@ -413,20 +502,28 @@ export default function App() {
             }
           />
           <Route
-            path="/my-teams"
+            path="/my-teams/user/:userId"
             element={
-              <MyTeamsPage
-                viewerUserId={session.kind === "mock" ? session.userId : null}
+              <MyTeamsRoute
+                session={session}
                 games={games}
                 results={results}
-                ownershipRows={ownership}
+                ownership={ownership}
                 teamsById={teamsById}
                 usersById={usersById}
-                onOpenGameInBracket={(gameId) => {
-                  navigate("/bracket", {
-                    state: { focusGameId: gameId },
-                  });
-                }}
+              />
+            }
+          />
+          <Route
+            path="/my-teams"
+            element={
+              <MyTeamsRoute
+                session={session}
+                games={games}
+                results={results}
+                ownership={ownership}
+                teamsById={teamsById}
+                usersById={usersById}
               />
             }
           />

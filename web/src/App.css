@@ -302,6 +302,12 @@
   color: #fff;
 }
 
+.pool-rules-divider {
+  border: 0;
+  border-top: 1px solid var(--pp-border);
+  margin: 0 0 1.25rem;
+}
+
 .pool-rules-page-lead {
   margin: 0 0 1.25rem;
   font-size: 0.9rem;
@@ -386,11 +392,111 @@
   margin-bottom: 0.35rem;
 }
 
+.my-teams-page-title--picker {
+  display: block;
+}
+
+.my-teams-title-picker {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.my-teams-title-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.15rem 0.2rem 0.15rem 0;
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--pp-fg-primary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.my-teams-title-picker-trigger:hover,
+.my-teams-title-picker-trigger[aria-expanded="true"] {
+  color: var(--pp-fg-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.my-teams-title-picker-label {
+  line-height: 1.2;
+}
+
+.my-teams-title-picker-chevron {
+  flex-shrink: 0;
+  width: 0.85em;
+  height: 0.85em;
+  display: block;
+  opacity: 0.88;
+}
+
+.my-teams-title-picker-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  max-width: 100%;
+  max-height: min(50vh, 18rem);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  background: var(--pp-bg-secondary);
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+}
+
+.my-teams-title-picker-option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 500;
+  text-align: left;
+  color: var(--pp-fg-primary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.my-teams-title-picker-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.my-teams-title-picker-option--current {
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
 .my-teams-page-lead {
   margin: 0 0 1.25rem;
   font-size: 0.9rem;
   color: var(--pp-fg-secondary);
   line-height: 1.4;
+}
+
+.my-teams-inline-link {
+  color: var(--pp-link);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.my-teams-inline-link:hover {
+  color: var(--pp-fg-primary);
 }
 
 .my-teams-section {
@@ -727,6 +833,17 @@
   vertical-align: bottom;
 }
 
+.leaderboard-table thead tr {
+  /* Keeps th z-index / stacking predictable (Safari + mobile WebKit). */
+  isolation: isolate;
+}
+
+/* Scrollable header cells must stack below the sticky Player column (see below). */
+.leaderboard-table thead th:not(.leaderboard-col-player) {
+  position: relative;
+  z-index: 0;
+}
+
 .leaderboard-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -749,14 +866,73 @@
 }
 
 .leaderboard-table thead th.leaderboard-col-player {
-  z-index: 2;
-  background: rgba(255, 255, 255, 0.03);
+  /*
+   * Must be opaque: translucent header bg lets scrolled headers show through.
+   * High z-index + compositor layer so sibling th / buttons don’t paint on top (iOS Safari).
+   */
+  z-index: 10;
+  background-color: var(--pp-bg-secondary);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.leaderboard-table thead th.leaderboard-col-player .leaderboard-th-btn {
+  position: relative;
+  z-index: 1;
 }
 
 .leaderboard-table tbody td.leaderboard-col-player {
   background: var(--pp-bg-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.leaderboard-col-player-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.leaderboard-col-player-link-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-col-player-link:hover {
+  color: var(--pp-link);
+}
+
+.leaderboard-col-player-link:hover .leaderboard-col-player-link-text {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.leaderboard-col-player-link-chevron {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.leaderboard-col-player-link:hover .leaderboard-col-player-link-chevron {
+  opacity: 1;
+}
+
+.leaderboard-col-player-link-chevron-svg {
+  display: block;
+}
+
+.leaderboard-col-player-link:focus-visible {
+  outline: 2px solid rgba(255, 213, 79, 0.65);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .leaderboard-th-btn {
