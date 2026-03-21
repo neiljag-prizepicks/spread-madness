@@ -1,6 +1,9 @@
 .DS_Store
 **/.DS_Store
 
+# Root (Vercel API + @vercel/blob)
+node_modules/
+
 # Web (Vite / React)
 web/node_modules/
 web/dist/
@@ -8,3 +11,5 @@ web/.env
 web/.env.local
 web/.env.*.local
 *.local
+.vercel
+.env*.local

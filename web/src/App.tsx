@@ -114,8 +114,14 @@ function UserAccountMenu({
   );
 }
 
+const LIVE_POLL_MS = Number(
+  import.meta.env.VITE_LIVE_POLL_MS ?? 90_000
+);
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
+  /** Bracket template only (no schedule/line overlay) — reapplied when live overlay updates. */
+  const [gameTemplate, setGameTemplate] = useState<BracketGame[]>([]);
   const [games, setGames] = useState<BracketGame[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -143,6 +149,7 @@ export default function App() {
     ])
       .then(([g, t, u, own, res, sched]) => {
         const raw = g.games ?? [];
+        setGameTemplate(raw);
         const overlay =
           sched && typeof sched === "object" && !Array.isArray(sched)
             ? (sched as Record<string, GameScheduleLineOverlayPatch>)
@@ -162,6 +169,35 @@ export default function App() {
       })
       .catch((e) => setLoadError(String(e)));
   }, []);
+
+  /** Production / preview: poll merged live results + overlay from Vercel (see vercel.json + web/README). */
+  useEffect(() => {
+    if (import.meta.env.VITE_LIVE_POLL !== "1") return;
+    if (!gameTemplate.length) return;
+
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/live/data?ts=${Date.now()}`);
+        if (!r.ok) return;
+        const data = (await r.json()) as {
+          results?: unknown;
+          overlay?: Record<string, GameScheduleLineOverlayPatch>;
+        };
+        if (data.results && typeof data.results === "object")
+          setResults(normalizeResultsFileObject(data.results));
+        if (data.overlay && typeof data.overlay === "object")
+          setGames(
+            applyScheduleLineOverlayToGames(gameTemplate, data.overlay)
+          );
+      } catch {
+        /* ignore transient failures */
+      }
+    };
+
+    const id = setInterval(tick, LIVE_POLL_MS);
+    void tick();
+    return () => clearInterval(id);
+  }, [gameTemplate]);
 
   const teamsById = useMemo(
     () => new Map(teams.map((t) => [t.id, t])),

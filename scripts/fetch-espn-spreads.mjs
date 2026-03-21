@@ -2,7 +2,8 @@
 /**
  * For ESPN games that map to a bracket slot with both teams resolved,
  * fetch summary pickcenter (DraftKings line on ESPN) and merge
- * favorite_team_id + spread_from_favorite_perspective into game_schedule_and_lines.json.
+ * favorite_team_id + spread_from_favorite_perspective into game_schedule_and_lines.json,
+ * and scheduled_tip_utc from the scoreboard event when the bracket template and overlay lack it.
  *
  * Spread convention matches games_*.json: negative = favorite laying points.
  * See scripts/README.md.
@@ -39,7 +40,6 @@ function parseArgs(argv) {
     verbose: false,
     force: false,
     onlyMissing: true,
-    includeTip: false,
     delayMs: 80,
     help: false,
   };
@@ -52,8 +52,7 @@ function parseArgs(argv) {
       out.onlyMissing = false;
     } else if (a === "--always-update") {
       out.onlyMissing = false;
-    } else if (a === "--include-tip") out.includeTip = true;
-    else if (a === "--dates") out.dates = argv[++i];
+    } else if (a === "--dates") out.dates = argv[++i];
     else if (a === "--games") out.games = argv[++i];
     else if (a === "--teams") out.teams = argv[++i];
     else if (a === "--results") out.results = argv[++i];
@@ -106,26 +105,42 @@ function shouldSkipExistingSpread(overlay, gid, onlyMissing) {
   return typeof s === "number" && !Number.isNaN(s);
 }
 
-/** Overlay tip overrides games template (same as web merge). */
-function effectiveTipUtc(game, overlayEntry, includeTipFallback, eventDateIso) {
-  if (
+/** Same “has a tip” rule as web overlay merge / import-game-overlay. */
+function overlayHasScheduledTip(overlayEntry) {
+  return (
     overlayEntry &&
     "scheduled_tip_utc" in overlayEntry &&
     overlayEntry.scheduled_tip_utc != null &&
     String(overlayEntry.scheduled_tip_utc).trim() !== ""
-  ) {
-    return overlayEntry.scheduled_tip_utc;
-  }
-  if (game?.scheduled_tip_utc) return game.scheduled_tip_utc;
-  if (includeTipFallback && eventDateIso) return eventDateIso;
+  );
+}
+
+function bracketHasScheduledTip(game) {
+  return (
+    game?.scheduled_tip_utc != null &&
+    String(game.scheduled_tip_utc).trim() !== ""
+  );
+}
+
+/**
+ * Tip used to decide if we may still write a spread: overlay → bracket template →
+ * this scoreboard row’s event time (so R32+ with null template still locks correctly).
+ */
+function tipForSpreadLock(game, overlayEntry, eventDateIso) {
+  if (overlayHasScheduledTip(overlayEntry)) return overlayEntry.scheduled_tip_utc;
+  if (bracketHasScheduledTip(game)) return game.scheduled_tip_utc;
+  if (eventDateIso) return eventDateIso;
   return null;
 }
 
-/** Strictly before scheduled tip instant (UTC ms); no spread writes on or after tip. */
+/**
+ * Before scheduled tip (UTC ms): no spread writes on or after tip.
+ * If no tip is known, allow (same idea as CSV overlay import).
+ */
 function isBeforeScheduledTip(tipIso, nowMs = Date.now()) {
-  if (!tipIso) return false;
+  if (!tipIso) return true;
   const t = Date.parse(tipIso);
-  if (Number.isNaN(t)) return false;
+  if (Number.isNaN(t)) return true;
   return nowMs < t;
 }
 
@@ -152,13 +167,13 @@ Options:
   --force               Overwrite spread in overlay even if already set
   --always-update       Same as --force
   --only-missing        Default: skip games that already have spread in overlay
-  --include-tip         Set scheduled_tip_utc from ESPN event time when overlay lacks it
   --delay-ms N          Pause between summary requests (default 80)
   --dry-run             Print overlay JSON; do not write
   --verbose             Log skips
 
-Spreads are **never** written on or after the game’s scheduled tip (field: scheduled_tip_utc from
-games JSON or overlay, else ESPN event time if --include-tip).
+For each ESPN event that maps to a bracket game: if the overlay and games template have no
+scheduled_tip_utc, the script stores ESPN’s event time as scheduled_tip_utc. Spread lock order is
+overlay tip → template tip → that same ESPN event time. Spreads are not written on or after tip.
 
 Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your pool rules.
 `);
@@ -217,12 +232,12 @@ Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your poo
       process.exit(1);
     }
 
+    const pair = buildPairToGameId(games, resultsMap);
     const events = data.events ?? [];
     for (const ev of events) {
       const comp = ev?.competitions?.[0];
       if (!comp?.competitors || comp.competitors.length !== 2) continue;
 
-      const pair = buildPairToGameId(games, resultsMap);
       const ha = homeAwayTeamIds(
         comp,
         aliases,
@@ -242,22 +257,31 @@ Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your poo
         continue;
       }
 
+      const prev = overlay[gid] ?? {};
+      const bracketGame = gameById.get(gid);
+      let next = { ...prev };
+
+      if (
+        !overlayHasScheduledTip(prev) &&
+        !bracketHasScheduledTip(bracketGame) &&
+        ev.date
+      ) {
+        next.scheduled_tip_utc = ev.date;
+      }
+
+      const lockTip = tipForSpreadLock(bracketGame, prev, ev.date);
+
       if (shouldSkipExistingSpread(overlay, gid, args.onlyMissing)) {
+        overlay[gid] = next;
         if (opts.verbose) console.warn(`Skip ${gid}: overlay already has spread`);
         continue;
       }
 
-      const bracketGame = gameById.get(gid);
-      const tip = effectiveTipUtc(
-        bracketGame,
-        overlay[gid],
-        args.includeTip,
-        ev.date
-      );
-      if (!isBeforeScheduledTip(tip, Date.now())) {
+      if (!isBeforeScheduledTip(lockTip, Date.now())) {
+        overlay[gid] = next;
         if (opts.verbose)
           console.warn(
-            `Skip ${gid}: on or after scheduled tip (${tip ?? "no tip"})`
+            `Skip ${gid}: on or after scheduled tip (${lockTip ?? "no tip"})`
           );
         continue;
       }
@@ -266,6 +290,7 @@ Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your poo
       try {
         summary = await fetchSummaryForEvent(ev.id);
       } catch (e) {
+        overlay[gid] = next;
         if (opts.verbose) console.warn(`Summary ${ev.id}: ${e.message}`);
         continue;
       }
@@ -275,17 +300,13 @@ Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your poo
       const pick = pickFirstWithSpread(summary);
       const linePatch = patchFromPickcenter(pick, ha.tidHome, ha.tidAway);
       if (!linePatch) {
+        overlay[gid] = next;
         if (opts.verbose)
           console.warn(`No pickcenter spread for ${ev.shortName ?? ev.id}`);
         continue;
       }
 
-      const prev = overlay[gid] ?? {};
-      const next = { ...prev, ...linePatch };
-
-      if (args.includeTip && ev.date && !("scheduled_tip_utc" in prev)) {
-        next.scheduled_tip_utc = ev.date;
-      }
+      next = { ...next, ...linePatch };
 
       if (
         spreadLineChanged(
@@ -310,7 +331,9 @@ Note: Lines come from ESPN’s pickcenter (e.g. DraftKings). Verify for your poo
   }
 
   fs.writeFileSync(overlayPath, outJson, "utf8");
-  console.log(`Updated ${overlayPath} (ESPN pickcenter spreads, dates ${dateList.join(", ")})`);
+  console.log(
+    `Updated ${overlayPath} (ESPN tips + pickcenter spreads, dates ${dateList.join(", ")})`
+  );
 }
 
 main().catch((e) => {

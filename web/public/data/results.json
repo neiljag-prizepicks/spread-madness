@@ -47,6 +47,24 @@
       "E09": 66
     }
   },
+  "E-R64-3": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E05": 79,
+      "E12": 53
+    },
+    "scores_updated_at": "2026-03-21T01:34:13.520Z"
+  },
+  "E-R64-4": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E04": 68,
+      "E13": 60
+    },
+    "scores_updated_at": "2026-03-21T04:15:10.795Z"
+  },
   "E-R64-5": {
     "status": "final",
     "clock": null,
@@ -62,6 +80,24 @@
       "E03": 92,
       "E14": 67
     }
+  },
+  "E-R64-7": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E07": 75,
+      "E10": 71
+    },
+    "scores_updated_at": "2026-03-21T02:06:30.989Z"
+  },
+  "E-R64-8": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "E02": 82,
+      "E15": 71
+    },
+    "scores_updated_at": "2026-03-21T04:51:48.312Z"
   },
   "W-R64-1": {
     "status": "final",
@@ -111,6 +147,42 @@
       "W03": 73,
       "W14": 64
     }
+  },
+  "W-R64-7": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W07": 80,
+      "W10": 66
+    },
+    "scores_updated_at": "2026-03-21T04:39:56.471Z"
+  },
+  "W-R64-8": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W02": 104,
+      "W15": 71
+    },
+    "scores_updated_at": "2026-03-21T01:34:13.520Z"
+  },
+  "S-R64-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S01": 114,
+      "S16A": 55
+    },
+    "scores_updated_at": "2026-03-21T04:00:58.270Z"
+  },
+  "S-R64-2": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "S08": 61,
+      "S09": 67
+    },
+    "scores_updated_at": "2026-03-21T01:14:04.046Z"
   },
   "S-R64-3": {
     "status": "final",
@@ -227,5 +299,14 @@
       "MW15": 74
     },
     "scores_updated_at": "2026-03-20T21:20:44.362Z"
+  },
+  "MW-R32-1": {
+    "status": "in_progress",
+    "clock": "5:35 - 1st Half",
+    "scores": {
+      "MW01": 40,
+      "MW09": 31
+    },
+    "scores_updated_at": "2026-03-21T16:45:53.866Z"
   }
 }
