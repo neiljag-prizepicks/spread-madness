@@ -173,8 +173,64 @@
   margin-bottom: 0;
 }
 
+.app-header-rules-lead {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+}
+
+.app-header-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.35rem 0.45rem 0.35rem 0;
+  font-family: inherit;
+  color: var(--pp-fg-primary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.app-header-back:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-header-back:focus-visible {
+  outline: 2px solid var(--pp-action);
+  outline-offset: 2px;
+}
+
+.app-header-back-icon {
+  display: block;
+}
+
+.app-header-rules-divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.35rem;
+  margin: 0 0.6rem;
+  background: var(--pp-border);
+  flex-shrink: 0;
+}
+
+.app-header-rules-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pp-fg-primary);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .app-header-tabs {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.15rem;
 }
@@ -200,6 +256,66 @@
 .app-header-tab--active {
   color: var(--pp-fg-primary);
   box-shadow: inset 0 -2px 0 0 var(--pp-action);
+}
+
+/*
+ * Groups hub (/groups): nav is a direct child of .app (not inside header) so position:sticky
+ * is limited by .app’s tall scroll height, not the short header — tabs stay pinned while
+ * scrolling the groups page (same idea as region round nav in the bracket).
+ */
+.app-header--groups-top {
+  border-bottom: none;
+  padding-bottom: 0.35rem;
+}
+
+.app-header-tabs--groups-hub {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 45;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  margin: 0;
+  padding: 0.4rem calc(1.25rem + env(safe-area-inset-right, 0px)) 0.55rem
+    calc(1.25rem + env(safe-area-inset-left, 0px));
+  background: var(--pp-bg-secondary);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.app-header-tabs--groups-hub .app-header-tab {
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin: 0;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--pp-fg-tertiary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--pp-border);
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.app-header-tabs--groups-hub .app-header-tab:hover {
+  color: var(--pp-fg-primary);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.app-header-tabs--groups-hub .app-header-tab--active {
+  color: var(--pp-fg-primary);
+  border-color: rgba(90, 127, 216, 0.55);
+  box-shadow: 0 0 0 1px rgba(90, 127, 216, 0.2);
 }
 
 .app-header-user-menu {
@@ -274,6 +390,8 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
 .app-header-user-menu-item:hover {
@@ -284,13 +402,6 @@
   max-width: 40rem;
   margin: 0 auto;
   padding: 0 0.15rem 1rem;
-}
-
-.pool-rules-page-title {
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin: 0 0 0.35rem;
-  color: var(--pp-fg-primary);
 }
 
 .pool-rules-tldr {
@@ -1394,7 +1505,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Final pool outcome — card tint matches overview slots (green / red / purple) */
+/* Final group outcome — card tint matches overview slots (green / red / purple) */
 .matchup--pool-hit {
   border-color: rgba(0, 230, 118, 0.5);
   background: rgba(0, 230, 118, 0.12);
@@ -2646,7 +2757,7 @@
   }
 }
 
-/* —— Spread Madness brand menu (pools) —— */
+/* —— Spread Madness brand menu (groups) —— */
 .app-header-brand-menu {
   position: relative;
   flex: 1;
@@ -2793,6 +2904,7 @@
 .group-hub-section-title {
   font-size: 0.95rem;
   margin: 0 0 0.75rem;
+  scroll-margin-top: 0.75rem;
 }
 
 .group-hub-section-head {

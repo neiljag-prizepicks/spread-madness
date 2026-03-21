@@ -6,6 +6,7 @@ import {
   signOut,
 } from "firebase/auth";
 import {
+  Link,
   Navigate,
   NavLink,
   Route,
@@ -45,6 +46,7 @@ import { GroupHubPage } from "./components/GroupHubPage";
 import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
+import { POOL_RULES_PAGE_TITLE } from "./content/poolRulesCopy";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import "./App.css";
 
@@ -68,9 +70,11 @@ function decodeJwtPayload(credential: string): { email?: string; name?: string }
 function UserAccountMenu({
   displayName,
   onSignOut,
+  showRulesLink = true,
 }: {
   displayName: string;
   onSignOut: () => void;
+  showRulesLink?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -128,6 +132,16 @@ function UserAccountMenu({
           role="menu"
           aria-labelledby={triggerId}
         >
+          {showRulesLink ? (
+            <Link
+              to="/rules"
+              className="app-header-user-menu-item"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              Rules
+            </Link>
+          ) : null}
           <button
             type="button"
             className="app-header-user-menu-item"
@@ -148,11 +162,11 @@ function UserAccountMenu({
 function SpreadMadnessBrandMenu({
   userGroupRows,
   activeGroupId,
-  onSelectPool,
+  onSelectGroup,
 }: {
   userGroupRows: { id: string; data: UserGroupLinkDoc }[];
   activeGroupId: string | null;
-  onSelectPool: (groupId: string) => void;
+  onSelectGroup: (groupId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -179,7 +193,7 @@ function SpreadMadnessBrandMenu({
   }, [open]);
 
   const inGroupsSection = location.pathname.startsWith("/groups");
-  const poolSectionActive = (groupId: string) =>
+  const groupSectionActive = (groupId: string) =>
     !inGroupsSection && activeGroupId === groupId;
 
   const triggerLabel = useMemo(() => {
@@ -263,11 +277,11 @@ function SpreadMadnessBrandMenu({
                 <button
                   key={r.id}
                   type="button"
-                  className={`app-header-brand-menu-item${poolSectionActive(r.id) ? " app-header-brand-menu-item--active" : ""}`}
+                  className={`app-header-brand-menu-item${groupSectionActive(r.id) ? " app-header-brand-menu-item--active" : ""}`}
                   role="menuitem"
                   onClick={() => {
                     setOpen(false);
-                    onSelectPool(r.id);
+                    onSelectGroup(r.id);
                     navigate("/bracket", { replace: true });
                   }}
                 >
@@ -295,7 +309,7 @@ type MyTeamsRouteProps = {
   ownership: OwnershipRow[];
   teamsById: Map<string, Team>;
   usersById: Map<string, User>;
-  /** When set (e.g. Firebase pool), roster is limited to pool members. */
+  /** When set (e.g. Firebase group), roster is limited to group members. */
   rosterUsers?: User[];
 };
 
@@ -623,7 +637,7 @@ export default function App() {
     return users;
   }, [session, users, memberUsers]);
 
-  const rosterUsersForPool = useMemo(() => {
+  const rosterUsersForGroup = useMemo(() => {
     if (
       session?.kind === "google" &&
       isFirebaseConfigured() &&
@@ -691,6 +705,10 @@ export default function App() {
     location.pathname === "/my-teams" ||
     location.pathname.startsWith("/my-teams/user/");
 
+  const isRulesPage = location.pathname === "/rules";
+  const isGroupsHome = location.pathname === "/groups";
+  const groupsNavHash = isGroupsHome ? location.hash : "";
+
   if (!session) {
     return (
       <div className="login-screen">
@@ -700,7 +718,7 @@ export default function App() {
             <span className="pp-mark">P</span>
             <span>Spread Madness</span>
           </div>
-          <p className="login-sub">POC — March Madness pool (ATS)</p>
+          <p className="login-sub">POC — March Madness group (ATS)</p>
 
           <div className="login-section">
             <h2>Mock login (internal demo)</h2>
@@ -772,13 +790,49 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
+      <header
+        className={`app-header${isGroupsHome && !isRulesPage ? " app-header--groups-top" : ""}`}
+      >
         <div className="app-header-top">
-          {firebaseGroupMode ? (
+          {isRulesPage ? (
+            <div className="app-header-rules-lead">
+              <button
+                type="button"
+                className="app-header-back"
+                aria-label="Go back"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate("/bracket");
+                  }
+                }}
+              >
+                <svg
+                  className="app-header-back-icon"
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  aria-hidden
+                >
+                  <path
+                    d="M15 18l-6-6 6-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <span className="app-header-rules-divider" aria-hidden />
+              <h1 className="app-header-rules-title">{POOL_RULES_PAGE_TITLE}</h1>
+            </div>
+          ) : firebaseGroupMode ? (
             <SpreadMadnessBrandMenu
               userGroupRows={userGroupRows}
               activeGroupId={activeGroupId}
-              onSelectPool={(id) => {
+              onSelectGroup={(id) => {
                 setActiveGroupId(id);
                 writeStoredActiveGroupId(id);
               }}
@@ -792,55 +846,80 @@ export default function App() {
           <UserAccountMenu
             displayName={session.label}
             onSignOut={() => void handleSignOut()}
+            showRulesLink={!isRulesPage}
           />
         </div>
-        <nav
-          className="app-header-tabs"
-          role="tablist"
-          aria-label="App sections"
-        >
-          <NavLink
-            to="/bracket"
-            role="tab"
-            aria-selected={location.pathname === "/bracket"}
-            className={({ isActive }) =>
-              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
-            }
+        {!isRulesPage && !isGroupsHome ? (
+          <nav
+            className="app-header-tabs"
+            role="navigation"
+            aria-label="App sections"
           >
-            Bracket
-          </NavLink>
-          <NavLink
-            to="/my-teams"
-            role="tab"
-            aria-selected={myTeamsTabActive}
-            className={() =>
-              `app-header-tab${myTeamsTabActive ? " app-header-tab--active" : ""}`
-            }
-          >
-            My Teams
-          </NavLink>
-          <NavLink
-            to="/leaderboard"
-            role="tab"
-            aria-selected={location.pathname === "/leaderboard"}
-            className={({ isActive }) =>
-              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
-            }
-          >
-            Leaderboard
-          </NavLink>
-          <NavLink
-            to="/rules"
-            role="tab"
-            aria-selected={location.pathname === "/rules"}
-            className={({ isActive }) =>
-              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
-            }
-          >
-            Rules
-          </NavLink>
-        </nav>
+            <NavLink
+              to="/bracket"
+              role="tab"
+              aria-selected={location.pathname === "/bracket"}
+              className={({ isActive }) =>
+                `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+              }
+            >
+              Bracket
+            </NavLink>
+            <NavLink
+              to="/my-teams"
+              role="tab"
+              aria-selected={myTeamsTabActive}
+              className={() =>
+                `app-header-tab${myTeamsTabActive ? " app-header-tab--active" : ""}`
+              }
+            >
+              My Teams
+            </NavLink>
+            <NavLink
+              to="/leaderboard"
+              role="tab"
+              aria-selected={location.pathname === "/leaderboard"}
+              className={({ isActive }) =>
+                `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+              }
+            >
+              Leaderboard
+            </NavLink>
+          </nav>
+        ) : null}
       </header>
+      {!isRulesPage && isGroupsHome ? (
+        <nav
+          className="app-header-tabs app-header-tabs--groups-hub"
+          role="navigation"
+          aria-label="Group page sections"
+        >
+          <a
+            href="#my-groups-h"
+            className={`app-header-tab${groupsNavHash === "#my-groups-h" ? " app-header-tab--active" : ""}`}
+          >
+            My Groups
+          </a>
+          <a
+            href="#create-h"
+            className={`app-header-tab${groupsNavHash === "#create-h" ? " app-header-tab--active" : ""}`}
+          >
+            Create Group
+          </a>
+          <a
+            href="#market-h"
+            className={`app-header-tab${groupsNavHash === "#market-h" ? " app-header-tab--active" : ""}`}
+          >
+            Public Groups
+          </a>
+          <a
+            href="#priv-join-h"
+            className={`app-header-tab${groupsNavHash === "#priv-join-h" ? " app-header-tab--active" : ""}`}
+          >
+            Private Groups
+          </a>
+        </nav>
+      ) : null}
 
       <main className="bracket-main">
         <Routes>
@@ -911,7 +990,7 @@ export default function App() {
                 ownership={effectiveOwnership}
                 teamsById={teamsById}
                 usersById={mergedUsersById}
-                rosterUsers={rosterUsersForPool}
+                rosterUsers={rosterUsersForGroup}
               />
             }
           />
@@ -925,7 +1004,7 @@ export default function App() {
                 ownership={effectiveOwnership}
                 teamsById={teamsById}
                 usersById={mergedUsersById}
-                rosterUsers={rosterUsersForPool}
+                rosterUsers={rosterUsersForGroup}
               />
             }
           />

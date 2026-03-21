@@ -79,7 +79,7 @@ export function GroupAssignmentPage({
       const g = await getDoc(doc(db, "groups", groupId));
       if (cancelled) return;
       if (!link.exists() || !g.exists()) {
-        setError("You are not in this pool.");
+        setError("You are not in this group.");
         return;
       }
       const cap = g.data()?.memberCap;
@@ -158,13 +158,13 @@ export function GroupAssignmentPage({
     try {
       if (!memberCap || members.length !== memberCap) {
         setError(
-          `Pool needs exactly ${memberCap ?? "?"} members before randomizing.`
+          `Group needs exactly ${memberCap ?? "?"} members before randomizing.`
         );
         return;
       }
       if (!canSplitTournamentEvenly(memberCap)) {
         setError(
-          "This pool size cannot split the 64-slot bracket evenly. Use pool size 2, 4, 8, 16, 32, or 64."
+          "This group size cannot split the 64-slot bracket evenly. Use group size 2, 4, 8, 16, 32, or 64."
         );
         return;
       }
@@ -227,9 +227,9 @@ export function GroupAssignmentPage({
           <p className="group-hub-muted">Checking access…</p>
         ) : (
           <>
-            <p className="group-hub-error">Only pool admins can assign teams.</p>
+            <p className="group-hub-error">Only group admins can assign teams.</p>
             <Link to="/groups" className="btn-ghost">
-              Back to pools
+              Back to groups
             </Link>
           </>
         )}
@@ -247,7 +247,7 @@ export function GroupAssignmentPage({
           {memberCap && canSplitTournamentEvenly(memberCap)
             ? teamsPerMember(memberCap)
             : "—"}{" "}
-          logical slots when the pool is full ({memberCap ?? "—"} members).
+          logical slots when the group is full ({memberCap ?? "—"} members).
           People with play-in games may have more team rows than others—that is
           expected.
         </p>

@@ -7,7 +7,7 @@ export const LOGICAL_BRACKET_SLOTS = 64;
 /** team_id rows in `teams_*.json` — update if the tournament file changes. */
 export const PHYSICAL_TEAM_ID_COUNT = 68;
 
-/** Supported pool sizes (each divides 64 evenly). */
+/** Supported group sizes (each divides 64 evenly). */
 export const GROUP_MEMBER_CAPS = [2, 4, 8, 16, 32, 64] as const;
 
 /** Legacy Firestore values — still accepted when reading groups. */
@@ -24,7 +24,7 @@ export function isValidMemberCap(n: number): n is GroupMemberCap {
   );
 }
 
-/** Logical bracket slots per person (64 ÷ pool size). Physical team_id rows can be higher for FF holders. */
+/** Logical bracket slots per person (64 ÷ group size). Physical team_id rows can be higher for FF holders. */
 export function teamsPerMember(memberCap: number): number {
   if (memberCap <= 0 || LOGICAL_BRACKET_SLOTS % memberCap !== 0) {
     throw new Error(
@@ -41,7 +41,7 @@ export function teamsPerMemberLabel(memberCap: number): string {
   return String(LOGICAL_BRACKET_SLOTS / memberCap);
 }
 
-/** Pool can run fair assignment on the 64-slot model. */
+/** Group can run fair assignment on the 64-slot model. */
 export function canSplitTournamentEvenly(memberCap: number): boolean {
   return memberCap > 0 && LOGICAL_BRACKET_SLOTS % memberCap === 0;
 }

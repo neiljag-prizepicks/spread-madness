@@ -1,5 +1,5 @@
 /**
- * Pool rules (Rules tab). Use **double asterisks** for bold segments in strings.
+ * Group rules (Rules tab). Use **double asterisks** for bold segments in strings.
  */
 /** Legend label colors — match `.birdseye-legend-*` in App.css */
 export type PoolRulesLegendClass =
@@ -39,10 +39,10 @@ export const POOL_RULES_SECTIONS: PoolRulesSection[] = [
     ],
     bullets: [
       "If the **underdog wins the game on the scoreboard**, the underdog is treated as having **covered**, and **that team’s owner** wins control of the advancing team in the bracket for that game.",
-      "If the **favorite wins the game**, they only win pool control if they **cover the spread** (i.e. win by **more** than the spread). If they win but **do not cover** (or it’s a **push** on the number), the **underdog’s owner** wins control of the advancing team, even though the favorite won on the court.",
+      "If the **favorite wins the game**, they only win group control if they **cover the spread** (i.e. win by **more** than the spread). If they win but **do not cover** (or it’s a **push** on the number), the **underdog’s owner** wins control of the advancing team, even though the favorite won on the court.",
     ],
     paragraphsAfterBullets: [
-      "If **no spread** is set for the game, the **straight-up winner’s** owner wins pool control for that game.",
+      "If **no spread** is set for the game, the **straight-up winner’s** owner wins group control for that game.",
     ],
   },
   {
@@ -60,17 +60,17 @@ export const POOL_RULES_SECTIONS: PoolRulesSection[] = [
       {
         legendClass: "pool-rules-legend-hit",
         label: "Green",
-        rest: " — You won pool control for that game (LFG)! Your initials are shown.",
+        rest: " — You won group control for that game (LFG)! Your initials are shown.",
       },
       {
         legendClass: "pool-rules-legend-miss",
         label: "Red",
-        rest: " — You had a team in that game, but **someone else** won pool control; their initials are shown.",
+        rest: " — You had a team in that game, but **someone else** won group control; their initials are shown.",
       },
       {
         legendClass: "pool-rules-legend-neutral",
         label: "Purple",
-        rest: " — The game is final and **you weren’t** on either side in that matchup; initials are the pool winner for that game.",
+        rest: " — The game is final and **you weren’t** on either side in that matchup; initials are the group winner for that game.",
       },
       {
         legendClass: "pool-rules-legend-live",

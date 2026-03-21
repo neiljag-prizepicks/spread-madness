@@ -236,7 +236,7 @@ export function MyTeamsPage({
           This proof-of-concept ties teams to <strong>mock league users</strong> from
           the demo login. Sign in with <strong>Mock login</strong> and pick your name
           to see the teams you control and your Round 1 picks here. Google sign-in
-          does not yet map to pool rosters.
+          does not yet map to group rosters.
         </p>
       </div>
     );
@@ -247,8 +247,8 @@ export function MyTeamsPage({
 
   const copy = {
     inControlDesc: peer
-      ? `${name}'s teams that they own the pool outcome for.`
-      : "Your teams that you own the pool outcome for.",
+      ? `${name}'s teams that they own the group outcome for.`
+      : "Your teams that you own the group outcome for.",
     inControlEmpty: peer
       ? `${name} is not in control of any teams right now.`
       : "You are not in control of any teams right now.",

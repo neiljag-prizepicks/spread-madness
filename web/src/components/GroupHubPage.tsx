@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { requireDb } from "../lib/firebase";
 import {
   GROUP_MEMBER_CAPS,
@@ -34,6 +34,7 @@ function randomJoinCode(): string {
 }
 
 export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
+  const location = useLocation();
   const db = useMemo(() => requireDb(), []);
   const [myGroups, setMyGroups] = useState<
     { id: string; name: string; memberCap: number; role: string }[]
@@ -90,6 +91,18 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
       cancelled = true;
     };
   }, [db]);
+
+  /** Scroll to in-page anchor when nav uses #my-groups-h, #create-h, etc. */
+  useEffect(() => {
+    const id = location.hash.replace(/^#/, "");
+    if (!id) return;
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [location.hash]);
 
   const refreshPublic = async () => {
     try {
@@ -157,9 +170,9 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
   return (
     <div className="group-hub">
       <header className="group-hub-header">
-        <h1 className="group-hub-title">Your pools</h1>
+        <h1 className="group-hub-title">Your groups</h1>
         <p className="group-hub-lede">
-          Create a pool or join one. Ownership is separate per pool. Pool size
+          Create a group or join one. Ownership is separate per group. Group size
           sets how many logical bracket slots each person holds (64 ÷ members;
           First Four games count as one slot each).
         </p>
@@ -173,10 +186,10 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
 
       <section className="group-hub-section" aria-labelledby="my-groups-h">
         <h2 id="my-groups-h" className="group-hub-section-title">
-          My pools
+          My groups
         </h2>
         {myGroups.length === 0 ? (
-          <p className="group-hub-muted">You are not in any pool yet.</p>
+          <p className="group-hub-muted">You are not in any group yet.</p>
         ) : (
           <ul className="group-hub-list">
             {myGroups.map((g) => (
@@ -216,11 +229,11 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
 
       <section className="group-hub-section" aria-labelledby="create-h">
         <h2 id="create-h" className="group-hub-section-title">
-          Create a pool
+          Create a group
         </h2>
         <form className="group-hub-form" onSubmit={handleCreate}>
           <label className="group-hub-label">
-            Pool name
+            Group name
             <input
               className="group-hub-input"
               value={createName}
@@ -231,7 +244,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
             />
           </label>
           <label className="group-hub-label">
-            Pool size (members)
+            Group size (members)
             <select
               className="group-hub-input"
               value={createCap}
@@ -308,7 +321,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
             </>
           ) : null}
           <button type="submit" className="btn-primary">
-            Create pool
+            Create group
           </button>
         </form>
       </section>
@@ -316,7 +329,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
       <section className="group-hub-section" aria-labelledby="market-h">
         <div className="group-hub-section-head">
           <h2 id="market-h" className="group-hub-section-title">
-            Public pools
+            Public groups
           </h2>
           <button type="button" className="btn-ghost btn-sm" onClick={refreshPublic}>
             Refresh
@@ -324,7 +337,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
         </div>
         {publicGroups.filter((g) => g.data.memberCount < g.data.maxMembers)
           .length === 0 ? (
-          <p className="group-hub-muted">No open public pools right now.</p>
+          <p className="group-hub-muted">No open public groups right now.</p>
         ) : (
           <ul className="group-hub-list">
             {publicGroups
@@ -353,7 +366,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
 
       <section className="group-hub-section" aria-labelledby="priv-join-h">
         <h2 id="priv-join-h" className="group-hub-section-title">
-          Join a private pool
+          Join a private group
         </h2>
         <form className="group-hub-form" onSubmit={handleJoinPrivate}>
           <label className="group-hub-label">
@@ -376,7 +389,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
             />
           </label>
           <button type="submit" className="btn-primary">
-            Join private pool
+            Join private group
           </button>
         </form>
       </section>

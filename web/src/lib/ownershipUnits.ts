@@ -127,7 +127,7 @@ export function assignUnitsBalanced(
 
   if (pairCount > 0 && unitsPerPlayer === 1) {
     throw new Error(
-      "A pool cannot give everyone exactly one logical slot while keeping First Four pairs together. Use a larger pool size."
+      "A group cannot give everyone exactly one logical slot while keeping First Four pairs together. Use a larger group size."
     );
   }
 
