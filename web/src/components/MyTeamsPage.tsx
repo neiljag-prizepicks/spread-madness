@@ -13,6 +13,44 @@ type Props = {
   onOpenGameInBracket: (gameId: string) => void;
 };
 
+function MyTeamsLiveScoreboard({ row }: { row: MyTeamRow }) {
+  if (!row.nextGameLive) return null;
+  if (!row.liveGameScoreLabel && !row.liveGameClock) return null;
+  return (
+    <div className="my-teams-live-board" aria-live="polite">
+      {row.liveGameScoreLabel ? (
+        <p className="my-teams-live-score">{row.liveGameScoreLabel}</p>
+      ) : null}
+      {row.liveGameClock ? (
+        <p className="my-teams-live-clock">{row.liveGameClock}</p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Top-right hint that the whole card opens the bracket at this game. */
+function MyTeamsCardBracketAffordance() {
+  return (
+    <div className="my-teams-card-affordance">
+      <span className="my-teams-card-affordance-text">View in bracket</span>
+      <svg
+        className="my-teams-card-affordance-chevron"
+        viewBox="0 0 10 10"
+        aria-hidden
+      >
+        <path
+          d="M3.25 2.5 L6.25 5 L3.25 7.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export function MyTeamsPage({
   viewerUserId,
   games,
@@ -22,9 +60,13 @@ export function MyTeamsPage({
   usersById,
   onOpenGameInBracket,
 }: Props) {
-  const { active, lost } = useMemo(() => {
+  const { active, changedControl, lost } = useMemo(() => {
     if (!viewerUserId) {
-      return { active: [] as MyTeamRow[], lost: [] as MyTeamRow[] };
+      return {
+        active: [] as MyTeamRow[],
+        changedControl: [] as MyTeamRow[],
+        lost: [] as MyTeamRow[],
+      };
     }
     return buildMyTeamsSections(
       viewerUserId,
@@ -54,8 +96,10 @@ export function MyTeamsPage({
     <div className="my-teams-page">
       <h1 className="my-teams-page-title">My Teams</h1>
       <p className="my-teams-page-lead">
-        <strong>In Control</strong> lists teams you control in the bracket (spread outcomes).{" "}
-        <strong>Lost Control</strong> lists teams you no longer control because they did not beat the spread.
+        <strong>In Control</strong> — you own the pool outcome for that team right now.{" "}
+        <strong>Changed Control</strong> — your pick lost the game but covered the spread (someone else
+        controls the slot that advanced). <strong>Lost Control</strong> — your pick did not cover (or lost
+        outright without covering).
       </p>
 
       <section
@@ -75,35 +119,127 @@ export function MyTeamsPage({
               <li key={row.teamId}>
                 <button
                   type="button"
-                  className="my-teams-card"
+                  className={`my-teams-card${row.nextGameLive ? " my-teams-card--live" : ""}`}
                   onClick={() => onOpenGameInBracket(row.focusGameId)}
+                  aria-label={
+                    row.nextGameLive
+                      ? `${row.school}: game in progress, view in bracket`
+                      : undefined
+                  }
                 >
-                  <div className="my-teams-card-head">
-                    <span className="my-teams-seed">({row.seed})</span>
-                    <span className="my-teams-school">{row.school}</span>
-                    {row.mascot ? (
-                      <span className="my-teams-mascot">{row.mascot}</span>
-                    ) : null}
+                  <div className="my-teams-card-top">
+                    <div className="my-teams-card-head">
+                      <span className="my-teams-seed">({row.seed})</span>
+                      <span className="my-teams-school">{row.school}</span>
+                      {row.mascot ? (
+                        <span className="my-teams-mascot">{row.mascot}</span>
+                      ) : null}
+                    </div>
+                    <MyTeamsCardBracketAffordance />
                   </div>
                   <div className="my-teams-meta">
                     <span>{row.region}</span>
+                    {row.nextGameLive ? (
+                      <span className="my-teams-live-pill" aria-hidden>
+                        Live
+                      </span>
+                    ) : null}
                   </div>
-                  <dl className="my-teams-dl">
-                    <div>
+                  <MyTeamsLiveScoreboard row={row} />
+                  <dl className="my-teams-dl my-teams-dl--split">
+                    <div className="my-teams-dl-split-col my-teams-dl-split-col--game">
+                      <div className="my-teams-dl-field">
+                        <dt>Round</dt>
+                        <dd>{row.roundLabel}</dd>
+                      </div>
+                      <div className="my-teams-dl-field">
+                        <dt>Game time</dt>
+                        <dd>{row.nextTipLabel}</dd>
+                      </div>
+                      <div className="my-teams-dl-field">
+                        <dt>Spread</dt>
+                        <dd>{row.nextSpreadLabel}</dd>
+                      </div>
+                    </div>
+                    <div className="my-teams-dl-split-col my-teams-dl-split-col--opponent">
+                      <div className="my-teams-dl-field">
+                        <dt>Next opponent</dt>
+                        <dd>{row.nextOpponentLabel}</dd>
+                      </div>
+                      <div className="my-teams-dl-field">
+                        <dt>Next owner</dt>
+                        <dd>{row.nextOpponentOwnerLabel}</dd>
+                      </div>
+                    </div>
+                  </dl>
+                  {row.lastOutcomeMessage ? (
+                    <p className="my-teams-outcome">{row.lastOutcomeMessage}</p>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section
+        className="my-teams-section"
+        aria-labelledby="my-teams-changed-control-heading"
+      >
+        <h2
+          id="my-teams-changed-control-heading"
+          className="my-teams-section-title"
+        >
+          Changed Control
+        </h2>
+        {changedControl.length === 0 ? (
+          <p className="my-teams-empty">
+            None yet — no Round 1 picks lost the game while covering the spread.
+          </p>
+        ) : (
+          <ul className="my-teams-list">
+            {changedControl.map((row) => (
+              <li key={row.teamId}>
+                <button
+                  type="button"
+                  className={`my-teams-card my-teams-card--changed${row.nextGameLive ? " my-teams-card--live" : ""}`}
+                  onClick={() => onOpenGameInBracket(row.focusGameId)}
+                  aria-label={
+                    row.nextGameLive
+                      ? `${row.school}: game in progress, view in bracket`
+                      : undefined
+                  }
+                >
+                  <div className="my-teams-card-top">
+                    <div className="my-teams-card-head">
+                      <span className="my-teams-seed">({row.seed})</span>
+                      <span className="my-teams-school">{row.school}</span>
+                      {row.mascot ? (
+                        <span className="my-teams-mascot">{row.mascot}</span>
+                      ) : null}
+                    </div>
+                    <MyTeamsCardBracketAffordance />
+                  </div>
+                  <div className="my-teams-meta">
+                    <span>{row.region}</span>
+                    {row.nextGameLive ? (
+                      <span className="my-teams-live-pill" aria-hidden>
+                        Live
+                      </span>
+                    ) : null}
+                  </div>
+                  <MyTeamsLiveScoreboard row={row} />
+                  <dl className="my-teams-dl my-teams-dl--muted my-teams-dl--stacked">
+                    <div className="my-teams-dl-field">
                       <dt>Round</dt>
-                      <dd>{row.roundLabel}</dd>
+                      <dd>
+                        {row.lostControlRoundLabel ??
+                          row.roundLabel.replace(/\s*—\s*out\s*$/i, "")}
+                      </dd>
                     </div>
-                    <div>
-                      <dt>Next opponent</dt>
-                      <dd>{row.nextOpponentLabel}</dd>
-                    </div>
-                    <div>
+                    <div className="my-teams-dl-field">
                       <dt>Game time</dt>
                       <dd>{row.nextTipLabel}</dd>
-                    </div>
-                    <div>
-                      <dt>Spread</dt>
-                      <dd>{row.nextSpreadLabel}</dd>
                     </div>
                   </dl>
                   {row.lastOutcomeMessage ? (
@@ -125,7 +261,8 @@ export function MyTeamsPage({
         </h2>
         {lost.length === 0 ? (
           <p className="my-teams-empty">
-            None yet — your Round 1 teams are still yours.
+            None yet — no Round 1 picks failed to cover (including skinny wins where you lost
+            the pool slot).
           </p>
         ) : (
           <ul className="my-teams-list">
@@ -133,37 +270,57 @@ export function MyTeamsPage({
               <li key={row.teamId}>
                 <button
                   type="button"
-                  className="my-teams-card my-teams-card--lost"
+                  className={`my-teams-card my-teams-card--lost${row.nextGameLive ? " my-teams-card--live" : ""}`}
                   onClick={() => onOpenGameInBracket(row.focusGameId)}
+                  aria-label={
+                    row.nextGameLive
+                      ? `${row.school}: game in progress, view in bracket`
+                      : undefined
+                  }
                 >
-                  <div className="my-teams-card-head">
-                    <span className="my-teams-seed">({row.seed})</span>
-                    <span className="my-teams-school">{row.school}</span>
-                    {row.mascot ? (
-                      <span className="my-teams-mascot">{row.mascot}</span>
-                    ) : null}
+                  <div className="my-teams-card-top">
+                    <div className="my-teams-card-head">
+                      <span className="my-teams-seed">({row.seed})</span>
+                      <span className="my-teams-school">{row.school}</span>
+                      {row.mascot ? (
+                        <span className="my-teams-mascot">{row.mascot}</span>
+                      ) : null}
+                    </div>
+                    <MyTeamsCardBracketAffordance />
                   </div>
                   <div className="my-teams-meta">
                     <span>{row.region}</span>
+                    {row.nextGameLive ? (
+                      <span className="my-teams-live-pill" aria-hidden>
+                        Live
+                      </span>
+                    ) : null}
                   </div>
-                  {row.lastOutcomeMessage ? (
-                    <p className="my-teams-outcome my-teams-outcome--emphasis">
-                      {row.lastOutcomeMessage}
-                    </p>
-                  ) : null}
-                  <dl className="my-teams-dl my-teams-dl--muted">
-                    <div className="my-teams-dl-fullwidth">
-                      <dt>Lost control</dt>
-                      <dd>
-                        {row.lostControlRoundLabel ??
-                          row.roundLabel.replace(/\s*—\s*out\s*$/i, "")}
-                      </dd>
+                  <MyTeamsLiveScoreboard row={row} />
+                  <dl className="my-teams-dl my-teams-dl--split my-teams-dl--muted">
+                    <div className="my-teams-dl-split-col my-teams-dl-split-col--game">
+                      <div className="my-teams-dl-field">
+                        <dt>Lost control</dt>
+                        <dd>
+                          {row.lostControlRoundLabel ??
+                            row.roundLabel.replace(/\s*—\s*out\s*$/i, "")}
+                        </dd>
+                      </div>
+                      <div className="my-teams-dl-field">
+                        <dt>Game time</dt>
+                        <dd>{row.nextTipLabel}</dd>
+                      </div>
                     </div>
-                    <div>
-                      <dt>Game time</dt>
-                      <dd>{row.nextTipLabel}</dd>
+                    <div className="my-teams-dl-split-col my-teams-dl-split-col--opponent">
+                      <div className="my-teams-dl-field">
+                        <dt>Owner</dt>
+                        <dd>{row.lostSlotOwnerLabel ?? "—"}</dd>
+                      </div>
                     </div>
                   </dl>
+                  {row.lastOutcomeMessage ? (
+                    <p className="my-teams-outcome">{row.lastOutcomeMessage}</p>
+                  ) : null}
                 </button>
               </li>
             ))}

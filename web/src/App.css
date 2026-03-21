@@ -423,16 +423,70 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.my-teams-card--lost {
+.my-teams-card:focus-visible {
+  outline: 2px solid rgba(255, 213, 79, 0.65);
+  outline-offset: 2px;
+}
+
+.my-teams-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+.my-teams-card-affordance {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.my-teams-card-affordance-text {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--pp-fg-secondary);
+}
+
+.my-teams-card:hover .my-teams-card-affordance-text,
+.my-teams-card:focus-visible .my-teams-card-affordance-text {
+  color: var(--pp-fg-primary);
+}
+
+.my-teams-card-affordance-chevron {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex-shrink: 0;
+  color: var(--pp-fg-secondary);
+  opacity: 0.9;
+}
+
+.my-teams-card:hover .my-teams-card-affordance-chevron,
+.my-teams-card:focus-visible .my-teams-card-affordance-chevron {
+  color: #ffd54f;
+  opacity: 1;
+}
+
+.my-teams-card--lost,
+.my-teams-card--changed {
   opacity: 0.92;
 }
 
 .my-teams-card-head {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.35rem 0.5rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0;
 }
 
 .my-teams-seed {
@@ -453,9 +507,51 @@
 }
 
 .my-teams-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.5rem;
   font-size: 0.8rem;
   color: var(--pp-fg-secondary);
   margin-bottom: 0.5rem;
+}
+
+/* Same yellow treatment as .matchup--live / .overview-slot--live */
+.my-teams-card--live {
+  border-color: rgba(255, 213, 79, 0.55);
+  background: rgba(255, 213, 79, 0.14);
+}
+
+.my-teams-card--live:hover {
+  background: rgba(255, 213, 79, 0.2);
+  border-color: rgba(255, 213, 79, 0.65);
+}
+
+.my-teams-live-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffd54f;
+}
+
+.my-teams-live-board {
+  margin: 0 0 0.5rem;
+}
+
+.my-teams-live-score {
+  margin: 0 0 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--pp-fg-primary);
+  letter-spacing: 0.02em;
+}
+
+.my-teams-live-clock {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--pp-fg-secondary);
 }
 
 .my-teams-dl {
@@ -464,6 +560,42 @@
   gap: 0.4rem 0.75rem;
   margin: 0;
   font-size: 0.82rem;
+}
+
+.my-teams-dl--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.my-teams-dl--split {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1rem 1.25rem;
+}
+
+.my-teams-dl-split-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.my-teams-dl-field {
+  display: block;
+}
+
+.my-teams-dl-field dt {
+  margin: 0;
+  color: var(--pp-fg-secondary);
+  font-weight: 500;
+}
+
+.my-teams-dl-field dd {
+  margin: 0;
+  color: var(--pp-fg-primary);
 }
 
 .my-teams-dl dt {
@@ -804,6 +936,72 @@
   background: rgba(255, 213, 79, 0.14);
 }
 
+.matchup--live .matchup-info-btn {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.matchup--live .matchup-info-btn:hover,
+.matchup--live .matchup-info-btn:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Final pool outcome — card tint matches overview slots (green / red / purple) */
+.matchup--pool-hit {
+  border-color: rgba(0, 230, 118, 0.5);
+  background: rgba(0, 230, 118, 0.12);
+}
+
+.matchup--pool-miss {
+  border-color: rgba(255, 77, 77, 0.5);
+  background: rgba(255, 77, 77, 0.1);
+}
+
+.matchup--pool-neutral {
+  border-color: rgba(157, 123, 255, 0.55);
+  background: rgba(157, 123, 255, 0.12);
+}
+
+.matchup--pool-hit .matchup-info-btn,
+.matchup--pool-miss .matchup-info-btn,
+.matchup--pool-neutral .matchup-info-btn {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.matchup--pool-hit .matchup-info-btn:hover,
+.matchup--pool-hit .matchup-info-btn:focus-visible,
+.matchup--pool-miss .matchup-info-btn:hover,
+.matchup--pool-miss .matchup-info-btn:focus-visible,
+.matchup--pool-neutral .matchup-info-btn:hover,
+.matchup--pool-neutral .matchup-info-btn:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.matchup--pool-hit .matchup-outcome,
+.matchup--pool-miss .matchup-outcome,
+.matchup--pool-neutral .matchup-outcome {
+  border-top-color: rgba(255, 255, 255, 0.22);
+}
+
+.matchup--pool-hit .matchup-margin--headline,
+.matchup--pool-miss .matchup-margin--headline,
+.matchup--pool-neutral .matchup-margin--headline {
+  color: #fff;
+}
+
+.matchup--pool-hit .matchup-message,
+.matchup--pool-miss .matchup-message,
+.matchup--pool-neutral .matchup-message {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.matchup--pool-hit .matchup-owner,
+.matchup--pool-miss .matchup-owner,
+.matchup--pool-neutral .matchup-owner {
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .matchup-top {
   position: absolute;
   top: 0.35rem;
@@ -1059,19 +1257,6 @@
   font-size: 0.75rem;
   line-height: 1.35;
   color: var(--pp-fg-secondary);
-}
-
-/* Margin line only — matches overview green / red / purple; message stays grey */
-.matchup-outcome--hit .matchup-margin {
-  color: var(--pp-positive);
-}
-
-.matchup-outcome--miss .matchup-margin {
-  color: var(--pp-negative);
-}
-
-.matchup-outcome--neutral .matchup-margin {
-  color: var(--pp-fg-accent);
 }
 
 .final-rounds {

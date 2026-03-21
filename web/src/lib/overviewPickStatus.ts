@@ -1,5 +1,5 @@
 import type { BracketGame, GameResult, Team, User } from "../types";
-import { computePoolOutcome } from "./ats";
+import { computePoolOutcome, getOwnerDisplayForSide } from "./ats";
 import { isPoolSettledForGame } from "./gameResult";
 import type { OwnershipRow } from "./ownershipMap";
 import { buildTeamToUserId } from "./ownershipMap";
@@ -56,7 +56,7 @@ function isGameFinal(
  * (or status is explicitly in progress). Catches partial JSON and clock+scores
  * rows that were previously mis-inferred as final.
  */
-function isOverviewLiveResult(
+export function isOverviewLiveResult(
   r: GameResult | undefined,
   ta: string,
   tb: string
@@ -69,17 +69,10 @@ function isOverviewLiveResult(
   return sa != null || sb != null;
 }
 
-function ownerInitialsForTeam(
-  teamId: string,
-  teamToUser: ReturnType<typeof buildTeamToUserId>,
-  usersById: Map<string, User>,
-  displayName: (userId: string) => string
-): string {
-  const uid = teamToUser.get(teamId);
-  if (!uid) return "—";
-  const nm = usersById.get(uid)?.display_name ?? displayName(uid);
+function initialsFromOwnerLabel(label: string): string {
+  if (!label || label === "—") return "—";
   return (
-    userInitialsFromDisplayName(nm) || uid.slice(0, 2).toUpperCase()
+    userInitialsFromDisplayName(label) || label.slice(0, 2).toUpperCase()
   );
 }
 
@@ -101,12 +94,27 @@ export function overviewSlotVisual(
   const tb = resolveTeamId(game, "side_b", gm, results, new Set());
   if (!ta || !tb) return { status: "pending", initials: "" };
 
-  const teamToUser = buildTeamToUserId(ownershipRows);
   const r = results.get(game.id);
 
   if (isOverviewLiveResult(r, ta, tb)) {
-    const ia = ownerInitialsForTeam(ta, teamToUser, usersById, displayName);
-    const ib = ownerInitialsForTeam(tb, teamToUser, usersById, displayName);
+    const nameA = getOwnerDisplayForSide(
+      game,
+      "side_a",
+      allGames,
+      results,
+      ownershipRows,
+      displayName
+    );
+    const nameB = getOwnerDisplayForSide(
+      game,
+      "side_b",
+      allGames,
+      results,
+      ownershipRows,
+      displayName
+    );
+    const ia = initialsFromOwnerLabel(nameA);
+    const ib = initialsFromOwnerLabel(nameB);
     return { status: "live", initials: `${ia}·${ib}` };
   }
 

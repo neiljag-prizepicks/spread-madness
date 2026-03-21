@@ -46,7 +46,7 @@ export function computePoolOutcome(
 
   if (oa && ob && oa === ob) {
     const ncaaWinnerId = sa > sb ? ta : tb;
-    const msg = `${abbrev(ncaaWinnerId)} advances. ${displayName(oa)} controls ${school(ncaaWinnerId)}.`;
+    const msg = `${abbrev(ncaaWinnerId)} advances.`;
     return {
       ncaaWinnerId,
       poolOwnerUserId: oa,
@@ -71,7 +71,7 @@ export function computePoolOutcome(
       favoriteId: fav ?? ta,
       dogId: fav === ta ? tb : ta,
       marginFromFavorite: sa - sb,
-      message: `No spread set — ${school(ncaaWinnerId)} wins. ${displayName(owner)} controls ${school(ncaaWinnerId)}.`,
+      message: `No spread set — ${school(ncaaWinnerId)} wins.`,
     };
   }
 
@@ -101,7 +101,9 @@ export function computePoolOutcome(
   }
 
   const marginFromFavorite = fav === ta ? sa - sb : sb - sa;
-  const msg = `${abbrev(coveredTeamId)} covered the spread! ${displayName(poolOwnerUserId)} controls ${school(ncaaWinnerId)}.`;
+  const opponentId = coveredTeamId === ta ? tb : ta;
+  const scoreSummary = `${abbrev(ta)} ${sa}, ${abbrev(tb)} ${sb}`;
+  const msg = `${abbrev(coveredTeamId)} covered the spread vs. ${abbrev(opponentId)}! The final score was ${scoreSummary}.`;
 
   return {
     ncaaWinnerId,

@@ -1,5 +1,9 @@
 import type { BracketGame, GameResult, Team, User } from "../types";
-import { computePoolOutcome, getPoolOwnerForSide } from "./ats";
+import {
+  computePoolOutcome,
+  getOwnerDisplayForSide,
+  getPoolOwnerForSide,
+} from "./ats";
 import { isPoolSettledForGame } from "./gameResult";
 import type { OwnershipRow } from "./ownershipMap";
 import { buildTeamToUserId } from "./ownershipMap";
@@ -63,11 +67,21 @@ export type MyTeamRow = {
   seed: number;
   roundLabel: string;
   nextOpponentLabel: string;
+  /** Pool owner line for the next opponent (same logic as bracket matchup rows). */
+  nextOpponentOwnerLabel: string;
   nextTipLabel: string;
   nextSpreadLabel: string;
   lastOutcomeMessage: string | null;
   /** Lost Control section: round label only, e.g. "Round of 64" */
   lostControlRoundLabel?: string;
+  /** Lost Control: display name of pool owner for the advancing slot after the deciding game. */
+  lostSlotOwnerLabel?: string;
+  /** True when this row's current bracket game (frontier) is in progress. */
+  nextGameLive: boolean;
+  /** When live: game clock (e.g. 1st Half 10:39). */
+  liveGameClock: string | null;
+  /** When live: scoreboard line with abbrevs, e.g. "DUKE 42 · UNC 39". */
+  liveGameScoreLabel: string | null;
 };
 
 function spreadLineLabel(
@@ -225,6 +239,31 @@ function currentPoolController(
   return teamToUser.get(teamId) ?? null;
 }
 
+/** Eliminated on the scoreboard but that team is who covered ATS (underdog moral cover). */
+function coveredSpreadButLostNcaa(
+  teamId: string,
+  eliminationGame: BracketGame,
+  games: BracketGame[],
+  results: Map<string, GameResult>,
+  ownershipRows: OwnershipRow[],
+  teamsById: Map<string, Team>
+): boolean {
+  const dn = (uid: string) => uid;
+  const out = computePoolOutcome(
+    eliminationGame,
+    games,
+    results,
+    ownershipRows,
+    teamsById,
+    dn
+  );
+  if (!out) return false;
+  return (
+    out.coveredTeamId === teamId &&
+    out.ncaaWinnerId !== teamId
+  );
+}
+
 function lastSettledGameForTeam(
   teamId: string,
   games: BracketGame[],
@@ -361,8 +400,11 @@ function buildRow(
   let focusGameId = frontier.game.id;
   let roundLabel = ROUND_LABELS[frontier.game.round] ?? frontier.game.round;
   let nextOpponentLabel = "—";
+  let nextOpponentOwnerLabel = "—";
   let nextTipLabel = "—";
   let nextSpreadLabel = "—";
+
+  const dn = (uid: string) => usersById.get(uid)?.display_name ?? uid;
 
   if (frontier.kind === "upcoming") {
     nextOpponentLabel = opponentLabel(
@@ -372,19 +414,62 @@ function buildRow(
       results,
       teamsById
     );
+    const opponentSide: "side_a" | "side_b" =
+      frontier.side === "side_a" ? "side_b" : "side_a";
+    nextOpponentOwnerLabel = getOwnerDisplayForSide(
+      frontier.game,
+      opponentSide,
+      games,
+      results,
+      ownershipRows,
+      dn
+    );
     nextTipLabel = formatTip(frontier.game.scheduled_tip_utc);
     nextSpreadLabel = spreadLineLabel(frontier.game, teamsById);
   } else if (frontier.kind === "champion") {
     roundLabel = "National champion";
     nextOpponentLabel = "Tournament complete";
+    nextOpponentOwnerLabel = "—";
     nextTipLabel = "—";
     nextSpreadLabel = "—";
     focusGameId = frontier.game.id;
   } else {
     roundLabel = `${ROUND_LABELS[frontier.game.round] ?? frontier.game.round} — out`;
     nextOpponentLabel = "Eliminated";
+    nextOpponentOwnerLabel = "—";
     nextTipLabel = formatTip(frontier.game.scheduled_tip_utc);
     nextSpreadLabel = spreadLineLabel(frontier.game, teamsById);
+  }
+
+  const nextGameLive =
+    frontier.kind === "upcoming" &&
+    results.get(frontier.game.id)?.status === "in_progress";
+
+  let liveGameClock: string | null = null;
+  let liveGameScoreLabel: string | null = null;
+  if (nextGameLive && frontier.kind === "upcoming") {
+    const g = frontier.game;
+    const r = results.get(g.id);
+    const ck = r?.clock;
+    if (ck != null && String(ck).trim() !== "") {
+      liveGameClock = String(ck);
+    }
+    const ta = resolveTeamId(g, "side_a", gm, results, new Set());
+    const tb = resolveTeamId(g, "side_b", gm, results, new Set());
+    const sa =
+      ta != null && r?.scores?.[ta] != null ? r.scores[ta] : null;
+    const sb =
+      tb != null && r?.scores?.[tb] != null ? r.scores[tb] : null;
+    const parts: string[] = [];
+    if (ta != null && sa != null) {
+      parts.push(`${teamAbbrev(ta, teamsById)} ${sa}`);
+    }
+    if (tb != null && sb != null) {
+      parts.push(`${teamAbbrev(tb, teamsById)} ${sb}`);
+    }
+    if (parts.length > 0) {
+      liveGameScoreLabel = parts.join(" · ");
+    }
   }
 
   return {
@@ -396,9 +481,13 @@ function buildRow(
     seed,
     roundLabel,
     nextOpponentLabel,
+    nextOpponentOwnerLabel,
     nextTipLabel,
     nextSpreadLabel,
     lastOutcomeMessage,
+    nextGameLive,
+    liveGameClock,
+    liveGameScoreLabel,
   };
 }
 
@@ -409,7 +498,11 @@ export function buildMyTeamsSections(
   ownershipRows: OwnershipRow[],
   teamsById: Map<string, Team>,
   usersById: Map<string, User>
-): { active: MyTeamRow[]; lost: MyTeamRow[] } {
+): {
+  active: MyTeamRow[];
+  changedControl: MyTeamRow[];
+  lost: MyTeamRow[];
+} {
   const draftedByViewer = new Set(
     ownershipRows.filter((r) => r.user_id === viewerUserId).map((r) => r.team_id)
   );
@@ -420,6 +513,7 @@ export function buildMyTeamsSections(
   ]);
 
   const active: MyTeamRow[] = [];
+  const changedControl: MyTeamRow[] = [];
   const lost: MyTeamRow[] = [];
 
   for (const teamId of candidateIds) {
@@ -467,14 +561,46 @@ export function buildMyTeamsSections(
         ? (ROUND_LABELS[fallbackRoundGame.round] ?? fallbackRoundGame.round)
         : (ROUND_LABELS[frontier.game.round] ?? frontier.game.round);
       const anchorGame = lostGame ?? fallbackRoundGame;
-      lost.push({
+      const augmented = {
         ...row,
         lostControlRoundLabel,
         focusGameId: anchorGame?.id ?? row.focusGameId,
         nextTipLabel: anchorGame
           ? formatTip(anchorGame.scheduled_tip_utc)
           : row.nextTipLabel,
-      });
+      };
+
+      const isChangedControl =
+        frontier.kind === "eliminated" &&
+        coveredSpreadButLostNcaa(
+          teamId,
+          frontier.game,
+          games,
+          results,
+          ownershipRows,
+          teamsById
+        );
+
+      if (isChangedControl) changedControl.push(augmented);
+      else {
+        const dnOwner = (uid: string) =>
+          usersById.get(uid)?.display_name ?? uid;
+        let lostSlotOwnerLabel = "—";
+        if (anchorGame) {
+          const out = computePoolOutcome(
+            anchorGame,
+            games,
+            results,
+            ownershipRows,
+            teamsById,
+            dnOwner
+          );
+          if (out?.poolOwnerUserId) {
+            lostSlotOwnerLabel = dnOwner(out.poolOwnerUserId);
+          }
+        }
+        lost.push({ ...augmented, lostSlotOwnerLabel });
+      }
     }
   }
 
@@ -487,11 +613,17 @@ export function buildMyTeamsSections(
     return a.school.localeCompare(b.school);
   });
 
+  changedControl.sort((a, b) => {
+    if (a.region !== b.region) return a.region.localeCompare(b.region);
+    if (a.seed !== b.seed) return a.seed - b.seed;
+    return a.school.localeCompare(b.school);
+  });
+
   lost.sort((a, b) => {
     if (a.region !== b.region) return a.region.localeCompare(b.region);
     if (a.seed !== b.seed) return a.seed - b.seed;
     return a.school.localeCompare(b.school);
   });
 
-  return { active, lost };
+  return { active, changedControl, lost };
 }
