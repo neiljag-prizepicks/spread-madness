@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithCredential,
+  signOut,
+} from "firebase/auth";
+import {
   Navigate,
   NavLink,
   Route,
@@ -16,13 +22,26 @@ import type {
   Team,
   User,
 } from "./types";
+import {
+  readStoredActiveGroupId,
+  writeStoredActiveGroupId,
+} from "./lib/activeGroupStorage";
+import { auth, db, isFirebaseConfigured } from "./lib/firebase";
 import { normalizeResultsFileObject } from "./lib/gameResult";
+import {
+  subscribeGroupMembers,
+  subscribeGroupOwnership,
+  subscribeUserGroups,
+  type UserGroupLinkDoc,
+} from "./lib/firestore/groupsApi";
 import { applyScheduleLineOverlayToGames } from "./lib/mergeGameOverlay";
 import type { OwnershipRow } from "./lib/ownershipMap";
 import {
   KalshiBracketArena,
   type KalshiBracketArenaProps,
 } from "./components/KalshiBracketArena";
+import { GroupAssignmentPage } from "./components/GroupAssignmentPage";
+import { GroupHubPage } from "./components/GroupHubPage";
 import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
@@ -30,7 +49,7 @@ import "./App.css";
 
 type Session =
   | { kind: "mock"; userId: string; label: string }
-  | { kind: "google"; label: string };
+  | { kind: "google"; label: string; uid?: string };
 
 function decodeJwtPayload(credential: string): { email?: string; name?: string } {
   try {
@@ -135,6 +154,8 @@ type MyTeamsRouteProps = {
   ownership: OwnershipRow[];
   teamsById: Map<string, Team>;
   usersById: Map<string, User>;
+  /** When set (e.g. Firebase pool), roster is limited to pool members. */
+  rosterUsers?: User[];
 };
 
 function MyTeamsRoute({
@@ -144,6 +165,7 @@ function MyTeamsRoute({
   ownership,
   teamsById,
   usersById,
+  rosterUsers: rosterUsersProp,
 }: MyTeamsRouteProps) {
   const navigate = useNavigate();
   const { userId: userIdParam } = useParams<{ userId: string }>();
@@ -160,7 +182,8 @@ function MyTeamsRoute({
         };
       }
       const isOwn =
-        session.kind === "mock" && session.userId === userIdParam;
+        (session.kind === "mock" && session.userId === userIdParam) ||
+        (session.kind === "google" && session.uid === userIdParam);
       return {
         viewerUserId: userIdParam,
         userNotFound: false as const,
@@ -169,20 +192,24 @@ function MyTeamsRoute({
       };
     }
     return {
-      viewerUserId: session.kind === "mock" ? session.userId : null,
+      viewerUserId:
+        session.kind === "mock" ? session.userId : session.uid ?? null,
       userNotFound: false as const,
       perspective: "self" as const,
       peerName: "",
     };
   }, [userIdParam, session, usersById]);
 
-  const rosterUsers = useMemo(
-    () =>
-      [...usersById.values()].sort((a, b) =>
+  const rosterUsers = useMemo(() => {
+    if (rosterUsersProp?.length) {
+      return [...rosterUsersProp].sort((a, b) =>
         a.display_name.localeCompare(b.display_name)
-      ),
-    [usersById]
-  );
+      );
+    }
+    return [...usersById.values()].sort((a, b) =>
+      a.display_name.localeCompare(b.display_name)
+    );
+  }, [rosterUsersProp, usersById]);
 
   return (
     <MyTeamsPage
@@ -197,7 +224,10 @@ function MyTeamsRoute({
       usersById={usersById}
       rosterUsers={rosterUsers}
       onSelectRosterUser={(userId) => {
-        if (session.kind === "mock" && session.userId === userId) {
+        if (
+          (session.kind === "mock" && session.userId === userId) ||
+          (session.kind === "google" && session.uid === userId)
+        ) {
           navigate("/my-teams");
         } else {
           navigate(`/my-teams/user/${encodeURIComponent(userId)}`);
@@ -227,6 +257,18 @@ export default function App() {
   const [bracketFocusGameId, setBracketFocusGameId] = useState<string | null>(
     null
   );
+
+  const [authReady, setAuthReady] = useState(() => !isFirebaseConfigured());
+  const [userGroupRows, setUserGroupRows] = useState<
+    { id: string; data: UserGroupLinkDoc }[]
+  >([]);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(() =>
+    readStoredActiveGroupId()
+  );
+  const [firestoreOwnership, setFirestoreOwnership] = useState<
+    OwnershipRow[]
+  >([]);
+  const [memberUsers, setMemberUsers] = useState<Map<string, User>>(new Map());
 
   /** Apply focus from router state (e.g. My Teams → bracket) and clear state so refresh/back behave. */
   useEffect(() => {
@@ -304,6 +346,101 @@ export default function App() {
     return () => clearInterval(id);
   }, [gameTemplate]);
 
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !auth) {
+      setAuthReady(true);
+      return;
+    }
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setSession({
+          kind: "google",
+          uid: user.uid,
+          label: user.displayName ?? user.email ?? "Google user",
+        });
+      } else {
+        setSession(null);
+      }
+      setAuthReady(true);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!db || session?.kind !== "google" || !session.uid) {
+      setUserGroupRows([]);
+      return;
+    }
+    const unsub = subscribeUserGroups(db, session.uid, setUserGroupRows);
+    return () => unsub();
+  }, [session]);
+
+  useEffect(() => {
+    if (session?.kind !== "google" || !session.uid) return;
+    if (!userGroupRows.length) {
+      setActiveGroupId(null);
+      writeStoredActiveGroupId(null);
+      return;
+    }
+    setActiveGroupId((prev) => {
+      if (prev && userGroupRows.some((r) => r.id === prev)) return prev;
+      const stored = readStoredActiveGroupId();
+      if (stored && userGroupRows.some((r) => r.id === stored)) return stored;
+      return userGroupRows[0].id;
+    });
+  }, [session, userGroupRows]);
+
+  useEffect(() => {
+    if (session?.kind !== "google") return;
+    writeStoredActiveGroupId(activeGroupId);
+  }, [activeGroupId, session?.kind]);
+
+  useEffect(() => {
+    if (!db || !activeGroupId || session?.kind !== "google") {
+      setFirestoreOwnership([]);
+      return;
+    }
+    const unsub = subscribeGroupOwnership(db, activeGroupId, setFirestoreOwnership);
+    return () => unsub();
+  }, [db, activeGroupId, session?.kind]);
+
+  useEffect(() => {
+    if (!db || !activeGroupId || session?.kind !== "google") {
+      setMemberUsers(new Map());
+      return;
+    }
+    const unsub = subscribeGroupMembers(
+      db,
+      activeGroupId,
+      (rows) => {
+        const m = new Map<string, User>();
+        for (const r of rows) {
+          m.set(r.uid, { id: r.uid, display_name: r.data.displayName });
+        }
+        setMemberUsers(m);
+      }
+    );
+    return () => unsub();
+  }, [db, activeGroupId, session?.kind]);
+
+  const firebaseGroupMode =
+    isFirebaseConfigured() &&
+    session?.kind === "google" &&
+    Boolean(session.uid);
+
+  useEffect(() => {
+    if (!firebaseGroupMode || userGroupRows.length > 0) return;
+    const p = location.pathname;
+    if (p === "/groups" || p === "/rules" || p.startsWith("/groups/")) return;
+    if (
+      p.startsWith("/bracket") ||
+      p.startsWith("/my-teams") ||
+      p.startsWith("/leaderboard")
+    ) {
+      navigate("/groups", { replace: true });
+    }
+  }, [firebaseGroupMode, userGroupRows.length, location.pathname, navigate]);
+
   const teamsById = useMemo(
     () => new Map(teams.map((t) => [t.id, t])),
     [teams]
@@ -313,16 +450,76 @@ export default function App() {
     [users]
   );
 
+  const mergedUsersById = useMemo(() => {
+    const m = new Map(usersById);
+    for (const [id, u] of memberUsers) m.set(id, u);
+    return m;
+  }, [usersById, memberUsers]);
+
+  const effectiveOwnership = useMemo(() => {
+    if (session?.kind === "mock") return ownership;
+    if (
+      session?.kind === "google" &&
+      isFirebaseConfigured() &&
+      session.uid &&
+      activeGroupId
+    ) {
+      return firestoreOwnership;
+    }
+    return ownership;
+  }, [session, ownership, firestoreOwnership, activeGroupId]);
+
+  const leaderboardUsers = useMemo(() => {
+    if (
+      session?.kind === "google" &&
+      isFirebaseConfigured() &&
+      memberUsers.size > 0
+    ) {
+      return [...memberUsers.values()].sort((a, b) =>
+        a.display_name.localeCompare(b.display_name)
+      );
+    }
+    return users;
+  }, [session, users, memberUsers]);
+
+  const rosterUsersForPool = useMemo(() => {
+    if (
+      session?.kind === "google" &&
+      isFirebaseConfigured() &&
+      memberUsers.size > 0
+    ) {
+      return [...memberUsers.values()].sort((a, b) =>
+        a.display_name.localeCompare(b.display_name)
+      );
+    }
+    return undefined;
+  }, [session, memberUsers]);
+
+  const allTeamIds = useMemo(
+    () => [...teams.map((t) => t.id)].sort(),
+    [teams]
+  );
+
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
-  const onGoogleSuccess = (cred: CredentialResponse) => {
+  const onGoogleSuccess = async (cred: CredentialResponse) => {
     if (!cred.credential) return;
-    const p = decodeJwtPayload(cred.credential);
-    setSession({
-      kind: "google",
-      label: p.name ?? p.email ?? "Google user",
-    });
-    navigate("/bracket", { replace: true });
+    if (isFirebaseConfigured() && auth) {
+      try {
+        const credential = GoogleAuthProvider.credential(cred.credential);
+        await signInWithCredential(auth, credential);
+        navigate("/groups", { replace: true });
+      } catch (e) {
+        console.warn("Firebase sign-in failed", e);
+      }
+    } else {
+      const p = decodeJwtPayload(cred.credential);
+      setSession({
+        kind: "google",
+        label: p.name ?? p.email ?? "Google user",
+      });
+      navigate("/bracket", { replace: true });
+    }
   };
 
   if (loadError) {
@@ -341,9 +538,18 @@ export default function App() {
     );
   }
 
+  if (!authReady && isFirebaseConfigured()) {
+    return (
+      <div className="app-loading">
+        <p>Checking session…</p>
+      </div>
+    );
+  }
+
   const myTeamsTabActive =
     location.pathname === "/my-teams" ||
     location.pathname.startsWith("/my-teams/user/");
+  const poolsTabActive = location.pathname.startsWith("/groups");
 
   if (!session) {
     return (
@@ -379,12 +585,15 @@ export default function App() {
                   ) as HTMLSelectElement;
                   const u = users.find((x) => x.id === sel.value);
                   if (u) {
-                    setSession({
-                      kind: "mock",
-                      userId: u.id,
-                      label: u.display_name,
-                    });
-                    navigate("/bracket", { replace: true });
+                    void (async () => {
+                      if (auth) await signOut(auth);
+                      setSession({
+                        kind: "mock",
+                        userId: u.id,
+                        label: u.display_name,
+                      });
+                      navigate("/bracket", { replace: true });
+                    })();
                   }
                 }}
               >
@@ -415,6 +624,12 @@ export default function App() {
     );
   }
 
+  const handleSignOut = async () => {
+    if (auth) await signOut(auth);
+    setSession(null);
+    writeStoredActiveGroupId(null);
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -423,9 +638,28 @@ export default function App() {
             <span className="pp-mark">P</span>
             <span>Spread Madness</span>
           </div>
+          {firebaseGroupMode && userGroupRows.length > 0 ? (
+            <div className="app-header-pool">
+              <label className="app-header-pool-label" htmlFor="active-pool">
+                Pool
+              </label>
+              <select
+                id="active-pool"
+                className="app-header-pool-select"
+                value={activeGroupId ?? ""}
+                onChange={(e) => setActiveGroupId(e.target.value || null)}
+              >
+                {userGroupRows.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.data.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
           <UserAccountMenu
             displayName={session.label}
-            onSignOut={() => setSession(null)}
+            onSignOut={() => void handleSignOut()}
           />
         </div>
         <nav
@@ -433,6 +667,18 @@ export default function App() {
           role="tablist"
           aria-label="App sections"
         >
+          {firebaseGroupMode ? (
+            <NavLink
+              to="/groups"
+              role="tab"
+              aria-selected={poolsTabActive}
+              className={() =>
+                `app-header-tab${poolsTabActive ? " app-header-tab--active" : ""}`
+              }
+            >
+              Pools
+            </NavLink>
+          ) : null}
           <NavLink
             to="/bracket"
             role="tab"
@@ -483,6 +729,37 @@ export default function App() {
             element={<Navigate to="/bracket" replace />}
           />
           <Route
+            path="/groups"
+            element={
+              session.kind === "google" && session.uid ? (
+                <GroupHubPage
+                  uid={session.uid}
+                  displayName={session.label}
+                  onEnterGroup={(id) => {
+                    setActiveGroupId(id);
+                    navigate("/bracket", { replace: true });
+                  }}
+                />
+              ) : (
+                <Navigate to="/bracket" replace />
+              )
+            }
+          />
+          <Route
+            path="/groups/:groupId/assign"
+            element={
+              session.kind === "google" && session.uid ? (
+                <GroupAssignmentPage
+                  uid={session.uid}
+                  allTeamIds={allTeamIds}
+                  teamsById={teamsById}
+                />
+              ) : (
+                <Navigate to="/groups" replace />
+              )
+            }
+          />
+          <Route
             path="/bracket"
             element={
               <KalshiBracketArena
@@ -490,11 +767,13 @@ export default function App() {
                   games,
                   allGames: games,
                   teamsById,
-                  usersById,
-                  ownershipRows: ownership,
+                  usersById: mergedUsersById,
+                  ownershipRows: effectiveOwnership,
                   results,
                   viewerUserId:
-                    session.kind === "mock" ? session.userId : null,
+                    session.kind === "mock"
+                      ? session.userId
+                      : session.uid ?? null,
                   focusGameId: bracketFocusGameId,
                   onFocusGameConsumed: () => setBracketFocusGameId(null),
                 } satisfies KalshiBracketArenaProps)}
@@ -508,9 +787,10 @@ export default function App() {
                 session={session}
                 games={games}
                 results={results}
-                ownership={ownership}
+                ownership={effectiveOwnership}
                 teamsById={teamsById}
-                usersById={usersById}
+                usersById={mergedUsersById}
+                rosterUsers={rosterUsersForPool}
               />
             }
           />
@@ -521,9 +801,10 @@ export default function App() {
                 session={session}
                 games={games}
                 results={results}
-                ownership={ownership}
+                ownership={effectiveOwnership}
                 teamsById={teamsById}
-                usersById={usersById}
+                usersById={mergedUsersById}
+                rosterUsers={rosterUsersForPool}
               />
             }
           />
@@ -531,10 +812,10 @@ export default function App() {
             path="/leaderboard"
             element={
               <LeaderboardPage
-                users={users}
+                users={leaderboardUsers}
                 games={games}
                 results={results}
-                ownershipRows={ownership}
+                ownershipRows={effectiveOwnership}
                 teamsById={teamsById}
               />
             }

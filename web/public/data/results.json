@@ -301,13 +301,13 @@
     "scores_updated_at": "2026-03-20T21:20:44.362Z"
   },
   "E-R32-3": {
-    "status": "in_progress",
-    "clock": "16:04 - 2nd Half",
+    "status": "final",
+    "clock": null,
     "scores": {
-      "E03": 42,
-      "E06": 37
+      "E03": 77,
+      "E06": 69
     },
-    "scores_updated_at": "2026-03-21T20:07:41.155Z"
+    "scores_updated_at": "2026-03-21T21:04:12.688Z"
   },
   "MW-R32-1": {
     "status": "final",

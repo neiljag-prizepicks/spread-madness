@@ -2645,3 +2645,216 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
   }
 }
+
+/* —— Firebase pools (group hub + assignment) —— */
+.app-header-pool {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+}
+
+.app-header-pool-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--pp-fg-tertiary);
+  white-space: nowrap;
+}
+
+.app-header-pool-select {
+  max-width: min(220px, 46vw);
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-bg-tertiary);
+  color: var(--pp-fg-primary);
+  font-size: 0.82rem;
+}
+
+.group-hub,
+.group-assign {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2.5rem;
+}
+
+.group-hub-header {
+  margin-bottom: 1.5rem;
+}
+
+.group-hub-title {
+  font-size: 1.35rem;
+  margin: 0 0 0.35rem;
+}
+
+.group-hub-lede {
+  color: var(--pp-fg-secondary);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.group-hub-muted {
+  color: var(--pp-fg-tertiary);
+  font-size: 0.9rem;
+}
+
+.group-hub-error {
+  background: rgba(220, 80, 80, 0.12);
+  border: 1px solid rgba(220, 80, 80, 0.35);
+  color: var(--pp-fg-primary);
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+}
+
+.group-hub-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--pp-border);
+}
+
+.group-hub-section:last-of-type {
+  border-bottom: none;
+}
+
+.group-hub-section-title {
+  font-size: 0.95rem;
+  margin: 0 0 0.75rem;
+}
+
+.group-hub-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.group-hub-section-head .group-hub-section-title {
+  margin: 0;
+}
+
+.btn-sm {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.55rem;
+}
+
+.group-hub-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.group-hub-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--pp-border);
+  border-radius: 10px;
+  background: var(--pp-bg-secondary);
+}
+
+.group-hub-card-name {
+  font-weight: 600;
+}
+
+.group-hub-card-meta {
+  font-size: 0.8rem;
+  color: var(--pp-fg-tertiary);
+  margin-top: 0.2rem;
+}
+
+.group-hub-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+}
+
+.group-hub-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 420px;
+}
+
+.group-hub-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--pp-fg-secondary);
+}
+
+.group-hub-input {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-bg-tertiary);
+  color: var(--pp-fg-primary);
+}
+
+.group-hub-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.group-hub-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.group-hub-legend {
+  font-size: 0.82rem;
+  color: var(--pp-fg-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.group-hub-inline {
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 0.35rem;
+}
+
+.group-assign-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.group-assign-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: min(70vh, 720px);
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.group-assign-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(140px, 180px);
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.group-assign-team {
+  min-width: 0;
+}
+
+.group-assign-select {
+  width: 100%;
+}
