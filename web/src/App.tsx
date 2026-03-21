@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Navigate,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import type {
   BracketGame,
@@ -18,8 +26,6 @@ import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
 import "./App.css";
-
-type MainTab = "bracket" | "my-teams" | "leaderboard" | "rules";
 
 type Session =
   | { kind: "mock"; userId: string; label: string }
@@ -119,7 +125,11 @@ const LIVE_POLL_MS = Number(
   import.meta.env.VITE_LIVE_POLL_MS ?? 90_000
 );
 
+type BracketLocationState = { focusGameId?: string };
+
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [session, setSession] = useState<Session | null>(null);
   /** Bracket template only (no schedule/line overlay) — reapplied when live overlay updates. */
   const [gameTemplate, setGameTemplate] = useState<BracketGame[]>([]);
@@ -129,10 +139,19 @@ export default function App() {
   const [ownership, setOwnership] = useState<OwnershipRow[]>([]);
   const [results, setResults] = useState<Map<string, GameResult>>(new Map());
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [mainTab, setMainTab] = useState<MainTab>("bracket");
   const [bracketFocusGameId, setBracketFocusGameId] = useState<string | null>(
     null
   );
+
+  /** Apply focus from router state (e.g. My Teams → bracket) and clear state so refresh/back behave. */
+  useEffect(() => {
+    if (location.pathname !== "/bracket") return;
+    const focus = (location.state as BracketLocationState | null)?.focusGameId;
+    if (!focus) return;
+    setBracketFocusGameId(null);
+    requestAnimationFrame(() => setBracketFocusGameId(focus));
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     const base = "/data";
@@ -218,6 +237,7 @@ export default function App() {
       kind: "google",
       label: p.name ?? p.email ?? "Google user",
     });
+    navigate("/bracket", { replace: true });
   };
 
   if (loadError) {
@@ -269,12 +289,14 @@ export default function App() {
                     "mock-user"
                   ) as HTMLSelectElement;
                   const u = users.find((x) => x.id === sel.value);
-                  if (u)
+                  if (u) {
                     setSession({
                       kind: "mock",
                       userId: u.id,
                       label: u.display_name,
                     });
+                    navigate("/bracket", { replace: true });
+                  }
                 }}
               >
                 Enter league
@@ -322,86 +344,110 @@ export default function App() {
           role="tablist"
           aria-label="App sections"
         >
-          <button
-            type="button"
+          <NavLink
+            to="/bracket"
             role="tab"
-            aria-selected={mainTab === "bracket"}
-            className={`app-header-tab${mainTab === "bracket" ? " app-header-tab--active" : ""}`}
-            onClick={() => setMainTab("bracket")}
+            aria-selected={location.pathname === "/bracket"}
+            className={({ isActive }) =>
+              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            }
           >
             Bracket
-          </button>
-          <button
-            type="button"
+          </NavLink>
+          <NavLink
+            to="/my-teams"
             role="tab"
-            aria-selected={mainTab === "my-teams"}
-            className={`app-header-tab${mainTab === "my-teams" ? " app-header-tab--active" : ""}`}
-            onClick={() => setMainTab("my-teams")}
+            aria-selected={location.pathname === "/my-teams"}
+            className={({ isActive }) =>
+              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            }
           >
             My Teams
-          </button>
-          <button
-            type="button"
+          </NavLink>
+          <NavLink
+            to="/leaderboard"
             role="tab"
-            aria-selected={mainTab === "leaderboard"}
-            className={`app-header-tab${mainTab === "leaderboard" ? " app-header-tab--active" : ""}`}
-            onClick={() => setMainTab("leaderboard")}
+            aria-selected={location.pathname === "/leaderboard"}
+            className={({ isActive }) =>
+              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            }
           >
             Leaderboard
-          </button>
-          <button
-            type="button"
+          </NavLink>
+          <NavLink
+            to="/rules"
             role="tab"
-            aria-selected={mainTab === "rules"}
-            className={`app-header-tab${mainTab === "rules" ? " app-header-tab--active" : ""}`}
-            onClick={() => setMainTab("rules")}
+            aria-selected={location.pathname === "/rules"}
+            className={({ isActive }) =>
+              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            }
           >
             Rules
-          </button>
+          </NavLink>
         </nav>
       </header>
 
       <main className="bracket-main">
-        {mainTab === "bracket" ? (
-          <KalshiBracketArena
-            {...({
-              games,
-              allGames: games,
-              teamsById,
-              usersById,
-              ownershipRows: ownership,
-              results,
-              viewerUserId:
-                session.kind === "mock" ? session.userId : null,
-              focusGameId: bracketFocusGameId,
-              onFocusGameConsumed: () => setBracketFocusGameId(null),
-            } satisfies KalshiBracketArenaProps)}
+        <Routes>
+          <Route
+            path="/"
+            element={<Navigate to="/bracket" replace />}
           />
-        ) : mainTab === "my-teams" ? (
-          <MyTeamsPage
-            viewerUserId={session.kind === "mock" ? session.userId : null}
-            games={games}
-            results={results}
-            ownershipRows={ownership}
-            teamsById={teamsById}
-            usersById={usersById}
-            onOpenGameInBracket={(gameId) => {
-              setMainTab("bracket");
-              setBracketFocusGameId(null);
-              requestAnimationFrame(() => setBracketFocusGameId(gameId));
-            }}
+          <Route
+            path="/bracket"
+            element={
+              <KalshiBracketArena
+                {...({
+                  games,
+                  allGames: games,
+                  teamsById,
+                  usersById,
+                  ownershipRows: ownership,
+                  results,
+                  viewerUserId:
+                    session.kind === "mock" ? session.userId : null,
+                  focusGameId: bracketFocusGameId,
+                  onFocusGameConsumed: () => setBracketFocusGameId(null),
+                } satisfies KalshiBracketArenaProps)}
+              />
+            }
           />
-        ) : mainTab === "leaderboard" ? (
-          <LeaderboardPage
-            users={users}
-            games={games}
-            results={results}
-            ownershipRows={ownership}
-            teamsById={teamsById}
+          <Route
+            path="/my-teams"
+            element={
+              <MyTeamsPage
+                viewerUserId={session.kind === "mock" ? session.userId : null}
+                games={games}
+                results={results}
+                ownershipRows={ownership}
+                teamsById={teamsById}
+                usersById={usersById}
+                onOpenGameInBracket={(gameId) => {
+                  navigate("/bracket", {
+                    state: { focusGameId: gameId },
+                  });
+                }}
+              />
+            }
           />
-        ) : (
-          <PoolRulesPage />
-        )}
+          <Route
+            path="/leaderboard"
+            element={
+              <LeaderboardPage
+                users={users}
+                games={games}
+                results={results}
+                ownershipRows={ownership}
+                teamsById={teamsById}
+              />
+            }
+          />
+          <Route path="/rules" element={<PoolRulesPage />} />
+          <Route
+            path="*"
+            element={<Navigate to="/bracket" replace />}
+          />
+        </Routes>
       </main>
     </div>
   );
