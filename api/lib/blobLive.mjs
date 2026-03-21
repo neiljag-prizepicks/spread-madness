@@ -11,11 +11,8 @@ export async function readLiveJson(token, pathname) {
       prefix: "mm-live/",
     });
     const hit = blobs.find((b) => b.pathname === pathname);
-    const readUrl = hit?.downloadUrl ?? hit?.url;
-    if (!readUrl) return null;
-    const r = await fetch(readUrl, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    if (!hit?.url) return null;
+    const r = await fetch(hit.url);
     if (!r.ok) return null;
     return await r.json();
   } catch {
@@ -26,7 +23,7 @@ export async function readLiveJson(token, pathname) {
 export async function writeLiveJson(token, pathname, obj) {
   const body = JSON.stringify(obj, null, 2) + "\n";
   await put(pathname, body, {
-    access: "private",
+    access: "public",
     token,
     addRandomSuffix: false,
     contentType: "application/json",

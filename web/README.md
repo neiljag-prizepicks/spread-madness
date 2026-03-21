@@ -59,7 +59,7 @@ Deployment uses the **repo root** (`spreadMadness/`) so Vercel can run `api/` se
 ### What you do in Vercel
 
 1. **Import the project** with **Root Directory** = repository root (folder that contains `vercel.json`, `web/`, `scripts/`, `api/`).
-2. **Storage → Blob** — create a store and link it. Vercel injects **`BLOB_READ_WRITE_TOKEN`** into the project (or add it manually from the Blob store).
+2. **Storage → Blob** — create a store and link it. Vercel injects **`BLOB_READ_WRITE_TOKEN`** into the project (or add it manually from the Blob store). Use a **Public** store: the server SDK’s `put()` requires public blobs, and clients still load data only via **`/api/live/data`** (blob URLs are not baked into the Vite app).
 3. **Environment variables** (Production, and Preview if you want):
 
    | Variable | Purpose |
