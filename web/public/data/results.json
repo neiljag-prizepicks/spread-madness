@@ -300,6 +300,15 @@
     },
     "scores_updated_at": "2026-03-20T21:20:44.362Z"
   },
+  "E-R32-1": {
+    "status": "in_progress",
+    "clock": "2:37 - 1st Half",
+    "scores": {
+      "E01": 34,
+      "E09": 29
+    },
+    "scores_updated_at": "2026-03-21T22:18:52.264Z"
+  },
   "E-R32-3": {
     "status": "final",
     "clock": null,
@@ -308,6 +317,15 @@
       "E06": 69
     },
     "scores_updated_at": "2026-03-21T21:04:12.688Z"
+  },
+  "S-R32-4": {
+    "status": "in_progress",
+    "clock": "15:11 - 1st Half",
+    "scores": {
+      "S02": 9,
+      "S10": 10
+    },
+    "scores_updated_at": "2026-03-21T22:18:52.265Z"
   },
   "MW-R32-1": {
     "status": "final",

@@ -1,47 +1,40 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
-import type { Team } from "../types";
+import type { BracketGame, Team } from "../types";
 import { requireDb } from "../lib/firebase";
 import {
-  buildRandomOwnership,
   setGroupOwnership,
   subscribeGroupMembers,
   subscribeGroupOwnership,
 } from "../lib/firestore/groupsApi";
 import {
+  buildBalancedOwnership,
+  buildFfPairMap,
+  logicalBracketSlotsForUser,
+} from "../lib/ownershipUnits";
+import {
+  canSplitTournamentEvenly,
   isValidMemberCap,
+  PHYSICAL_TEAM_ID_COUNT,
   teamsPerMember,
   type GroupMemberCap,
 } from "../lib/groupConstants";
 import type { OwnershipRow } from "../lib/ownershipMap";
 
-function buildDefaultGrid(
-  teamIds: string[],
-  memberUids: string[],
-  cap: GroupMemberCap
-): OwnershipRow[] {
-  const per = teamsPerMember(cap);
-  const sortedTeams = [...teamIds].sort();
-  const sortedMembers = [...memberUids].sort((a, b) => a.localeCompare(b));
-  const rows: OwnershipRow[] = [];
-  let t = 0;
-  for (const muid of sortedMembers) {
-    for (let k = 0; k < per; k++) {
-      const tid = sortedTeams[t++];
-      if (tid) rows.push({ user_id: muid, team_id: tid });
-    }
-  }
-  return rows;
-}
-
 type Props = {
   uid: string;
+  games: BracketGame[];
   allTeamIds: string[];
   teamsById: Map<string, Team>;
 };
 
-export function GroupAssignmentPage({ uid, allTeamIds, teamsById }: Props) {
+export function GroupAssignmentPage({
+  uid,
+  games,
+  allTeamIds,
+  teamsById,
+}: Props) {
   const { groupId = "" } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const db = useMemo(() => requireDb(), []);
@@ -57,6 +50,8 @@ export function GroupAssignmentPage({ uid, allTeamIds, teamsById }: Props) {
   /** After first Firestore ownership snapshot (may be empty). */
   const [ownershipReady, setOwnershipReady] = useState(false);
   const seededDefault = useRef(false);
+
+  const ffPairMap = useMemo(() => buildFfPairMap(games), [games]);
 
   useEffect(() => {
     const unsub = subscribeGroupMembers(
@@ -113,27 +108,50 @@ export function GroupAssignmentPage({ uid, allTeamIds, teamsById }: Props) {
 
   useEffect(() => {
     if (!ownershipReady || seededDefault.current) return;
-    if (!memberCap || allTeamIds.length !== 64) return;
+    if (!memberCap || !canSplitTournamentEvenly(memberCap)) return;
+    if (allTeamIds.length !== PHYSICAL_TEAM_ID_COUNT) return;
     if (members.length !== memberCap) return;
     const uids = members.map((m) => m.uid);
-    seededDefault.current = true;
-    setLocal(buildDefaultGrid(allTeamIds, uids, memberCap));
-  }, [ownershipReady, memberCap, allTeamIds, members]);
+    try {
+      const rows = buildBalancedOwnership(
+        games,
+        allTeamIds,
+        teamsById,
+        uids,
+        memberCap,
+        false
+      );
+      setLocal(rows.map((r) => ({ user_id: r.user_id, team_id: r.team_id })));
+      seededDefault.current = true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }, [ownershipReady, memberCap, allTeamIds, members, games, teamsById]);
 
   const countsOk = useMemo(() => {
     if (!memberCap || members.length !== memberCap) return false;
-    const per = teamsPerMember(memberCap);
-    const byUser = new Map<string, number>();
-    for (const m of members) byUser.set(m.uid, 0);
-    for (const r of local) {
-      byUser.set(r.user_id, (byUser.get(r.user_id) ?? 0) + 1);
-    }
-    for (const [, n] of byUser) {
-      if (n !== per) return false;
+    if (!canSplitTournamentEvenly(memberCap)) return false;
+    const logicalPer = teamsPerMember(memberCap);
+    for (const m of members) {
+      if (
+        logicalBracketSlotsForUser(m.uid, local, ffPairMap) !== logicalPer
+      ) {
+        return false;
+      }
     }
     const teams = new Set(local.map((r) => r.team_id));
-    return teams.size === 64;
-  }, [local, memberCap, members]);
+    if (teams.size !== allTeamIds.length) return false;
+    if (allTeamIds.length !== PHYSICAL_TEAM_ID_COUNT) return false;
+
+    const userByTeam = new Map(local.map((r) => [r.team_id, r.user_id]));
+    for (const [tid, other] of ffPairMap) {
+      if (tid.localeCompare(other) >= 0) continue;
+      const ua = userByTeam.get(tid);
+      const ub = userByTeam.get(other);
+      if (ua == null || ub == null || ua !== ub) return false;
+    }
+    return true;
+  }, [local, memberCap, members, ffPairMap, allTeamIds.length]);
 
   const handleRandomize = () => {
     setError(null);
@@ -144,8 +162,27 @@ export function GroupAssignmentPage({ uid, allTeamIds, teamsById }: Props) {
         );
         return;
       }
+      if (!canSplitTournamentEvenly(memberCap)) {
+        setError(
+          "This pool size cannot split the 64-slot bracket evenly. Use pool size 2, 4, 8, 16, 32, or 64."
+        );
+        return;
+      }
+      if (allTeamIds.length !== PHYSICAL_TEAM_ID_COUNT) {
+        setError(
+          `Roster must have ${PHYSICAL_TEAM_ID_COUNT} team ids (found ${allTeamIds.length}).`
+        );
+        return;
+      }
       const uids = members.map((m) => m.uid);
-      const rows = buildRandomOwnership(allTeamIds, uids, memberCap);
+      const rows = buildBalancedOwnership(
+        games,
+        allTeamIds,
+        teamsById,
+        uids,
+        memberCap,
+        true
+      );
       setLocal(rows.map((r) => ({ user_id: r.user_id, team_id: r.team_id })));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -154,7 +191,9 @@ export function GroupAssignmentPage({ uid, allTeamIds, teamsById }: Props) {
 
   const handleSave = async () => {
     if (!countsOk) {
-      setError("Each member must have the correct number of unique teams.");
+      setError(
+        `Each member must have the correct number of logical bracket slots (${PHYSICAL_TEAM_ID_COUNT} team ids total, First Four pairs count as one slot each), and play-in opponents must share an owner.`
+      );
       return;
     }
     setSaving(true);
@@ -170,11 +209,15 @@ export function GroupAssignmentPage({ uid, allTeamIds, teamsById }: Props) {
   };
 
   const updateTeamOwner = (teamId: string, userId: string) => {
-    setLocal((prev) =>
-      prev.map((r) =>
-        r.team_id === teamId ? { ...r, user_id: userId } : r
-      )
-    );
+    setLocal((prev) => {
+      const other = ffPairMap.get(teamId);
+      return prev.map((r) => {
+        if (r.team_id === teamId || (other && r.team_id === other)) {
+          return { ...r, user_id: userId };
+        }
+        return r;
+      });
+    });
   };
 
   if (role !== "admin") {
@@ -199,9 +242,14 @@ export function GroupAssignmentPage({ uid, allTeamIds, teamsById }: Props) {
       <header className="group-hub-header">
         <h1 className="group-hub-title">Assign teams</h1>
         <p className="group-hub-lede">
-          Each team goes to exactly one person. Everyone should have{" "}
-          {memberCap ? teamsPerMember(memberCap) : "—"} teams when the pool is
-          full ({memberCap ?? "—"} members).
+          First Four opponents stay together (same owner). Each play-in game
+          counts as one bracket slot (two team ids). Fair split: everyone gets{" "}
+          {memberCap && canSplitTournamentEvenly(memberCap)
+            ? teamsPerMember(memberCap)
+            : "—"}{" "}
+          logical slots when the pool is full ({memberCap ?? "—"} members).
+          People with play-in games may have more team rows than others—that is
+          expected.
         </p>
         <div className="group-assign-toolbar">
           <button type="button" className="btn-ghost" onClick={handleRandomize}>

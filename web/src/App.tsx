@@ -45,7 +45,11 @@ import { GroupHubPage } from "./components/GroupHubPage";
 import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
+import { useMediaQuery } from "./hooks/useMediaQuery";
 import "./App.css";
+
+/** Mobile brand line matches this reference length (see SpreadMadnessBrandMenu). */
+const MOBILE_BRAND_MAX_CHARS = "Spread Madness Home".length;
 
 type Session =
   | { kind: "mock"; userId: string; label: string }
@@ -135,6 +139,143 @@ function UserAccountMenu({
           >
             Sign out
           </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SpreadMadnessBrandMenu({
+  userGroupRows,
+  activeGroupId,
+  onSelectPool,
+}: {
+  userGroupRows: { id: string; data: UserGroupLinkDoc }[];
+  activeGroupId: string | null;
+  onSelectPool: (groupId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const triggerId = "app-header-brand-trigger";
+  const menuId = "app-header-brand-menu";
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocPointer = (e: PointerEvent) => {
+      if (rootRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDocPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDocPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const inGroupsSection = location.pathname.startsWith("/groups");
+  const poolSectionActive = (groupId: string) =>
+    !inGroupsSection && activeGroupId === groupId;
+
+  const triggerLabel = useMemo(() => {
+    if (inGroupsSection) return "Spread Madness Home";
+    const row = activeGroupId
+      ? userGroupRows.find((r) => r.id === activeGroupId)
+      : undefined;
+    if (row) return row.data.name;
+    return "Spread Madness";
+  }, [inGroupsSection, activeGroupId, userGroupRows]);
+
+  const isMobile = useMediaQuery("(max-width: 699px)");
+  const displayLabel = useMemo(() => {
+    if (!isMobile || triggerLabel.length <= MOBILE_BRAND_MAX_CHARS) {
+      return triggerLabel;
+    }
+    return `${triggerLabel.slice(0, MOBILE_BRAND_MAX_CHARS - 1)}\u2026`;
+  }, [isMobile, triggerLabel]);
+
+  return (
+    <div className="app-header-brand-menu" ref={rootRef}>
+      <button
+        id={triggerId}
+        type="button"
+        className="app-header-brand-trigger pp-brand-sm"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen((v) => !v)}
+        title={triggerLabel}
+        aria-label={
+          displayLabel !== triggerLabel ? triggerLabel : undefined
+        }
+      >
+        <span className="pp-mark">P</span>
+        <span
+          className={`app-header-brand-title${isMobile ? " app-header-brand-title--mobile" : ""}`}
+        >
+          {displayLabel}
+        </span>
+        <svg
+          className="app-header-brand-chevron"
+          viewBox="0 0 12 12"
+          aria-hidden
+        >
+          <path
+            d="M3 4.5 L6 7.5 L9 4.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open ? (
+        <div
+          id={menuId}
+          className="app-header-brand-dropdown"
+          role="menu"
+          aria-labelledby={triggerId}
+        >
+          <button
+            type="button"
+            className={`app-header-brand-menu-item${inGroupsSection ? " app-header-brand-menu-item--active" : ""}`}
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              navigate("/groups");
+            }}
+          >
+            Spread Madness Home
+          </button>
+          {userGroupRows.length > 0 ? (
+            <>
+              <div
+                className="app-header-brand-dropdown-sep"
+                role="separator"
+              />
+              {userGroupRows.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  className={`app-header-brand-menu-item${poolSectionActive(r.id) ? " app-header-brand-menu-item--active" : ""}`}
+                  role="menuitem"
+                  onClick={() => {
+                    setOpen(false);
+                    onSelectPool(r.id);
+                    navigate("/bracket", { replace: true });
+                  }}
+                >
+                  {r.data.name}
+                </button>
+              ))}
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -549,7 +690,6 @@ export default function App() {
   const myTeamsTabActive =
     location.pathname === "/my-teams" ||
     location.pathname.startsWith("/my-teams/user/");
-  const poolsTabActive = location.pathname.startsWith("/groups");
 
   if (!session) {
     return (
@@ -634,29 +774,21 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="app-header-top">
-          <div className="pp-brand pp-brand-sm">
-            <span className="pp-mark">P</span>
-            <span>Spread Madness</span>
-          </div>
-          {firebaseGroupMode && userGroupRows.length > 0 ? (
-            <div className="app-header-pool">
-              <label className="app-header-pool-label" htmlFor="active-pool">
-                Pool
-              </label>
-              <select
-                id="active-pool"
-                className="app-header-pool-select"
-                value={activeGroupId ?? ""}
-                onChange={(e) => setActiveGroupId(e.target.value || null)}
-              >
-                {userGroupRows.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.data.name}
-                  </option>
-                ))}
-              </select>
+          {firebaseGroupMode ? (
+            <SpreadMadnessBrandMenu
+              userGroupRows={userGroupRows}
+              activeGroupId={activeGroupId}
+              onSelectPool={(id) => {
+                setActiveGroupId(id);
+                writeStoredActiveGroupId(id);
+              }}
+            />
+          ) : (
+            <div className="pp-brand pp-brand-sm">
+              <span className="pp-mark">P</span>
+              <span>Spread Madness</span>
             </div>
-          ) : null}
+          )}
           <UserAccountMenu
             displayName={session.label}
             onSignOut={() => void handleSignOut()}
@@ -667,18 +799,6 @@ export default function App() {
           role="tablist"
           aria-label="App sections"
         >
-          {firebaseGroupMode ? (
-            <NavLink
-              to="/groups"
-              role="tab"
-              aria-selected={poolsTabActive}
-              className={() =>
-                `app-header-tab${poolsTabActive ? " app-header-tab--active" : ""}`
-              }
-            >
-              Pools
-            </NavLink>
-          ) : null}
           <NavLink
             to="/bracket"
             role="tab"
@@ -751,6 +871,7 @@ export default function App() {
               session.kind === "google" && session.uid ? (
                 <GroupAssignmentPage
                   uid={session.uid}
+                  games={games}
                   allTeamIds={allTeamIds}
                   teamsById={teamsById}
                 />

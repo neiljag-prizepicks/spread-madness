@@ -2646,32 +2646,101 @@
   }
 }
 
-/* —— Firebase pools (group hub + assignment) —— */
-.app-header-pool {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+/* —— Spread Madness brand menu (pools) —— */
+.app-header-brand-menu {
+  position: relative;
   flex: 1;
   min-width: 0;
-  justify-content: center;
 }
 
-.app-header-pool-label {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--pp-fg-tertiary);
+.app-header-brand-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.app-header-brand-trigger:hover {
+  color: var(--pp-fg-accent);
+}
+
+.app-header-brand-trigger:focus-visible {
+  outline: 2px solid var(--pp-action);
+  outline-offset: 2px;
+}
+
+.app-header-brand-title {
+  font-weight: 700;
+  font-size: 1rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.app-header-pool-select {
-  max-width: min(220px, 46vw);
-  padding: 0.35rem 0.5rem;
-  border-radius: 8px;
+/* Character cap applied in JS on mobile; avoid CSS ellipsis stacking with … */
+.app-header-brand-title--mobile {
+  text-overflow: clip;
+}
+
+.app-header-brand-chevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.app-header-brand-dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  min-width: min(18rem, calc(100vw - 2rem));
+  padding: 0.35rem;
+  background: var(--pp-bg-secondary);
   border: 1px solid var(--pp-border);
-  background: var(--pp-bg-tertiary);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 60;
+}
+
+.app-header-brand-menu-item {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.88rem;
+  font-family: inherit;
+  text-align: left;
   color: var(--pp-fg-primary);
-  font-size: 0.82rem;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.app-header-brand-menu-item:hover {
+  background: var(--pp-bg-tertiary);
+}
+
+.app-header-brand-menu-item--active {
+  background: var(--pp-bg-tertiary);
+  color: var(--pp-action);
+  font-weight: 600;
+}
+
+.app-header-brand-dropdown-sep {
+  height: 1px;
+  margin: 0.35rem 0.4rem;
+  background: var(--pp-border);
+  border: none;
 }
 
 .group-hub,

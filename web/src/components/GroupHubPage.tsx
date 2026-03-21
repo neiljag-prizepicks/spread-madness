@@ -4,7 +4,7 @@ import { requireDb } from "../lib/firebase";
 import {
   GROUP_MEMBER_CAPS,
   isValidMemberCap,
-  teamsPerMember,
+  teamsPerMemberLabel,
   type GroupMemberCap,
 } from "../lib/groupConstants";
 import {
@@ -45,7 +45,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const [createName, setCreateName] = useState("");
-  const [createCap, setCreateCap] = useState<GroupMemberCap>(8);
+  const [createCap, setCreateCap] = useState<GroupMemberCap>(2);
   const [createVis, setCreateVis] = useState<"public" | "private">("public");
   const [createCode, setCreateCode] = useState(() => randomJoinCode());
   const [createPass, setCreatePass] = useState("");
@@ -160,7 +160,8 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
         <h1 className="group-hub-title">Your pools</h1>
         <p className="group-hub-lede">
           Create a pool or join one. Ownership is separate per pool. Pool size
-          sets how many teams each person holds (64 ÷ members).
+          sets how many logical bracket slots each person holds (64 ÷ members;
+          First Four games count as one slot each).
         </p>
       </header>
 
@@ -183,7 +184,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
                 <div>
                   <div className="group-hub-card-name">{g.name}</div>
                   <div className="group-hub-card-meta">
-                    {g.memberCap} members · {teamsPerMember(g.memberCap as GroupMemberCap)} teams each ·{" "}
+                    {g.memberCap} members · {teamsPerMemberLabel(g.memberCap)} teams each ·{" "}
                     {g.role === "admin" ? "Admin" : "Member"}
                   </div>
                 </div>
@@ -241,7 +242,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
             >
               {GROUP_MEMBER_CAPS.map((c) => (
                 <option key={c} value={c}>
-                  {c} people · {teamsPerMember(c)} teams each
+                  {c} people · {teamsPerMemberLabel(c)} teams each
                 </option>
               ))}
             </select>
@@ -334,7 +335,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
                     <div className="group-hub-card-name">{g.data.name}</div>
                     <div className="group-hub-card-meta">
                       {g.data.memberCount}/{g.data.maxMembers} joined ·{" "}
-                      {teamsPerMember(g.data.memberCap)} teams each
+                      {teamsPerMemberLabel(g.data.memberCap)} teams each
                     </div>
                   </div>
                   <button

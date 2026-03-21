@@ -14,7 +14,6 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import type { GroupMemberCap } from "../groupConstants";
-import { teamsPerMember } from "../groupConstants";
 
 export type GroupVisibility = "public" | "private";
 
@@ -277,35 +276,4 @@ export async function setGroupOwnership(
     batch.set(ref, { userId: user_id });
   }
   await batch.commit();
-}
-
-/** Random fair split: shuffle teams, assign `teamsPerMember` consecutive slots per member (by stable uid sort). */
-export function buildRandomOwnership(
-  teamIds: string[],
-  memberUids: string[],
-  memberCap: GroupMemberCap
-): { team_id: string; user_id: string }[] {
-  const per = teamsPerMember(memberCap);
-  if (teamIds.length !== 64) {
-    throw new Error(`Expected 64 team ids, got ${teamIds.length}`);
-  }
-  if (memberUids.length !== memberCap) {
-    throw new Error(
-      `Need exactly ${memberCap} members to randomize; have ${memberUids.length}`
-    );
-  }
-  const sortedMembers = [...memberUids].sort();
-  const shuffled = [...teamIds];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  const out: { team_id: string; user_id: string }[] = [];
-  let idx = 0;
-  for (const uid of sortedMembers) {
-    for (let k = 0; k < per; k++) {
-      out.push({ team_id: shuffled[idx++], user_id: uid });
-    }
-  }
-  return out;
 }
