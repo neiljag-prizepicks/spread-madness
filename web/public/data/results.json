@@ -302,12 +302,12 @@
   },
   "E-R32-1": {
     "status": "in_progress",
-    "clock": "1:34 - 1st Half",
+    "clock": "0:50 - 1st Half",
     "scores": {
-      "E01": 34,
-      "E09": 31
+      "E01": 36,
+      "E09": 34
     },
-    "scores_updated_at": "2026-03-21T22:20:53.449Z"
+    "scores_updated_at": "2026-03-21T22:22:54.458Z"
   },
   "E-R32-3": {
     "status": "final",
@@ -320,12 +320,12 @@
   },
   "S-R32-4": {
     "status": "in_progress",
-    "clock": "15:11 - 1st Half",
+    "clock": "14:43 - 1st Half",
     "scores": {
-      "S02": 9,
+      "S02": 12,
       "S10": 10
     },
-    "scores_updated_at": "2026-03-21T22:18:52.265Z"
+    "scores_updated_at": "2026-03-21T22:22:54.459Z"
   },
   "MW-R32-1": {
     "status": "final",
