@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   POOL_RULES_PAGE_TITLE,
   POOL_RULES_SECTIONS,
+  POOL_RULES_TLDR,
   type PoolRulesColorKeyBullet,
 } from "../content/poolRulesCopy";
 
@@ -28,6 +29,9 @@ export function PoolRulesPage() {
   return (
     <div className="pool-rules-page">
       <h1 className="pool-rules-page-title">{POOL_RULES_PAGE_TITLE}</h1>
+      <p className="pool-rules-p pool-rules-tldr">
+        <RichText text={POOL_RULES_TLDR} />
+      </p>
       <div className="pool-rules-sections">
         {POOL_RULES_SECTIONS.map((sec, si) => (
           <section

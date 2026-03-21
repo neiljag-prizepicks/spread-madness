@@ -72,6 +72,34 @@ function resolvePoolOwnerEnteringGameSide(
   return out?.poolOwnerUserId ?? teamToUser.get(tid) ?? "";
 }
 
+/**
+ * Pool owner user id for `teamId`'s slot as they enter `game` (before this game's outcome).
+ * Draft pick if no feeder; otherwise the controller inherited from the settled feeder chain.
+ */
+export function poolOwnerUserIdEnteringGameForTeam(
+  game: BracketGame,
+  teamId: string,
+  games: BracketGame[],
+  results: Map<string, GameResult>,
+  ownershipRows: OwnershipRow[],
+  teamsById: Map<string, Team>
+): string {
+  const gm = gameMap(games);
+  const ta = resolveTeamId(game, "side_a", gm, results, new Set());
+  const tb = resolveTeamId(game, "side_b", gm, results, new Set());
+  const side: "side_a" | "side_b" | null =
+    ta === teamId ? "side_a" : tb === teamId ? "side_b" : null;
+  if (!side) return "";
+  return resolvePoolOwnerEnteringGameSide(
+    game,
+    side,
+    games,
+    results,
+    ownershipRows,
+    teamsById
+  );
+}
+
 export function computePoolOutcome(
   game: BracketGame,
   games: BracketGame[],

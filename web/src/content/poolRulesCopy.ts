@@ -28,6 +28,10 @@ export type PoolRulesSection = {
 
 export const POOL_RULES_PAGE_TITLE = "Spread Madness Rules";
 
+/** Shown under the page title, above the first section. Use ** for bold (e.g. **TL;DR:**). */
+export const POOL_RULES_TLDR =
+  "**TL;DR:** Beat the spread to advance. If your team loses the game but beats the spread, you take control of your opponent's team.";
+
 export const POOL_RULES_SECTIONS: PoolRulesSection[] = [
   {
     paragraphs: [
@@ -50,13 +54,13 @@ export const POOL_RULES_SECTIONS: PoolRulesSection[] = [
   {
     heading: "Color Key",
     paragraphs: [
-      "This matches the line above the bracket:",
+      "The bracket will change colors depending on the state of the game(s).",
     ],
     colorKeyBullets: [
       {
         legendClass: "pool-rules-legend-hit",
         label: "Green",
-        rest: " — You won pool control for that game (great for you on that square).",
+        rest: " — You won pool control for that game (LFG)! Your initials are shown.",
       },
       {
         legendClass: "pool-rules-legend-miss",

@@ -300,13 +300,22 @@
     },
     "scores_updated_at": "2026-03-20T21:20:44.362Z"
   },
-  "MW-R32-1": {
+  "E-R32-3": {
     "status": "in_progress",
-    "clock": "13:27 - 2nd Half",
+    "clock": "3:46 - 1st Half",
     "scores": {
-      "MW01": 61,
-      "MW09": 55
+      "E03": 30,
+      "E06": 23
     },
-    "scores_updated_at": "2026-03-21T17:38:22.382Z"
+    "scores_updated_at": "2026-03-21T19:23:17.386Z"
+  },
+  "MW-R32-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW01": 95,
+      "MW09": 72
+    },
+    "scores_updated_at": "2026-03-21T18:16:40.974Z"
   }
 }

@@ -3,6 +3,7 @@ import {
   computePoolOutcome,
   getOwnerDisplayForSide,
   getPoolOwnerForSide,
+  poolOwnerUserIdEnteringGameForTeam,
 } from "./ats";
 import { isPoolSettledForGame } from "./gameResult";
 import type { OwnershipRow } from "./ownershipMap";
@@ -74,11 +75,13 @@ export type MyTeamRow = {
   lastOutcomeMessage: string | null;
   /** Lost Control section: round label only, e.g. "Round of 64" */
   lostControlRoundLabel?: string;
-  /** Lost Control: display name of pool owner for the advancing slot after the deciding game. */
-  lostSlotOwnerLabel?: string;
+  /** Lost Control: who holds pool for this team now (frontier controller). */
+  currentOwnerLabel?: string;
+  /** Lost Control: pool winner when you lost control (who beat you in that round’s ATS). */
+  lostControlToLabel?: string;
   /** Changed Control: NCAA winner that now holds the advancing slot (viewer covered but lost). */
   changedToTeamLabel?: string;
-  /** Changed Control: viewer display name (pool controller for this pick before control changed). */
+  /** Changed Control: pool owner of the "Changed to" team entering the elimination game. */
   previousOwnerLabel?: string;
   /** True when this row's current bracket game (frontier) is in progress. */
   nextGameLive: boolean;
@@ -612,7 +615,7 @@ export function buildMyTeamsSections(
       if (isChangedControl) {
         const dnView = (uid: string) =>
           usersById.get(uid)?.display_name ?? uid;
-        const previousOwnerLabel = dnView(viewerUserId);
+        let previousOwnerLabel = "—";
         let changedToTeamLabel = "—";
         if (frontier.kind === "eliminated") {
           const out = computePoolOutcome(
@@ -628,6 +631,15 @@ export function buildMyTeamsSections(
             const sch = tw?.school ?? teamSchool(out.ncaaWinnerId, teamsById);
             const masc = tw?.mascot ? ` ${tw.mascot}` : "";
             changedToTeamLabel = `${sch}${masc}`.trim();
+            const prevUid = poolOwnerUserIdEnteringGameForTeam(
+              frontier.game,
+              out.ncaaWinnerId,
+              games,
+              results,
+              ownershipRows,
+              teamsById
+            );
+            if (prevUid) previousOwnerLabel = dnView(prevUid);
           }
         }
         changedControl.push({
@@ -639,7 +651,15 @@ export function buildMyTeamsSections(
       else {
         const dnOwner = (uid: string) =>
           usersById.get(uid)?.display_name ?? uid;
-        let lostSlotOwnerLabel = "—";
+        const ctrl = currentPoolController(
+          teamId,
+          frontier,
+          games,
+          results,
+          ownershipRows
+        );
+        const currentOwnerLabel = ctrl ? dnOwner(ctrl) : "—";
+        let lostControlToLabel = "—";
         if (anchorGame) {
           const out = computePoolOutcome(
             anchorGame,
@@ -650,10 +670,14 @@ export function buildMyTeamsSections(
             dnOwner
           );
           if (out?.poolOwnerUserId) {
-            lostSlotOwnerLabel = dnOwner(out.poolOwnerUserId);
+            lostControlToLabel = dnOwner(out.poolOwnerUserId);
           }
         }
-        lost.push({ ...augmented, lostSlotOwnerLabel });
+        lost.push({
+          ...augmented,
+          currentOwnerLabel,
+          lostControlToLabel,
+        });
       }
     }
   }

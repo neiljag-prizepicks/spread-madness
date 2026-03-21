@@ -339,7 +339,7 @@ export function MyTeamsPage({
                   <dl className="my-teams-dl my-teams-dl--split">
                     <div className="my-teams-dl-split-col my-teams-dl-split-col--game">
                       <div className="my-teams-dl-field">
-                        <dt>Lost control</dt>
+                        <dt>Lost control in</dt>
                         <dd>
                           {row.lostControlRoundLabel ??
                             row.roundLabel.replace(/\s*—\s*out\s*$/i, "")}
@@ -352,8 +352,12 @@ export function MyTeamsPage({
                     </div>
                     <div className="my-teams-dl-split-col my-teams-dl-split-col--opponent">
                       <div className="my-teams-dl-field">
-                        <dt>Owner</dt>
-                        <dd>{row.lostSlotOwnerLabel ?? "—"}</dd>
+                        <dt>Lost control to</dt>
+                        <dd>{row.lostControlToLabel ?? "—"}</dd>
+                      </div>
+                      <div className="my-teams-dl-field">
+                        <dt>Current owner</dt>
+                        <dd>{row.currentOwnerLabel ?? "—"}</dd>
                       </div>
                     </div>
                   </dl>
