@@ -16,6 +16,8 @@
   --pp-negative: #ff4d4d;
   --pp-warning: #ffc107;
   --pp-font: "Inter", system-ui, sans-serif;
+  /* Regional tree + center hub: all matchup tiles match R64 feeder column width */
+  --bracket-matchup-card-width: 264px;
 }
 
 * {

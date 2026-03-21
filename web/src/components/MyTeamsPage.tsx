@@ -51,6 +51,32 @@ function MyTeamsCardBracketAffordance() {
   );
 }
 
+/** Seed + school on row 1 with bracket affordance; mascot on row 2 when present. */
+function MyTeamsCardHeadRow({
+  seed,
+  school,
+  mascot,
+}: {
+  seed: number;
+  school: string;
+  mascot: string;
+}) {
+  return (
+    <div className="my-teams-card-top">
+      <div className="my-teams-card-head-line">
+        <span className="my-teams-seed">({seed})</span>
+        <span className="my-teams-school">{school}</span>
+      </div>
+      <MyTeamsCardBracketAffordance />
+      {mascot ? (
+        <div className="my-teams-mascot-row">
+          <span className="my-teams-mascot">{mascot}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function MyTeamsPage({
   viewerUserId,
   games,
@@ -95,20 +121,21 @@ export function MyTeamsPage({
   return (
     <div className="my-teams-page">
       <h1 className="my-teams-page-title">My Teams</h1>
-      <p className="my-teams-page-lead">
-        <strong>In Control</strong> — you own the pool outcome for that team right now.{" "}
-        <strong>Changed Control</strong> — your pick lost the game but covered the spread (someone else
-        controls the slot that advanced). <strong>Lost Control</strong> — your pick did not cover (or lost
-        outright without covering).
-      </p>
 
       <section
         className="my-teams-section"
         aria-labelledby="my-teams-in-control-heading"
+        aria-describedby="my-teams-in-control-desc"
       >
-        <h2 id="my-teams-in-control-heading" className="my-teams-section-title">
-          In Control
-        </h2>
+        <header className="my-teams-section-header">
+          <h2 id="my-teams-in-control-heading" className="my-teams-section-title">
+            <span className="my-teams-section-title-label">In Control</span>
+            <span className="my-teams-section-count">{active.length}</span>
+          </h2>
+          <p id="my-teams-in-control-desc" className="my-teams-section-subtext">
+            Your teams that you own the pool outcome for.
+          </p>
+        </header>
         {active.length === 0 ? (
           <p className="my-teams-empty">
             You are not in control of any teams right now.
@@ -127,16 +154,11 @@ export function MyTeamsPage({
                       : undefined
                   }
                 >
-                  <div className="my-teams-card-top">
-                    <div className="my-teams-card-head">
-                      <span className="my-teams-seed">({row.seed})</span>
-                      <span className="my-teams-school">{row.school}</span>
-                      {row.mascot ? (
-                        <span className="my-teams-mascot">{row.mascot}</span>
-                      ) : null}
-                    </div>
-                    <MyTeamsCardBracketAffordance />
-                  </div>
+                  <MyTeamsCardHeadRow
+                    seed={row.seed}
+                    school={row.school}
+                    mascot={row.mascot}
+                  />
                   <div className="my-teams-meta">
                     <span>{row.region}</span>
                     {row.nextGameLive ? (
@@ -185,16 +207,25 @@ export function MyTeamsPage({
       <section
         className="my-teams-section"
         aria-labelledby="my-teams-changed-control-heading"
+        aria-describedby="my-teams-changed-control-desc"
       >
-        <h2
-          id="my-teams-changed-control-heading"
-          className="my-teams-section-title"
-        >
-          Changed Control
-        </h2>
+        <header className="my-teams-section-header">
+          <h2
+            id="my-teams-changed-control-heading"
+            className="my-teams-section-title"
+          >
+            <span className="my-teams-section-title-label">Changed Control</span>
+            <span className="my-teams-section-count">
+              {changedControl.length}
+            </span>
+          </h2>
+          <p id="my-teams-changed-control-desc" className="my-teams-section-subtext">
+            Your teams that lost their game but covered the spread.
+          </p>
+        </header>
         {changedControl.length === 0 ? (
           <p className="my-teams-empty">
-            None yet — no Round 1 picks lost the game while covering the spread.
+            None yet — none of your teams lost the game while covering the spread.
           </p>
         ) : (
           <ul className="my-teams-list">
@@ -210,16 +241,11 @@ export function MyTeamsPage({
                       : undefined
                   }
                 >
-                  <div className="my-teams-card-top">
-                    <div className="my-teams-card-head">
-                      <span className="my-teams-seed">({row.seed})</span>
-                      <span className="my-teams-school">{row.school}</span>
-                      {row.mascot ? (
-                        <span className="my-teams-mascot">{row.mascot}</span>
-                      ) : null}
-                    </div>
-                    <MyTeamsCardBracketAffordance />
-                  </div>
+                  <MyTeamsCardHeadRow
+                    seed={row.seed}
+                    school={row.school}
+                    mascot={row.mascot}
+                  />
                   <div className="my-teams-meta">
                     <span>{row.region}</span>
                     {row.nextGameLive ? (
@@ -229,17 +255,29 @@ export function MyTeamsPage({
                     ) : null}
                   </div>
                   <MyTeamsLiveScoreboard row={row} />
-                  <dl className="my-teams-dl my-teams-dl--muted my-teams-dl--stacked">
-                    <div className="my-teams-dl-field">
-                      <dt>Round</dt>
-                      <dd>
-                        {row.lostControlRoundLabel ??
-                          row.roundLabel.replace(/\s*—\s*out\s*$/i, "")}
-                      </dd>
+                  <dl className="my-teams-dl my-teams-dl--split">
+                    <div className="my-teams-dl-split-col my-teams-dl-split-col--game">
+                      <div className="my-teams-dl-field">
+                        <dt>Round</dt>
+                        <dd>
+                          {row.lostControlRoundLabel ??
+                            row.roundLabel.replace(/\s*—\s*out\s*$/i, "")}
+                        </dd>
+                      </div>
+                      <div className="my-teams-dl-field">
+                        <dt>Game time</dt>
+                        <dd>{row.nextTipLabel}</dd>
+                      </div>
                     </div>
-                    <div className="my-teams-dl-field">
-                      <dt>Game time</dt>
-                      <dd>{row.nextTipLabel}</dd>
+                    <div className="my-teams-dl-split-col my-teams-dl-split-col--opponent">
+                      <div className="my-teams-dl-field">
+                        <dt>Changed to</dt>
+                        <dd>{row.changedToTeamLabel ?? "—"}</dd>
+                      </div>
+                      <div className="my-teams-dl-field">
+                        <dt>Previous owner</dt>
+                        <dd>{row.previousOwnerLabel ?? "—"}</dd>
+                      </div>
                     </div>
                   </dl>
                   {row.lastOutcomeMessage ? (
@@ -255,14 +293,20 @@ export function MyTeamsPage({
       <section
         className="my-teams-section"
         aria-labelledby="my-teams-lost-control-heading"
+        aria-describedby="my-teams-lost-control-desc"
       >
-        <h2 id="my-teams-lost-control-heading" className="my-teams-section-title">
-          Lost Control
-        </h2>
+        <header className="my-teams-section-header">
+          <h2 id="my-teams-lost-control-heading" className="my-teams-section-title">
+            <span className="my-teams-section-title-label">Lost Control</span>
+            <span className="my-teams-section-count">{lost.length}</span>
+          </h2>
+          <p id="my-teams-lost-control-desc" className="my-teams-section-subtext">
+            Your teams that did not cover the spread.
+          </p>
+        </header>
         {lost.length === 0 ? (
           <p className="my-teams-empty">
-            None yet — no Round 1 picks failed to cover (including skinny wins where you lost
-            the pool slot).
+            None yet — none of your teams have failed to cover the spread.
           </p>
         ) : (
           <ul className="my-teams-list">
@@ -278,16 +322,11 @@ export function MyTeamsPage({
                       : undefined
                   }
                 >
-                  <div className="my-teams-card-top">
-                    <div className="my-teams-card-head">
-                      <span className="my-teams-seed">({row.seed})</span>
-                      <span className="my-teams-school">{row.school}</span>
-                      {row.mascot ? (
-                        <span className="my-teams-mascot">{row.mascot}</span>
-                      ) : null}
-                    </div>
-                    <MyTeamsCardBracketAffordance />
-                  </div>
+                  <MyTeamsCardHeadRow
+                    seed={row.seed}
+                    school={row.school}
+                    mascot={row.mascot}
+                  />
                   <div className="my-teams-meta">
                     <span>{row.region}</span>
                     {row.nextGameLive ? (
@@ -297,7 +336,7 @@ export function MyTeamsPage({
                     ) : null}
                   </div>
                   <MyTeamsLiveScoreboard row={row} />
-                  <dl className="my-teams-dl my-teams-dl--split my-teams-dl--muted">
+                  <dl className="my-teams-dl my-teams-dl--split">
                     <div className="my-teams-dl-split-col my-teams-dl-split-col--game">
                       <div className="my-teams-dl-field">
                         <dt>Lost control</dt>

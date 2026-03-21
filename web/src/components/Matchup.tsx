@@ -1,6 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { BracketGame, GameResult, Team, User } from "../types";
-import { computePoolOutcome, getOwnerDisplayForSide } from "../lib/ats";
+import {
+  computePoolOutcome,
+  getOwnerDisplayForSide,
+  getOwnerUserIdForSide,
+} from "../lib/ats";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import { buildTeamToUserId } from "../lib/ownershipMap";
 import { getMatchupTooltipRegion } from "../lib/matchupTooltip";
@@ -172,6 +176,21 @@ export function Matchup({
     dn
   );
 
+  const ownerUidA = getOwnerUserIdForSide(
+    game,
+    "side_a",
+    allGames,
+    results,
+    ownershipRows
+  );
+  const ownerUidB = getOwnerUserIdForSide(
+    game,
+    "side_b",
+    allGames,
+    results,
+    ownershipRows
+  );
+
   const score = (tid: string | null) =>
     tid && r?.scores?.[tid] != null ? String(r.scores[tid]) : "";
 
@@ -210,40 +229,9 @@ export function Matchup({
         })()
       : null;
 
-  /** Grey subtext: final score (spread / no-line) or margin line (same-owner games). */
+  /** Grey subtext: scoreboard winner margin (no final score sentence on bracket cards). */
   const outcomeDetailLine =
-    final &&
-    outcome &&
-    ta &&
-    tb &&
-    r?.scores &&
-    r.scores[ta] != null &&
-    r.scores[tb] != null
-      ? (() => {
-          const teamToUser = buildTeamToUserId(ownershipRows);
-          const oa = teamToUser.get(ta);
-          const ob = teamToUser.get(tb);
-          const sa = r.scores![ta]!;
-          const sb = r.scores![tb]!;
-
-          if (oa && ob && oa === ob) {
-            const covered = outcome.coveredTeamId;
-            const other = covered === ta ? tb : ta;
-            const cs = r.scores![covered];
-            const os = r.scores![other];
-            if (cs == null || os == null) return null;
-            const diff = Math.abs(cs - os);
-            const cabbr = teamAbbrev(covered, teamsById);
-            let scoreboard: string;
-            if (cs > os) scoreboard = `${cabbr} won by ${diff}`;
-            else if (cs < os) scoreboard = `${cabbr} lost by ${diff}`;
-            else scoreboard = `${cabbr} tied`;
-            return `${scoreboard}.`;
-          }
-
-          return `The final score was ${teamAbbrev(ta, teamsById)} ${sa}, ${teamAbbrev(tb, teamsById)} ${sb}.`;
-        })()
-      : null;
+    final && outcome ? outcome.bracketMarginLine : null;
 
   const outcomeTone: "hit" | "miss" | "neutral" | null =
     final && outcome
@@ -262,10 +250,12 @@ export function Matchup({
     tid,
     side,
     owner,
+    ownerUserId,
   }: {
     tid: string | null;
     side: "side_a" | "side_b";
     owner: string;
+    ownerUserId: string | null;
   }) => {
     const pendingRef = feederSourceGameIdForSide(game, side, gm);
     const t = tid ? teamsById.get(tid) : null;
@@ -280,29 +270,36 @@ export function Matchup({
     const abbr = tid != null ? teamAbbrev(tid, teamsById) : "—";
     const spread = noLine ? "" : spreadLabel(tid, fav, sp);
 
+    const viewerOwnsRow =
+      Boolean(viewerUserId && ownerUserId && viewerUserId === ownerUserId);
+
     return (
-      <div className="matchup-row">
-        <div className="matchup-row-inner">
-          <span className="matchup-seed">{seed}</span>
-          <div className="matchup-logo" title={school} aria-hidden>
-            {abbr}
+      <>
+        <span className="matchup-seed">{seed}</span>
+        <div
+          className={`matchup-logo${viewerOwnsRow ? " matchup-logo--viewer" : ""}`}
+          title={school}
+          aria-hidden
+        >
+          {abbr}
+        </div>
+        <div className="matchup-main">
+          <div className="matchup-name-row">
+            <span
+              className={`matchup-name${pending ? " matchup-name--pending" : ""}`}
+            >
+              {school}
+            </span>
           </div>
-          <div className="matchup-main">
-            <div className="matchup-name-row">
-              <span
-                className={`matchup-name${pending ? " matchup-name--pending" : ""}`}
-              >
-                {school}
-              </span>
-              <span className="matchup-spread">
-                {noLine ? "—" : spread}
-              </span>
-            </div>
-            <div className="matchup-owner">{owner}</div>
+          <div
+            className={`matchup-owner${viewerOwnsRow ? " matchup-owner--viewer" : ""}`}
+          >
+            {owner}
           </div>
         </div>
+        <span className="matchup-spread">{noLine ? "—" : spread}</span>
         <span className="matchup-score">{score(tid)}</span>
-      </div>
+      </>
     );
   };
 
@@ -317,41 +314,54 @@ export function Matchup({
           : " matchup--pool-neutral"
       : "";
 
+  const tipLabel =
+    !final && !live && game.scheduled_tip_utc
+      ? new Date(game.scheduled_tip_utc).toLocaleString(undefined, {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : null;
+
   return (
     <div
       data-game-id={game.id}
       className={`matchup${live ? " matchup--live" : ""}${hasOutcomeBlock ? " matchup--final" : ""}${poolOutcomeClass}`}
     >
       <div className="matchup-top">
-        <GameIdInfo game={game} allGames={allGames} result={r} />
-      </div>
-      <div className="matchup-body">
-        {noLine && (
-          <div className="matchup-no-line">Spread not set yet</div>
-        )}
-        <Row tid={ta} side="side_a" owner={ownerA} />
-        {final && <div className="matchup-status">Final</div>}
-        {!final && live && (
-          <div className="matchup-status matchup-status-live">
-            <span className="matchup-live-label">Live</span>
-            {r.clock ? (
-              <span className="matchup-clock">{r.clock}</span>
-            ) : null}
-          </div>
-        )}
-        {!final &&
-          !live &&
-          game.scheduled_tip_utc && (
-            <div className="matchup-status matchup-status-tip">
-              {new Date(game.scheduled_tip_utc).toLocaleString(undefined, {
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
+        <div className="matchup-top-meta">
+          {noLine && (
+            <div className="matchup-top-line matchup-no-line">
+              Spread not set yet
             </div>
           )}
-        <Row tid={tb} side="side_b" owner={ownerB} />
+          {final && (
+            <div className="matchup-top-line matchup-status">Final</div>
+          )}
+          {!final && live && (
+            <div className="matchup-top-line matchup-status matchup-status-live">
+              <span className="matchup-live-label">Live</span>
+              {r?.clock ? (
+                <span className="matchup-clock">{r.clock}</span>
+              ) : null}
+            </div>
+          )}
+          {tipLabel && (
+            <div className="matchup-top-line matchup-status matchup-status-tip">
+              {tipLabel}
+            </div>
+          )}
+        </div>
+        <div className="matchup-top-actions">
+          <GameIdInfo game={game} allGames={allGames} result={r} />
+        </div>
+      </div>
+      <div className="matchup-body">
+        <div className="matchup-rows" role="presentation">
+          <Row tid={ta} side="side_a" owner={ownerA} ownerUserId={ownerUidA} />
+          <Row tid={tb} side="side_b" owner={ownerB} ownerUserId={ownerUidB} />
+        </div>
         {final && outcome && (
           <div className="matchup-outcome">
             {outcomeHeadline && (

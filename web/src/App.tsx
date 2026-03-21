@@ -14,11 +14,12 @@ import {
   KalshiBracketArena,
   type KalshiBracketArenaProps,
 } from "./components/KalshiBracketArena";
+import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
 import "./App.css";
 
-type MainTab = "bracket" | "my-teams" | "rules";
+type MainTab = "bracket" | "my-teams" | "leaderboard" | "rules";
 
 type Session =
   | { kind: "mock"; userId: string; label: string }
@@ -342,6 +343,15 @@ export default function App() {
           <button
             type="button"
             role="tab"
+            aria-selected={mainTab === "leaderboard"}
+            className={`app-header-tab${mainTab === "leaderboard" ? " app-header-tab--active" : ""}`}
+            onClick={() => setMainTab("leaderboard")}
+          >
+            Leaderboard
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={mainTab === "rules"}
             className={`app-header-tab${mainTab === "rules" ? " app-header-tab--active" : ""}`}
             onClick={() => setMainTab("rules")}
@@ -380,6 +390,14 @@ export default function App() {
               setBracketFocusGameId(null);
               requestAnimationFrame(() => setBracketFocusGameId(gameId));
             }}
+          />
+        ) : mainTab === "leaderboard" ? (
+          <LeaderboardPage
+            users={users}
+            games={games}
+            results={results}
+            ownershipRows={ownership}
+            teamsById={teamsById}
           />
         ) : (
           <PoolRulesPage />

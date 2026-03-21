@@ -76,12 +76,18 @@ export type MyTeamRow = {
   lostControlRoundLabel?: string;
   /** Lost Control: display name of pool owner for the advancing slot after the deciding game. */
   lostSlotOwnerLabel?: string;
+  /** Changed Control: NCAA winner that now holds the advancing slot (viewer covered but lost). */
+  changedToTeamLabel?: string;
+  /** Changed Control: viewer display name (pool controller for this pick before control changed). */
+  previousOwnerLabel?: string;
   /** True when this row's current bracket game (frontier) is in progress. */
   nextGameLive: boolean;
   /** When live: game clock (e.g. 1st Half 10:39). */
   liveGameClock: string | null;
   /** When live: scoreboard line with abbrevs, e.g. "DUKE 42 · UNC 39". */
   liveGameScoreLabel: string | null;
+  /** `Date.parse` of game time used for sorting (matches Game time column); missing → end. */
+  nextTipSortKey: number;
 };
 
 function spreadLineLabel(
@@ -103,6 +109,12 @@ function formatTip(iso: string | null): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function tipMsFromIso(iso: string | null | undefined): number {
+  if (iso == null || iso === "") return Number.POSITIVE_INFINITY;
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
 }
 
 function opponentLabel(
@@ -216,11 +228,32 @@ export function findTeamFrontierState(
   }
 }
 
-function isAlive(frontier: TeamFrontierState): boolean {
+/** Current pool controller for a team slot and whether that team is still alive in the NCAA bracket. */
+export function getTeamPoolControlSnapshot(
+  teamId: string,
+  games: BracketGame[],
+  results: Map<string, GameResult>,
+  ownershipRows: OwnershipRow[]
+): { alive: boolean; controllerUserId: string | null } | null {
+  const frontier = findTeamFrontierState(teamId, games, results);
+  if (!frontier) return null;
+  return {
+    alive: isAliveFrontier(frontier),
+    controllerUserId: currentPoolController(
+      teamId,
+      frontier,
+      games,
+      results,
+      ownershipRows
+    ),
+  };
+}
+
+export function isAliveFrontier(frontier: TeamFrontierState): boolean {
   return frontier.kind !== "eliminated";
 }
 
-function currentPoolController(
+export function currentPoolController(
   teamId: string,
   frontier: TeamFrontierState,
   games: BracketGame[],
@@ -363,15 +396,6 @@ function lastOutcomeMessageForTeam(
   return out?.message ?? null;
 }
 
-function tipSortKey(frontier: TeamFrontierState): number {
-  if (frontier.kind === "upcoming") {
-    const t = Date.parse(frontier.game.scheduled_tip_utc ?? "");
-    return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
-  }
-  if (frontier.kind === "champion") return Number.POSITIVE_INFINITY - 1;
-  return Number.POSITIVE_INFINITY;
-}
-
 function buildRow(
   teamId: string,
   frontier: TeamFrontierState,
@@ -488,6 +512,7 @@ function buildRow(
     nextGameLive,
     liveGameClock,
     liveGameScoreLabel,
+    nextTipSortKey: tipMsFromIso(frontier.game.scheduled_tip_utc),
   };
 }
 
@@ -520,7 +545,7 @@ export function buildMyTeamsSections(
     const frontier = findTeamFrontierState(teamId, games, results);
     if (!frontier) continue;
 
-    const alive = isAlive(frontier);
+    const alive = isAliveFrontier(frontier);
     const controller = currentPoolController(
       teamId,
       frontier,
@@ -568,6 +593,9 @@ export function buildMyTeamsSections(
         nextTipLabel: anchorGame
           ? formatTip(anchorGame.scheduled_tip_utc)
           : row.nextTipLabel,
+        nextTipSortKey: anchorGame
+          ? tipMsFromIso(anchorGame.scheduled_tip_utc)
+          : row.nextTipSortKey,
       };
 
       const isChangedControl =
@@ -581,7 +609,33 @@ export function buildMyTeamsSections(
           teamsById
         );
 
-      if (isChangedControl) changedControl.push(augmented);
+      if (isChangedControl) {
+        const dnView = (uid: string) =>
+          usersById.get(uid)?.display_name ?? uid;
+        const previousOwnerLabel = dnView(viewerUserId);
+        let changedToTeamLabel = "—";
+        if (frontier.kind === "eliminated") {
+          const out = computePoolOutcome(
+            frontier.game,
+            games,
+            results,
+            ownershipRows,
+            teamsById,
+            (uid) => uid
+          );
+          if (out) {
+            const tw = teamsById.get(out.ncaaWinnerId);
+            const sch = tw?.school ?? teamSchool(out.ncaaWinnerId, teamsById);
+            const masc = tw?.mascot ? ` ${tw.mascot}` : "";
+            changedToTeamLabel = `${sch}${masc}`.trim();
+          }
+        }
+        changedControl.push({
+          ...augmented,
+          changedToTeamLabel,
+          previousOwnerLabel,
+        });
+      }
       else {
         const dnOwner = (uid: string) =>
           usersById.get(uid)?.display_name ?? uid;
@@ -604,26 +658,16 @@ export function buildMyTeamsSections(
     }
   }
 
-  active.sort((a, b) => {
-    const fa = findTeamFrontierState(a.teamId, games, results);
-    const fb = findTeamFrontierState(b.teamId, games, results);
-    const ka = fa ? tipSortKey(fa) : 0;
-    const kb = fb ? tipSortKey(fb) : 0;
-    if (ka !== kb) return ka - kb;
+  const byGameTimeThenSchool = (a: MyTeamRow, b: MyTeamRow) => {
+    if (a.nextTipSortKey !== b.nextTipSortKey) {
+      return a.nextTipSortKey - b.nextTipSortKey;
+    }
     return a.school.localeCompare(b.school);
-  });
+  };
 
-  changedControl.sort((a, b) => {
-    if (a.region !== b.region) return a.region.localeCompare(b.region);
-    if (a.seed !== b.seed) return a.seed - b.seed;
-    return a.school.localeCompare(b.school);
-  });
-
-  lost.sort((a, b) => {
-    if (a.region !== b.region) return a.region.localeCompare(b.region);
-    if (a.seed !== b.seed) return a.seed - b.seed;
-    return a.school.localeCompare(b.school);
-  });
+  active.sort(byGameTimeThenSchool);
+  changedControl.sort(byGameTimeThenSchool);
+  lost.sort(byGameTimeThenSchool);
 
   return { active, changedControl, lost };
 }
