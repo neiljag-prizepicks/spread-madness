@@ -329,12 +329,12 @@
   },
   "S-R32-4": {
     "status": "in_progress",
-    "clock": "10:19 - 2nd Half",
+    "clock": "4:39 - 2nd Half",
     "scores": {
-      "S02": 67,
-      "S10": 43
+      "S02": 77,
+      "S10": 53
     },
-    "scores_updated_at": "2026-03-21T23:55:47.460Z"
+    "scores_updated_at": "2026-03-22T00:13:57.063Z"
   },
   "MW-R32-1": {
     "status": "final",

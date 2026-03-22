@@ -937,6 +937,12 @@ export default function App() {
                   onError={() => console.warn("Google login failed")}
                   useOneTap={false}
                   width={googleLoginWidth}
+                  type="standard"
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                  logo_alignment="left"
                 />
               </div>
             </div>
