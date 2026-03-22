@@ -192,9 +192,11 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
         </h2>
         {myGroups.length === 0 ? (
           <>
-            <p className="group-hub-muted">You are not in any group yet.</p>
             <p className="group-hub-muted">
-              New here? Need a refresher? Check out the{" "}
+              Join or create a group to spread the madness!
+            </p>
+            <p className="group-hub-muted">
+              New here? Need a rules refresher? Check out the{" "}
               <Link to="/rules" className="group-hub-rules-link">
                 {POOL_RULES_PAGE_TITLE}
               </Link>{" "}
