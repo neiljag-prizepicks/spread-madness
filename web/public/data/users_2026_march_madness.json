@@ -1,8 +1,9 @@
 {
     "users": [
         {
-            "id": "1", 
-            "name": "Neil Jag",
+            "id": "1",
+            "first_name": "Neil",
+            "last_name": "Jag",
             "display_name": "Neil Jag",
             "email": "neil.jagtiani@prizepicks.com",
             "created_at": "2021-01-01",
@@ -10,7 +11,8 @@
         },
         {
             "id": "2",
-            "name": "Sharaf Syed",
+            "first_name": "Sharaf",
+            "last_name": "Syed",
             "display_name": "Sharaf Syed",
             "email": "sharaf.syed@prizepicks.com",
             "created_at": "2021-01-01",
@@ -18,7 +20,8 @@
         },
         {
             "id": "3",
-            "name": "Josh Rub",
+            "first_name": "Josh",
+            "last_name": "Rub",
             "display_name": "Josh Rub",
             "email": "josh.rub@prizepicks.com",
             "created_at": "2021-01-01",
@@ -26,7 +29,8 @@
         },
         {
             "id": "4",
-            "name": "McKenna Ville",
+            "first_name": "McKenna",
+            "last_name": "Ville",
             "display_name": "McKenna Ville",
             "email": "mckenna.ville@prizepicks.com",
             "created_at": "2021-01-01",
@@ -34,7 +38,8 @@
         },
         {
             "id": "5",
-            "name": "Gary Bogdanski",
+            "first_name": "Gary",
+            "last_name": "Bogdanski",
             "display_name": "Gary Bogdanski",
             "email": "gary.bogdanski@prizepicks.com",
             "created_at": "2021-01-01",
@@ -42,23 +47,26 @@
         },
         {
             "id": "6",
-            "name": "Ben Steele",
+            "first_name": "Ben",
+            "last_name": "Steele",
             "display_name": "Ben Steele",
             "email": "ben.steele@prizepicks.com",
             "created_at": "2021-01-01",
             "updated_at": "2021-01-01"
-        }, 
+        },
         {
             "id": "7",
-            "name": "George Navas",
+            "first_name": "George",
+            "last_name": "Navas",
             "display_name": "George Navas",
             "email": "george.navas@prizepicks.com",
             "created_at": "2021-01-01",
             "updated_at": "2021-01-01"
-        }, 
+        },
         {
             "id": "8",
-            "name": "Dylan Cooper",
+            "first_name": "Dylan",
+            "last_name": "Cooper",
             "display_name": "Dylan Cooper",
             "email": "dylan.cooper@prizepicks.com",
             "created_at": "2021-01-01",

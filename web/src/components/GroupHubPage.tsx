@@ -12,6 +12,7 @@ import {
   fetchPublicGroups,
   joinPrivateGroup,
   joinPublicGroup,
+  leavePublicGroup,
   subscribeUserGroups,
   type GroupDoc,
 } from "../lib/firestore/groupsApi";
@@ -55,6 +56,11 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
 
   const [privCode, setPrivCode] = useState("");
   const [privPass, setPrivPass] = useState("");
+
+  /** Public Join / Joined button async guard */
+  const [publicActionGroupId, setPublicActionGroupId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const unsub = subscribeUserGroups(
@@ -132,14 +138,37 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
     }
   };
 
-  const handleJoinPublic = async (groupId: string) => {
+  const handlePublicGroupAction = async (groupId: string) => {
+    const membership = myGroups.find((m) => m.id === groupId);
     setError(null);
+    if (membership) {
+      if (membership.role === "admin") {
+        setError(
+          "You're the admin of this league. Open it from My groups to manage or delete the group."
+        );
+        return;
+      }
+      setPublicActionGroupId(groupId);
+      try {
+        await leavePublicGroup(db, groupId, uid);
+        setPublicGroups(await fetchPublicGroups(db));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setPublicActionGroupId(null);
+      }
+      return;
+    }
+
+    setPublicActionGroupId(groupId);
     try {
       await joinPublicGroup(db, groupId, uid, displayName);
       writeStoredActiveGroupId(groupId);
       onEnterGroup(groupId);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setPublicActionGroupId(null);
     }
   };
 
@@ -173,11 +202,6 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
     <div className="group-hub">
       <header className="group-hub-header">
         <h1 className="group-hub-title">Your groups</h1>
-        <p className="group-hub-lede">
-          Create a group or join one. Ownership is separate per group. Group size
-          sets how many logical bracket slots each person holds (64 ÷ members;
-          First Four games count as one slot each).
-        </p>
       </header>
 
       {error ? (
@@ -190,10 +214,14 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
         <h2 id="my-groups-h" className="group-hub-section-title">
           My groups
         </h2>
+        <p className="group-hub-muted">
+          Hello {displayName.trim() || "there"}, join or create a group to spread
+          the madness!
+        </p>
         {myGroups.length === 0 ? (
           <>
             <p className="group-hub-muted">
-              Join or create a group to spread the madness!
+              You are not part of any groups yet.
             </p>
             <p className="group-hub-muted">
               New here? Need a rules refresher? Check out the{" "}
@@ -359,31 +387,66 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
             Refresh
           </button>
         </div>
-        {publicGroups.filter((g) => g.data.memberCount < g.data.maxMembers)
-          .length === 0 ? (
+        {publicGroups.filter(
+          (g) =>
+            g.data.memberCount < g.data.maxMembers ||
+            myGroups.some((m) => m.id === g.id)
+        ).length === 0 ? (
           <p className="group-hub-muted">No open public groups right now.</p>
         ) : (
           <ul className="group-hub-list">
             {publicGroups
-              .filter((g) => g.data.memberCount < g.data.maxMembers)
-              .map((g) => (
-                <li key={g.id} className="group-hub-card">
-                  <div>
-                    <div className="group-hub-card-name">{g.data.name}</div>
-                    <div className="group-hub-card-meta">
-                      {g.data.memberCount}/{g.data.maxMembers} joined ·{" "}
-                      {teamsPerMemberLabel(g.data.memberCap)} teams each
+              .filter(
+                (g) =>
+                  g.data.memberCount < g.data.maxMembers ||
+                  myGroups.some((m) => m.id === g.id)
+              )
+              .map((g) => {
+                const membership = myGroups.find((m) => m.id === g.id);
+                const joined = !!membership;
+                const busy = publicActionGroupId === g.id;
+                return (
+                  <li key={g.id} className="group-hub-card">
+                    <div>
+                      <div className="group-hub-card-name">{g.data.name}</div>
+                      <div className="group-hub-card-meta">
+                        {g.data.memberCount}/{g.data.maxMembers} joined ·{" "}
+                        {teamsPerMemberLabel(g.data.memberCap)} teams each
+                      </div>
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() => void handleJoinPublic(g.id)}
-                  >
-                    Join
-                  </button>
-                </li>
-              ))}
+                    <button
+                      type="button"
+                      className={`group-hub-public-join${
+                        joined ? " btn-primary btn-public-joined" : " btn-primary"
+                      }`}
+                      disabled={busy}
+                      onClick={() => void handlePublicGroupAction(g.id)}
+                      aria-label={
+                        joined
+                          ? membership!.role === "admin"
+                            ? `Joined as admin: ${g.data.name}`
+                            : `Joined ${g.data.name} — tap to leave`
+                          : `Join ${g.data.name}`
+                      }
+                    >
+                      {joined ? (
+                        <svg
+                          className="btn-public-joined-icon"
+                          viewBox="0 0 24 24"
+                          aria-hidden
+                        >
+                          <path
+                            fill="currentColor"
+                            d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+                          />
+                        </svg>
+                      ) : (
+                        "Join"
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
           </ul>
         )}
       </section>

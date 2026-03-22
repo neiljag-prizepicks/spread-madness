@@ -169,6 +169,20 @@ export function KalshiBracketArena({
         <div className="kalshi-cell kalshi-cell--west">
           <RegionQuadrant title="West" games={west} flow="rtl" {...mprops} />
         </div>
+        <div className="kalshi-cell kalshi-cell--center">
+          <section
+            className="kalshi-final-band"
+            aria-label="Final Four and National Championship"
+          >
+            <h2 className="first-four-section-title">Final Four & Championship</h2>
+            <BracketCenterHub
+              ff1={ff1}
+              ff2={ff2}
+              ncg={ncg}
+              {...mprops}
+            />
+          </section>
+        </div>
         <div className="kalshi-cell kalshi-cell--south">
           <RegionQuadrant title="South" games={south} flow="ltr" {...mprops} />
         </div>
@@ -177,14 +191,6 @@ export function KalshiBracketArena({
             title="Midwest"
             games={midwest}
             flow="rtl"
-            {...mprops}
-          />
-        </div>
-        <div className="kalshi-cell kalshi-cell--center">
-          <BracketCenterHub
-            ff1={ff1}
-            ff2={ff2}
-            ncg={ncg}
             {...mprops}
           />
         </div>

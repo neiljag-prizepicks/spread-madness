@@ -1,9 +1,12 @@
 import type { BracketGame, GameResult, Team, User } from "../types";
-import { computePoolOutcome, getOwnerDisplayForSide } from "./ats";
+import {
+  computePoolOutcome,
+  getOwnerUserIdForSide,
+} from "./ats";
 import { isPoolSettledForGame } from "./gameResult";
 import type { OwnershipRow } from "./ownershipMap";
 import { buildTeamToUserId } from "./ownershipMap";
-import { userInitialsFromDisplayName } from "./userInitials";
+import { userInitialsFromUser } from "./userInitials";
 import { gameMap, resolveTeamId } from "./resolveTeams";
 
 export type OverviewSlotStatus =
@@ -69,10 +72,18 @@ export function isOverviewLiveResult(
   return sa != null || sb != null;
 }
 
-function initialsFromOwnerLabel(label: string): string {
+function initialsForUserId(
+  uid: string | null,
+  usersById: Map<string, User>,
+  displayName: (userId: string) => string
+): string {
+  if (!uid) return "—";
+  const u = usersById.get(uid);
+  const label = u?.display_name?.trim() || displayName(uid);
   if (!label || label === "—") return "—";
   return (
-    userInitialsFromDisplayName(label) || label.slice(0, 2).toUpperCase()
+    userInitialsFromUser(u, displayName(uid)) ||
+    label.slice(0, 2).toUpperCase()
   );
 }
 
@@ -97,24 +108,22 @@ export function overviewSlotVisual(
   const r = results.get(game.id);
 
   if (isOverviewLiveResult(r, ta, tb)) {
-    const nameA = getOwnerDisplayForSide(
+    const uidA = getOwnerUserIdForSide(
       game,
       "side_a",
       allGames,
       results,
-      ownershipRows,
-      displayName
+      ownershipRows
     );
-    const nameB = getOwnerDisplayForSide(
+    const uidB = getOwnerUserIdForSide(
       game,
       "side_b",
       allGames,
       results,
-      ownershipRows,
-      displayName
+      ownershipRows
     );
-    const ia = initialsFromOwnerLabel(nameA);
-    const ib = initialsFromOwnerLabel(nameB);
+    const ia = initialsForUserId(uidA, usersById, displayName);
+    const ib = initialsForUserId(uidB, usersById, displayName);
     return { status: "live", initials: `${ia}·${ib}` };
   }
 
@@ -136,8 +145,10 @@ export function overviewSlotVisual(
     usersById.get(outcome.poolOwnerUserId)?.display_name ??
     displayName(outcome.poolOwnerUserId);
   const poolOwnerInitials =
-    userInitialsFromDisplayName(poolOwnerName) ||
-    outcome.poolOwnerUserId.slice(0, 2).toUpperCase();
+    userInitialsFromUser(
+      usersById.get(outcome.poolOwnerUserId),
+      poolOwnerName
+    ) || outcome.poolOwnerUserId.slice(0, 2).toUpperCase();
 
   const tone = viewerPoolOutcomeTone(
     viewerId,
@@ -151,7 +162,7 @@ export function overviewSlotVisual(
     const selfName =
       usersById.get(viewerId)?.display_name ?? displayName(viewerId);
     const ini =
-      userInitialsFromDisplayName(selfName) ||
+      userInitialsFromUser(usersById.get(viewerId), selfName) ||
       viewerId.slice(0, 2).toUpperCase();
     return {
       status: "hit",

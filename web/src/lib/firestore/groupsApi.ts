@@ -36,8 +36,26 @@ export type GroupDoc = {
 export type MemberDoc = {
   role: "admin" | "member";
   displayName: string;
+  firstName?: string;
+  lastName?: string;
   joinedAt: Timestamp;
 };
+
+/** Legacy docs may still have `name` instead of firstName/lastName. */
+export type MemberDocWithLegacy = MemberDoc & { name?: string };
+
+export function firstLastFromMemberDoc(
+  d: MemberDocWithLegacy
+): { first_name: string; last_name: string } {
+  let first_name = typeof d.firstName === "string" ? d.firstName.trim() : "";
+  let last_name = typeof d.lastName === "string" ? d.lastName.trim() : "";
+  if (!first_name && !last_name && typeof d.name === "string" && d.name.trim()) {
+    const parts = d.name.trim().split(/\s+/).filter(Boolean);
+    first_name = parts[0] ?? "";
+    last_name = parts.length > 1 ? parts.slice(1).join(" ") : "";
+  }
+  return { first_name, last_name };
+}
 
 export type UserGroupLinkDoc = {
   groupId: string;
@@ -144,6 +162,118 @@ export async function joinPublicGroup(
       visibility: data.visibility,
       joinedAt: Timestamp.now(),
     } satisfies UserGroupLinkDoc);
+  });
+}
+
+/**
+ * Non-admin leaves any public or private group (same rules as leaving from the hub for public groups).
+ * Admins must use league tools or {@link leaveGroupAsAdminWithCoAdmins}.
+ */
+export async function leaveGroupAsMember(
+  firestore: Firestore,
+  groupId: string,
+  uid: string
+): Promise<void> {
+  const gRef = doc(firestore, "groups", groupId);
+  const mRef = doc(firestore, "groups", groupId, "members", uid);
+
+  const mSnap = await getDoc(mRef);
+  if (!mSnap.exists()) throw new Error("You're not in this group.");
+  const member = mSnap.data() as MemberDoc;
+  if (member.role === "admin") {
+    throw new Error(
+      "Group admins can't leave from here. Use League settings or delete the group from My groups."
+    );
+  }
+
+  const ownershipQ = query(
+    collection(firestore, "groups", groupId, "ownership"),
+    where("userId", "==", uid)
+  );
+  const ownSnap = await getDocs(ownershipQ);
+  if (!ownSnap.empty) {
+    throw new Error(
+      "You still have teams assigned in this group. Reassign them in Assign teams before leaving."
+    );
+  }
+
+  await runTransaction(firestore, async (transaction) => {
+    const gT = await transaction.get(gRef);
+    const mT = await transaction.get(mRef);
+    if (!gT.exists() || !mT.exists()) {
+      throw new Error("Could not leave the group. Try again.");
+    }
+    const gData = gT.data() as GroupDoc;
+    if ((mT.data() as MemberDoc).role === "admin") {
+      throw new Error(
+        "Group admins can't leave from here. Use League settings or delete the group from My groups."
+      );
+    }
+    if (gData.memberCount < 1) {
+      throw new Error("Group data is inconsistent.");
+    }
+    transaction.update(gRef, { memberCount: increment(-1) });
+    transaction.delete(mRef);
+    transaction.delete(doc(firestore, "users", uid, "groups", groupId));
+  });
+}
+
+/** Member leaves a public group (not available for admins — use league settings). */
+export async function leavePublicGroup(
+  firestore: Firestore,
+  groupId: string,
+  uid: string
+): Promise<void> {
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+  const group = gSnap.data() as GroupDoc;
+  if (group.visibility !== "public") {
+    throw new Error("Only public groups can be left from here.");
+  }
+  await leaveGroupAsMember(firestore, groupId, uid);
+}
+
+/** Admin leaves when at least one other admin exists; fails if user still has teams assigned. */
+export async function leaveGroupAsAdminWithCoAdmins(
+  firestore: Firestore,
+  groupId: string,
+  uid: string
+): Promise<void> {
+  const membersSnap = await getDocs(
+    collection(firestore, "groups", groupId, "members")
+  );
+  const adminCount = membersSnap.docs.filter(
+    (d) => (d.data() as MemberDoc).role === "admin"
+  ).length;
+  const selfDoc = membersSnap.docs.find((d) => d.id === uid);
+  if (!selfDoc || (selfDoc.data() as MemberDoc).role !== "admin") {
+    throw new Error("You are not an admin of this group.");
+  }
+  if (adminCount <= 1) {
+    throw new Error(
+      "You are the only admin. Delete the group from My groups or promote another admin first."
+    );
+  }
+
+  const ownershipQ = query(
+    collection(firestore, "groups", groupId, "ownership"),
+    where("userId", "==", uid)
+  );
+  const ownSnap = await getDocs(ownershipQ);
+  if (!ownSnap.empty) {
+    throw new Error(
+      "You still have teams assigned in this group. Reassign them in Assign teams before leaving."
+    );
+  }
+
+  const gRef = doc(firestore, "groups", groupId);
+  await runTransaction(firestore, async (transaction) => {
+    const gSnap = await transaction.get(gRef);
+    if (!gSnap.exists()) throw new Error("Group not found.");
+    transaction.update(gRef, { memberCount: increment(-1) });
+    transaction.delete(doc(firestore, "groups", groupId, "members", uid));
+    transaction.delete(doc(firestore, "users", uid, "groups", groupId));
   });
 }
 

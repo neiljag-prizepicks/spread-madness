@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
+  reload,
   signInWithCredential,
   signOut,
 } from "firebase/auth";
@@ -31,11 +32,13 @@ import {
 import { auth, db, isFirebaseConfigured } from "./lib/firebase";
 import { normalizeResultsFileObject } from "./lib/gameResult";
 import {
+  firstLastFromMemberDoc,
   subscribeGroupDocument,
   subscribeGroupMembers,
   subscribeGroupOwnership,
   subscribeUserGroups,
   type GroupDoc,
+  type MemberDocWithLegacy,
   type UserGroupLinkDoc,
 } from "./lib/firestore/groupsApi";
 import { PHYSICAL_TEAM_ID_COUNT } from "./lib/groupConstants";
@@ -53,13 +56,17 @@ import {
   KalshiBracketArena,
   type KalshiBracketArenaProps,
 } from "./components/KalshiBracketArena";
+import { AccountSettingsPage } from "./components/AccountSettingsPage";
 import { GroupAssignmentPage } from "./components/GroupAssignmentPage";
 import { GroupHubPage } from "./components/GroupHubPage";
 import { GroupLeagueSettingsPage } from "./components/GroupLeagueSettingsPage";
 import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
+import { normalizeUserRow } from "./lib/normalizeUserRow";
 import { POOL_RULES_PAGE_TITLE } from "./content/poolRulesCopy";
+
+const ACCOUNT_SETTINGS_PAGE_TITLE = "Account settings";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import "./App.css";
 
@@ -90,10 +97,12 @@ function UserAccountMenu({
   displayName,
   onSignOut,
   showRulesLink = true,
+  showAccountLink = false,
 }: {
   displayName: string;
   onSignOut: () => void;
   showRulesLink?: boolean;
+  showAccountLink?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -151,6 +160,16 @@ function UserAccountMenu({
           role="menu"
           aria-labelledby={triggerId}
         >
+          {showAccountLink ? (
+            <Link
+              to="/account"
+              className="app-header-user-menu-item"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              Account settings
+            </Link>
+          ) : null}
           {showRulesLink ? (
             <Link
               to="/rules"
@@ -481,20 +500,22 @@ export default function App() {
   const [memberUsers, setMemberUsers] = useState<Map<string, User>>(new Map());
   const [activeGroupDoc, setActiveGroupDoc] = useState<GroupDoc | null>(null);
 
-  const mockRowRef = useRef<HTMLDivElement>(null);
+  const mockSelectRef = useRef<HTMLSelectElement>(null);
   const loginCardRef = useRef<HTMLDivElement>(null);
-  const [googleLoginWidth, setGoogleLoginWidth] = useState(200);
+  const [googleLoginWidth, setGoogleLoginWidth] = useState(() => {
+    if (typeof window === "undefined") return 280;
+    return Math.min(400, Math.max(200, window.innerWidth - 120));
+  });
 
   /**
-   * Match GSI button width to the mock **row** (same as full-width dropdown on mobile, and
-   * dropdown + “Enter league” on desktop). Measuring only the `<select>` was too narrow when
-   * the button sat beside it. Clamp to card content width to avoid horizontal bleed.
+   * GSI `width` is in px (max 400). Match the mock `<select>` only — not the full card/row —
+   * so the Google button aligns with the dropdown on all breakpoints.
    */
   useLayoutEffect(() => {
     if (session !== null) return;
-    const rowEl = mockRowRef.current;
+    const selectEl = mockSelectRef.current;
     const cardEl = loginCardRef.current;
-    if (!rowEl || !cardEl) return;
+    if (!selectEl || !cardEl) return;
 
     const cardContentWidth = (card: HTMLElement) => {
       const s = getComputedStyle(card);
@@ -507,16 +528,26 @@ export default function App() {
 
     const sync = () => {
       const inner = cardContentWidth(cardEl);
-      const rowW = rowEl.getBoundingClientRect().width;
-      const w = Math.min(rowW, inner, 400);
-      setGoogleLoginWidth(Math.round(Math.max(160, w)));
+      if (inner <= 0) return;
+      const selectW = selectEl.getBoundingClientRect().width;
+      const w = Math.min(selectW, inner, 400);
+      setGoogleLoginWidth(Math.round(Math.max(200, w)));
     };
 
     sync();
+    requestAnimationFrame(() => {
+      sync();
+      requestAnimationFrame(sync);
+    });
     const ro = new ResizeObserver(sync);
-    ro.observe(rowEl);
+    ro.observe(selectEl);
     ro.observe(cardEl);
-    return () => ro.disconnect();
+    const onResize = () => sync();
+    window.addEventListener("resize", onResize);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
+    };
   }, [session]);
 
   /** Apply focus from router state (e.g. My Teams → bracket) and clear state so refresh/back behave. */
@@ -558,7 +589,11 @@ export default function App() {
               ? (t as { teams: Team[] }).teams
               : []
         );
-        setUsers((u.users ?? []) as User[]);
+        setUsers(
+          Array.isArray(u.users)
+            ? u.users.map((row: unknown) => normalizeUserRow(row))
+            : []
+        );
         setOwnership(Array.isArray(own) ? own : own.ownership_round1 ?? []);
         setResults(normalizeResultsFileObject(res));
         setLoadError(null);
@@ -677,7 +712,14 @@ export default function App() {
       (rows) => {
         const m = new Map<string, User>();
         for (const r of rows) {
-          m.set(r.uid, { id: r.uid, display_name: r.data.displayName });
+          const d = r.data as MemberDocWithLegacy;
+          const { first_name, last_name } = firstLastFromMemberDoc(d);
+          m.set(r.uid, {
+            id: r.uid,
+            display_name: d.displayName,
+            first_name,
+            last_name,
+          });
         }
         setMemberUsers(m);
       }
@@ -715,7 +757,13 @@ export default function App() {
   useEffect(() => {
     if (!firebaseGroupMode || userGroupRows.length > 0) return;
     const p = location.pathname;
-    if (p === "/groups" || p === "/rules" || p.startsWith("/groups/")) return;
+    if (
+      p === "/groups" ||
+      p === "/rules" ||
+      p === "/account" ||
+      p.startsWith("/groups/")
+    )
+      return;
     if (
       p.startsWith("/bracket") ||
       p.startsWith("/my-teams") ||
@@ -874,6 +922,7 @@ export default function App() {
       location.pathname.startsWith("/my-teams/user/");
 
   const isRulesPage = location.pathname === "/rules";
+  const isAccountPage = location.pathname === "/account";
   const isGroupsHome = location.pathname === "/groups";
   const groupsNavHash = isGroupsHome ? location.hash : "";
 
@@ -890,8 +939,9 @@ export default function App() {
 
           <div className="login-section">
             <h2>Mock login (internal demo)</h2>
-            <div ref={mockRowRef} className="mock-row">
+            <div className="mock-row">
               <select
+                ref={mockSelectRef}
                 id="mock-user"
                 className="mock-select"
                 defaultValue="1"
@@ -936,6 +986,7 @@ export default function App() {
                   onSuccess={onGoogleSuccess}
                   onError={() => console.warn("Google login failed")}
                   useOneTap={false}
+                  use_fedcm_for_button={false}
                   width={googleLoginWidth}
                   type="standard"
                   theme="outline"
@@ -1015,7 +1066,7 @@ export default function App() {
   return (
     <div className="app">
       <header
-        className={`app-header${isGroupsHome && !isRulesPage ? " app-header--groups-top" : ""}`}
+        className={`app-header${isGroupsHome && !isRulesPage && !isAccountPage ? " app-header--groups-top" : ""}`}
       >
         <div className="app-header-top">
           {isRulesPage ? (
@@ -1052,6 +1103,42 @@ export default function App() {
               <span className="app-header-rules-divider" aria-hidden />
               <h1 className="app-header-rules-title">{POOL_RULES_PAGE_TITLE}</h1>
             </div>
+          ) : isAccountPage ? (
+            <div className="app-header-rules-lead">
+              <button
+                type="button"
+                className="app-header-back"
+                aria-label="Go back"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate("/groups");
+                  }
+                }}
+              >
+                <svg
+                  className="app-header-back-icon"
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  aria-hidden
+                >
+                  <path
+                    d="M15 18l-6-6 6-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <span className="app-header-rules-divider" aria-hidden />
+              <h1 className="app-header-rules-title">
+                {ACCOUNT_SETTINGS_PAGE_TITLE}
+              </h1>
+            </div>
           ) : firebaseGroupMode ? (
             <SpreadMadnessBrandMenu
               userGroupRows={userGroupRows}
@@ -1071,9 +1158,10 @@ export default function App() {
             displayName={session.label}
             onSignOut={() => void handleSignOut()}
             showRulesLink={!isRulesPage}
+            showAccountLink={firebaseGroupMode && !isAccountPage}
           />
         </div>
-        {!isRulesPage && !isGroupsHome ? (
+        {!isRulesPage && !isAccountPage && !isGroupsHome ? (
           <nav
             className="app-header-tabs"
             role="navigation"
@@ -1124,7 +1212,7 @@ export default function App() {
           </nav>
         ) : null}
       </header>
-      {!isRulesPage && isGroupsHome ? (
+      {!isRulesPage && !isAccountPage && isGroupsHome ? (
         <nav
           className="app-header-tabs app-header-tabs--groups-hub"
           role="navigation"
@@ -1352,6 +1440,38 @@ export default function App() {
             }
           />
           <Route path="/rules" element={<PoolRulesPage />} />
+          <Route
+            path="/account"
+            element={
+              session.kind === "google" &&
+              session.uid &&
+              auth?.currentUser ? (
+                <AccountSettingsPage
+                  uid={session.uid}
+                  authUser={auth.currentUser}
+                  onProfileUpdated={() => {
+                    const u = auth?.currentUser;
+                    if (!u) return;
+                    void reload(u).then(() => {
+                      setSession({
+                        kind: "google",
+                        uid: u.uid,
+                        label:
+                          u.displayName ?? u.email ?? "Google user",
+                      });
+                    });
+                  }}
+                  onDeleted={() => {
+                    setSession(null);
+                    writeStoredActiveGroupId(null);
+                    navigate("/", { replace: true });
+                  }}
+                />
+              ) : (
+                <Navigate to="/groups" replace />
+              )
+            }
+          />
           <Route
             path="*"
             element={

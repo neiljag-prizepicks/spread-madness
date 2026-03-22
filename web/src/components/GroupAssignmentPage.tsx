@@ -21,7 +21,7 @@ import {
   type GroupMemberCap,
 } from "../lib/groupConstants";
 import type { OwnershipRow } from "../lib/ownershipMap";
-import { groupBracketPath, groupSettingsPath } from "../lib/groupPaths";
+import { groupBracketPath } from "../lib/groupPaths";
 
 type Props = {
   uid: string;
@@ -271,9 +271,6 @@ export function GroupAssignmentPage({
           >
             {saving ? "Saving…" : "Save & go to bracket"}
           </button>
-          <Link to={groupSettingsPath(groupId)} className="btn-ghost">
-            League settings
-          </Link>
         </div>
       </header>
 

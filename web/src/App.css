@@ -122,6 +122,17 @@
   min-width: 0;
 }
 
+/* GSI sets a fixed iframe width; nudge height toward mock select / primary button on small screens */
+@media (max-width: 520px) {
+  .login-google-button-host > div {
+    min-height: 44px;
+  }
+
+  .login-google-button-host iframe {
+    min-height: 44px !important;
+  }
+}
+
 .login-hint {
   font-size: 0.8rem;
   color: var(--pp-fg-tertiary);
@@ -155,6 +166,33 @@
 .btn-primary:disabled:hover {
   background: var(--pp-bg-tertiary);
   color: var(--pp-fg-tertiary);
+}
+
+/* Public groups: keep Join / checkmark control the same width */
+.group-hub-public-join {
+  min-width: 5.25rem;
+  box-sizing: border-box;
+}
+
+/* Public groups: joined state (tap again to leave as a member) */
+.btn-primary.btn-public-joined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pp-positive);
+  color: #0a0a0a;
+}
+
+.btn-primary.btn-public-joined:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--pp-positive) 88%, #000);
+  color: #0a0a0a;
+}
+
+.btn-public-joined-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  display: block;
 }
 
 .btn-secondary {
@@ -428,6 +466,129 @@
 
 .app-header-user-menu-item:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.account-settings-page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 0.15rem 1.5rem;
+}
+
+.account-settings-lead {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--pp-fg-secondary);
+}
+
+.account-settings-lead strong {
+  color: var(--pp-fg-primary);
+}
+
+.account-settings-block {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--pp-border);
+}
+
+.account-settings-block:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.account-settings-block--danger {
+  border-radius: 8px;
+  padding: 1rem 1rem 1.25rem;
+  margin-top: 0.5rem;
+  background: rgba(220, 80, 80, 0.08);
+  border: 1px solid rgba(220, 80, 80, 0.35);
+}
+
+.account-settings-heading {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.65rem;
+  color: var(--pp-fg-primary);
+}
+
+.account-settings-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: var(--pp-fg-secondary);
+}
+
+.account-settings-input {
+  display: block;
+  width: 100%;
+  max-width: 24rem;
+  box-sizing: border-box;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--pp-fg-primary);
+  background: var(--pp-bg-primary);
+  border: 1px solid var(--pp-border);
+  border-radius: 6px;
+}
+
+.account-settings-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.account-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.account-settings-saved {
+  font-size: 0.85rem;
+  color: var(--pp-positive);
+}
+
+.account-settings-muted {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--pp-fg-secondary);
+}
+
+.account-settings-error {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #f0a8a8;
+}
+
+.account-settings-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: rgba(200, 60, 60, 0.95);
+  border: 1px solid rgba(255, 120, 120, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.account-settings-delete-btn:hover:not(:disabled) {
+  background: rgba(220, 70, 70, 1);
+}
+
+.account-settings-delete-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .pool-rules-page {
@@ -2023,14 +2184,11 @@
   margin-top: 1rem;
 }
 
-/* --- Kalshi-style: four quadrants → center hub (FF–1 | NCG | FF–2) --- */
+/* --- Kalshi-style: East/West row → full-width Final Four band → South/Midwest row --- */
 .kalshi-arena {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(400px, min(46vw, 640px)) minmax(
-      220px,
-      1fr
-    );
-  grid-template-rows: minmax(380px, auto) minmax(380px, auto);
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+  grid-template-rows: minmax(380px, auto) auto minmax(380px, auto);
   gap: 14px 18px;
   align-items: stretch;
   width: 100%;
@@ -2048,27 +2206,56 @@
 }
 
 .kalshi-cell--west {
-  grid-column: 3;
+  grid-column: 2;
   grid-row: 1;
 }
 
 .kalshi-cell--south {
   grid-column: 1;
-  grid-row: 2;
+  grid-row: 3;
 }
 
 .kalshi-cell--midwest {
-  grid-column: 3;
-  grid-row: 2;
+  grid-column: 2;
+  grid-row: 3;
 }
 
 .kalshi-cell--center {
-  grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-width: 0;
+}
+
+/* Full-width strip between regional rows; mirrors .first-four-section treatment */
+.kalshi-final-band {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 1rem 1.1rem 1.25rem;
+  background: var(--pp-bg-secondary);
+  border: 1px solid var(--pp-border);
+  border-radius: 14px;
+}
+
+.kalshi-final-band .first-four-section-title {
+  margin-bottom: 0.85rem;
+}
+
+.kalshi-final-band .kalshi-center-hub {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  min-height: 0;
+  height: auto;
+}
+
+.kalshi-final-band .kalshi-center-hub--triptych {
+  justify-content: space-evenly;
+  gap: 1rem 1.5rem;
 }
 
 .kalshi-quadrant {
