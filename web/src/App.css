@@ -2971,6 +2971,20 @@
   font-size: 0.9rem;
 }
 
+.group-hub-rules-link {
+  color: var(--pp-link);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.group-hub-rules-link:hover {
+  text-decoration: underline;
+}
+
+.group-hub-section .group-hub-muted + .group-hub-muted {
+  margin-top: 0.45rem;
+}
+
 .group-hub-error {
   background: rgba(220, 80, 80, 0.12);
   border: 1px solid rgba(220, 80, 80, 0.35);

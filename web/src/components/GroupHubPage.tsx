@@ -16,6 +16,7 @@ import {
   type GroupDoc,
 } from "../lib/firestore/groupsApi";
 
+import { POOL_RULES_PAGE_TITLE } from "../content/poolRulesCopy";
 import { writeStoredActiveGroupId } from "../lib/activeGroupStorage";
 import { groupSettingsPath } from "../lib/groupPaths";
 
@@ -190,7 +191,16 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
           My groups
         </h2>
         {myGroups.length === 0 ? (
-          <p className="group-hub-muted">You are not in any group yet.</p>
+          <>
+            <p className="group-hub-muted">You are not in any group yet.</p>
+            <p className="group-hub-muted">
+              New here? Need a refresher? Check out the{" "}
+              <Link to="/rules" className="group-hub-rules-link">
+                {POOL_RULES_PAGE_TITLE}
+              </Link>{" "}
+              page.
+            </p>
+          </>
         ) : (
           <ul className="group-hub-list">
             {myGroups.map((g) => (

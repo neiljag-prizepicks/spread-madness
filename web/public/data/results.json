@@ -320,21 +320,30 @@
   },
   "W-R32-3": {
     "status": "in_progress",
-    "clock": "Halftime",
+    "clock": "15:17 - 2nd Half",
     "scores": {
-      "W03": 33,
-      "W11A": 35
+      "W03": 42,
+      "W11A": 43
     },
-    "scores_updated_at": "2026-03-21T23:53:46.448Z"
+    "scores_updated_at": "2026-03-22T00:26:08.318Z"
+  },
+  "S-R32-3": {
+    "status": "in_progress",
+    "clock": "15:43 - 1st Half",
+    "scores": {
+      "S03": 9,
+      "S11": 2
+    },
+    "scores_updated_at": "2026-03-22T00:24:07.368Z"
   },
   "S-R32-4": {
     "status": "in_progress",
-    "clock": "4:39 - 2nd Half",
+    "clock": "0:50 - 2nd Half",
     "scores": {
-      "S02": 77,
-      "S10": 53
+      "S02": 87,
+      "S10": 57
     },
-    "scores_updated_at": "2026-03-22T00:13:57.063Z"
+    "scores_updated_at": "2026-03-22T00:26:08.318Z"
   },
   "MW-R32-1": {
     "status": "final",
