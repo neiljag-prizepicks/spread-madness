@@ -491,6 +491,8 @@ export default function App() {
   const [userGroupRows, setUserGroupRows] = useState<
     { id: string; data: UserGroupLinkDoc }[]
   >([]);
+  /** False until Firestore returns the first snapshot (empty [] is valid; "not yet loaded" is not). */
+  const [userGroupsLoaded, setUserGroupsLoaded] = useState(false);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(() =>
     readStoredActiveGroupId()
   );
@@ -653,14 +655,20 @@ export default function App() {
   useEffect(() => {
     if (!db || session?.kind !== "google" || !session.uid) {
       setUserGroupRows([]);
+      setUserGroupsLoaded(false);
       return;
     }
-    const unsub = subscribeUserGroups(db, session.uid, setUserGroupRows);
+    setUserGroupsLoaded(false);
+    const unsub = subscribeUserGroups(db, session.uid, (rows) => {
+      setUserGroupRows(rows);
+      setUserGroupsLoaded(true);
+    });
     return () => unsub();
   }, [session]);
 
   useEffect(() => {
     if (session?.kind !== "google" || !session.uid) return;
+    if (!userGroupsLoaded) return;
     if (!userGroupRows.length) {
       setActiveGroupId(null);
       writeStoredActiveGroupId(null);
@@ -685,7 +693,7 @@ export default function App() {
       if (stored && userGroupRows.some((r) => r.id === stored)) return stored;
       return userGroupRows[0].id;
     });
-  }, [session, userGroupRows, location.pathname, navigate]);
+  }, [session, userGroupsLoaded, userGroupRows, location.pathname, navigate]);
 
   useEffect(() => {
     if (session?.kind !== "google") return;
@@ -755,7 +763,8 @@ export default function App() {
   }, [firebaseGroupMode, activeGroupDoc]);
 
   useEffect(() => {
-    if (!firebaseGroupMode || userGroupRows.length > 0) return;
+    if (!firebaseGroupMode || !userGroupsLoaded || userGroupRows.length > 0)
+      return;
     const p = location.pathname;
     if (
       p === "/groups" ||
@@ -772,7 +781,13 @@ export default function App() {
     ) {
       navigate("/groups", { replace: true });
     }
-  }, [firebaseGroupMode, userGroupRows.length, location.pathname, navigate]);
+  }, [
+    firebaseGroupMode,
+    userGroupsLoaded,
+    userGroupRows.length,
+    location.pathname,
+    navigate,
+  ]);
 
   const teamsById = useMemo(
     () => new Map(teams.map((t) => [t.id, t])),
