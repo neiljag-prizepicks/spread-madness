@@ -18,7 +18,7 @@ Open the URL Vite prints (usually http://localhost:5173).
 
 ## Auth
 
-- **Mock login:** pick any of the 8 league users → full bracket (static `ownership_round1.json`).
+- **Mock login:** pick any of the 8 group users → full bracket (static `ownership_round1.json`).
 - **Google:** create `web/.env` (see `.env.example`):
 
   ```env

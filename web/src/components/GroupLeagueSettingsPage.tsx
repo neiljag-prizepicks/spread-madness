@@ -20,7 +20,7 @@ type Props = {
 function CopyClipboardIcon() {
   return (
     <svg
-      className="group-league-settings-copy-svg"
+      className="group-settings-copy-svg"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -69,10 +69,10 @@ function SettingsInviteCopyRow({
   };
 
   return (
-    <div className="group-league-settings-value-row">
+    <div className="group-settings-value-row">
       <button
         type="button"
-        className="group-league-settings-code group-league-settings-code--tap"
+        className="group-settings-code group-settings-code--tap"
         onClick={() => void copy()}
         disabled={!canCopy}
         title={copied ? "Copied" : `Copy ${label}`}
@@ -81,7 +81,7 @@ function SettingsInviteCopyRow({
       </button>
       <button
         type="button"
-        className="group-league-settings-copy-icon-btn"
+        className="group-settings-copy-icon-btn"
         onClick={() => void copy()}
         disabled={!canCopy}
         aria-label={`Copy ${label} to clipboard`}
@@ -141,7 +141,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   const handleRemove = async (targetUid: string, displayName: string) => {
     if (
       !window.confirm(
-        `Remove ${displayName} from this league? They will lose access to this group.`
+        `Remove ${displayName} from this group? They will lose access to this group.`
       )
     ) {
       return;
@@ -172,7 +172,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   };
 
   const handleDeleteGroup = async () => {
-    const label = groupDoc?.name || "this league";
+    const label = groupDoc?.name || "this group";
     if (
       !window.confirm(
         `Delete "${label}" permanently? All members will lose access and ownership data for this group will be removed. This cannot be undone.`
@@ -204,7 +204,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   if (role !== "admin") {
     return (
       <div className="group-hub">
-        <p className="group-hub-error">Only group admins can manage league settings.</p>
+        <p className="group-hub-error">Only group admins can manage group settings.</p>
         <Link to="/groups" className="btn-ghost">
           Back to groups
         </Link>
@@ -213,9 +213,9 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   }
 
   return (
-    <div className="group-league-settings">
+    <div className="group-settings">
       <header className="group-hub-header">
-        <h1 className="group-hub-title">League settings</h1>
+        <h1 className="group-hub-title">Group settings</h1>
         {groupDoc?.name ? (
           <p className="group-hub-lede">{groupDoc.name}</p>
         ) : null}
@@ -229,18 +229,18 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
 
       {groupDoc?.visibility === "private" ? (
         <section
-          className="group-league-settings-section"
+          className="group-settings-section"
           aria-labelledby="private-invite-h"
         >
           <h2 id="private-invite-h" className="group-hub-section-title">
             Private invite
           </h2>
-          <p className="group-league-settings-desc">
+          <p className="group-settings-desc">
             Share the join code and password so people can join from the groups
-            home page until the league is full.
+            home page until the group is full.
           </p>
-          <dl className="group-league-settings-invite-dl">
-            <div className="group-league-settings-invite-row">
+          <dl className="group-settings-invite-dl">
+            <div className="group-settings-invite-row">
               <dt>Join code</dt>
               <dd>
                 <SettingsInviteCopyRow
@@ -249,7 +249,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
                 />
               </dd>
             </div>
-            <div className="group-league-settings-invite-row">
+            <div className="group-settings-invite-row">
               <dt>Group password</dt>
               <dd>
                 <SettingsInviteCopyRow
@@ -259,7 +259,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
               </dd>
             </div>
           </dl>
-          <form className="group-league-settings-form" onSubmit={handleSavePassword}>
+          <form className="group-settings-form" onSubmit={handleSavePassword}>
             <label className="group-hub-label">
               New password
               <input
@@ -283,47 +283,47 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
       ) : null}
 
       <section
-        className="group-league-settings-section"
+        className="group-settings-section"
         aria-labelledby="assign-teams-h"
       >
         <h2 id="assign-teams-h" className="group-hub-section-title">
           Assign teams
         </h2>
-        <p className="group-league-settings-desc">
+        <p className="group-settings-desc">
           Split tournament teams across members (First Four pairs stay together).
         </p>
         <Link className="btn-primary" to={groupAssignPath(groupId)}>
-          Open assign teams
+          Assign teams
         </Link>
       </section>
 
       <section
-        className="group-league-settings-section"
+        className="group-settings-section"
         aria-labelledby="remove-players-h"
       >
         <h2 id="remove-players-h" className="group-hub-section-title">
           Remove players
         </h2>
-        <p className="group-league-settings-desc">
+        <p className="group-settings-desc">
           Players must have no teams assigned yet, or you need to reassign their
           teams in Assign teams first.
         </p>
         {members.length === 0 ? (
           <p className="group-hub-muted">No members loaded.</p>
         ) : (
-          <ul className="group-league-settings-member-list">
+          <ul className="group-settings-member-list">
             {members.map((m) => {
               const isSelf = m.uid === uid;
               const soleAdmin =
                 m.data.role === "admin" && adminCount <= 1;
               const disableRemove = isSelf || soleAdmin;
               return (
-                <li key={m.uid} className="group-league-settings-member-row">
+                <li key={m.uid} className="group-settings-member-row">
                   <div>
-                    <span className="group-league-settings-member-name">
+                    <span className="group-settings-member-name">
                       {m.data.displayName}
                     </span>
-                    <span className="group-league-settings-member-role">
+                    <span className="group-settings-member-role">
                       {" "}
                       · {m.data.role === "admin" ? "Admin" : "Member"}
                       {isSelf ? " (you)" : ""}
@@ -331,7 +331,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
                   </div>
                   <button
                     type="button"
-                    className="btn-ghost btn-sm group-league-settings-remove"
+                    className="btn-ghost btn-sm group-settings-remove"
                     disabled={disableRemove || removingId === m.uid}
                     onClick={() => void handleRemove(m.uid, m.data.displayName)}
                     title={
@@ -352,23 +352,23 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
       </section>
 
       <section
-        className="group-league-settings-section group-league-settings-danger"
+        className="group-settings-section group-settings-danger"
         aria-labelledby="delete-group-h"
       >
         <h2 id="delete-group-h" className="group-hub-section-title">
           Delete group
         </h2>
-        <p className="group-league-settings-desc">
-          Permanently delete this league for everyone. This removes member links
+        <p className="group-settings-desc">
+          Permanently delete this group for everyone. This removes member links
           and team ownership for this group.
         </p>
         <button
           type="button"
-          className="group-league-settings-delete-btn"
+          className="group-settings-delete-btn"
           disabled={deleting}
           onClick={() => void handleDeleteGroup()}
         >
-          {deleting ? "Deleting…" : "Delete league"}
+          {deleting ? "Deleting…" : "Delete group"}
         </button>
       </section>
     </div>

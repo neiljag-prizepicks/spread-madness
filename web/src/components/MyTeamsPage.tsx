@@ -240,7 +240,7 @@ export function MyTeamsPage({
       <div className="my-teams-page">
         <h1 className="my-teams-page-title">My Teams</h1>
         <p className="my-teams-page-lead">
-          This proof-of-concept ties teams to <strong>mock league users</strong> from
+          This proof-of-concept ties teams to <strong>mock group users</strong> from
           the demo login. Sign in with <strong>Mock login</strong> and pick your name
           to see the teams you control and your Round 1 picks here. Google sign-in
           does not yet map to group rosters.

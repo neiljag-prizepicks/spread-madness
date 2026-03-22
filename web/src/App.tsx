@@ -973,7 +973,7 @@ export default function App() {
                   }
                 }}
               >
-                Enter league
+                Enter group
               </button>
             </div>
           </div>

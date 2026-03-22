@@ -144,7 +144,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
     if (membership) {
       if (membership.role === "admin") {
         setError(
-          "You're the admin of this league. Open it from My groups to manage or delete the group."
+          "You're the admin of this group. Open it from My groups to manage or delete the group."
         );
         return;
       }
@@ -247,8 +247,8 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
                     <Link
                       className="group-hub-settings-link"
                       to={groupSettingsPath(g.id)}
-                      aria-label={`League settings for ${g.name}`}
-                      title="League settings"
+                      aria-label={`Group settings for ${g.name}`}
+                      title="Group settings"
                     >
                       <svg
                         className="group-hub-settings-icon"

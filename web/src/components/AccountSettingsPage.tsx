@@ -36,7 +36,7 @@ export function AccountSettingsPage({
   const [deletePhrase, setDeletePhrase] = useState("");
   const [deleteWorking, setDeleteWorking] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [inLeagues, setInLeagues] = useState(false);
+  const [inGroups, setInGroups] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +46,7 @@ export function AccountSettingsPage({
         const linkSnap = await getDocs(collection(db, "users", uid, "groups"));
         const joined = !linkSnap.empty;
         if (cancelled) return;
-        setInLeagues(joined);
+        setInGroups(joined);
         const fromMembers = joined
           ? await fetchViewerProfileFromMemberships(db, uid)
           : { displayName: "", firstName: "", lastName: "" };
@@ -90,9 +90,9 @@ export function AccountSettingsPage({
     e.preventDefault();
     setFormError(null);
     setNameSaved(false);
-    if (!inLeagues) {
+    if (!inGroups) {
       setFormError(
-        "Join a league first — your first and last name are stored with each league membership."
+        "Join a group first — your first and last name are stored with each group membership."
       );
       return;
     }
@@ -156,7 +156,7 @@ export function AccountSettingsPage({
     <div className="account-settings-page">
       <p className="account-settings-lead">
         Your <strong>display name</strong> is what other players see in each
-        league. <strong>First name</strong> and <strong>last name</strong> are
+        group. <strong>First name</strong> and <strong>last name</strong> are
         optional; we use them for your initials in the bracket overview when both
         are set. Otherwise initials come from your display name.
       </p>
@@ -200,10 +200,10 @@ export function AccountSettingsPage({
 
       <form className="account-settings-block" onSubmit={handleSaveNames}>
         <h2 className="account-settings-heading">First and last name</h2>
-        {!inLeagues ? (
+        {!inGroups ? (
           <p className="account-settings-muted">
-            Join a league to save your name — it is stored on your membership
-            in each league.
+            Join a group to save your name — it is stored on your membership
+            in each group.
           </p>
         ) : null}
         <label className="account-settings-label" htmlFor="acct-first-name">
@@ -221,7 +221,7 @@ export function AccountSettingsPage({
           autoComplete="given-name"
           maxLength={80}
           placeholder="Optional"
-          disabled={!inLeagues}
+          disabled={!inGroups}
         />
         <label className="account-settings-label" htmlFor="acct-last-name">
           Last name
@@ -238,13 +238,13 @@ export function AccountSettingsPage({
           autoComplete="family-name"
           maxLength={80}
           placeholder="Optional"
-          disabled={!inLeagues}
+          disabled={!inGroups}
         />
         <div className="account-settings-actions">
           <button
             type="submit"
             className="btn-primary"
-            disabled={nameSaving || !inLeagues}
+            disabled={nameSaving || !inGroups}
           >
             {nameSaving ? "Saving…" : "Save first and last name"}
           </button>
@@ -262,7 +262,7 @@ export function AccountSettingsPage({
           Delete account
         </h2>
         <p className="account-settings-muted">
-          This removes you from all leagues (and deletes any league where you
+          This removes you from all groups (and deletes any group where you
           are the only admin), then deletes your sign-in. This cannot be undone.
         </p>
         <label className="account-settings-label" htmlFor="acct-delete-confirm">

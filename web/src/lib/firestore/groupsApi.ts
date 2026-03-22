@@ -167,7 +167,7 @@ export async function joinPublicGroup(
 
 /**
  * Non-admin leaves any public or private group (same rules as leaving from the hub for public groups).
- * Admins must use league tools or {@link leaveGroupAsAdminWithCoAdmins}.
+ * Admins must use group admin tools or {@link leaveGroupAsAdminWithCoAdmins}.
  */
 export async function leaveGroupAsMember(
   firestore: Firestore,
@@ -182,7 +182,7 @@ export async function leaveGroupAsMember(
   const member = mSnap.data() as MemberDoc;
   if (member.role === "admin") {
     throw new Error(
-      "Group admins can't leave from here. Use League settings or delete the group from My groups."
+      "Group admins can't leave from here. Use Group settings or delete the group from My groups."
     );
   }
 
@@ -206,7 +206,7 @@ export async function leaveGroupAsMember(
     const gData = gT.data() as GroupDoc;
     if ((mT.data() as MemberDoc).role === "admin") {
       throw new Error(
-        "Group admins can't leave from here. Use League settings or delete the group from My groups."
+        "Group admins can't leave from here. Use Group settings or delete the group from My groups."
       );
     }
     if (gData.memberCount < 1) {
@@ -218,7 +218,7 @@ export async function leaveGroupAsMember(
   });
 }
 
-/** Member leaves a public group (not available for admins — use league settings). */
+/** Member leaves a public group (not available for admins — use group settings). */
 export async function leavePublicGroup(
   firestore: Firestore,
   groupId: string,

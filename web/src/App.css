@@ -145,6 +145,8 @@
 }
 
 .btn-primary {
+  display: inline-block;
+  text-decoration: none;
   background: var(--pp-action);
   color: #fff;
   border: none;
@@ -154,6 +156,7 @@
 }
 
 .btn-primary:hover {
+  text-decoration: none;
   background: var(--pp-action-hover);
 }
 
@@ -3295,30 +3298,30 @@
   }
 }
 
-.group-league-settings {
+.group-settings {
   max-width: 560px;
 }
 
-.group-league-settings-section {
+.group-settings-section {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--pp-border);
 }
 
-.group-league-settings-section:first-of-type {
+.group-settings-section:first-of-type {
   border-top: none;
   padding-top: 0;
   margin-top: 1rem;
 }
 
-.group-league-settings-desc {
+.group-settings-desc {
   font-size: 0.88rem;
   color: var(--pp-fg-secondary);
   margin: 0 0 0.75rem;
   line-height: 1.45;
 }
 
-.group-league-settings-member-list {
+.group-settings-member-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -3327,7 +3330,7 @@
   gap: 0.5rem;
 }
 
-.group-league-settings-member-row {
+.group-settings-member-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3339,25 +3342,25 @@
   font-size: 0.88rem;
 }
 
-.group-league-settings-member-name {
+.group-settings-member-name {
   font-weight: 600;
 }
 
-.group-league-settings-member-role {
+.group-settings-member-role {
   color: var(--pp-fg-tertiary);
   font-size: 0.8rem;
 }
 
-.group-league-settings-remove:disabled {
+.group-settings-remove:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.group-league-settings-danger .group-hub-section-title {
+.group-settings-danger .group-hub-section-title {
   color: var(--pp-fg-secondary);
 }
 
-.group-league-settings-delete-btn {
+.group-settings-delete-btn {
   font: inherit;
   font-size: 0.88rem;
   font-weight: 600;
@@ -3369,23 +3372,23 @@
   cursor: pointer;
 }
 
-.group-league-settings-delete-btn:hover:not(:disabled) {
+.group-settings-delete-btn:hover:not(:disabled) {
   background: color-mix(in srgb, var(--pp-error, #c62828) 22%, transparent);
 }
 
-.group-league-settings-delete-btn:disabled {
+.group-settings-delete-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.group-league-settings-invite-dl {
+.group-settings-invite-dl {
   margin: 0 0 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
 }
 
-.group-league-settings-invite-row {
+.group-settings-invite-row {
   display: grid;
   grid-template-columns: 8rem 1fr;
   gap: 0.5rem 1rem;
@@ -3393,17 +3396,17 @@
   font-size: 0.88rem;
 }
 
-.group-league-settings-invite-row dt {
+.group-settings-invite-row dt {
   margin: 0;
   color: var(--pp-fg-secondary);
 }
 
-.group-league-settings-invite-row dd {
+.group-settings-invite-row dd {
   margin: 0;
   min-width: 0;
 }
 
-.group-league-settings-value-row {
+.group-settings-value-row {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -3411,7 +3414,7 @@
   min-width: 0;
 }
 
-.group-league-settings-code {
+.group-settings-code {
   font-family: ui-monospace, monospace;
   font-size: 0.9rem;
   padding: 0.2rem 0.45rem;
@@ -3421,7 +3424,7 @@
   color: var(--pp-fg-primary);
 }
 
-.group-league-settings-code--tap {
+.group-settings-code--tap {
   flex: 1;
   min-width: 0;
   text-align: left;
@@ -3434,17 +3437,17 @@
   font-size: 0.9rem;
 }
 
-.group-league-settings-code--tap:hover:not(:disabled) {
+.group-settings-code--tap:hover:not(:disabled) {
   border-color: var(--pp-link);
   color: var(--pp-link);
 }
 
-.group-league-settings-code--tap:disabled {
+.group-settings-code--tap:disabled {
   cursor: default;
   opacity: 0.7;
 }
 
-.group-league-settings-copy-icon-btn {
+.group-settings-copy-icon-btn {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -3459,23 +3462,23 @@
   cursor: pointer;
 }
 
-.group-league-settings-copy-icon-btn:hover:not(:disabled) {
+.group-settings-copy-icon-btn:hover:not(:disabled) {
   background: var(--pp-bg-tertiary);
   color: var(--pp-fg-primary);
 }
 
-.group-league-settings-copy-icon-btn:disabled {
+.group-settings-copy-icon-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.group-league-settings-copy-svg {
+.group-settings-copy-svg {
   width: 1.25rem;
   height: 1.25rem;
   display: block;
 }
 
-.group-league-settings-form {
+.group-settings-form {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
