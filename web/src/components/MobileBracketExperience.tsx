@@ -153,14 +153,12 @@ export function MobileBracketExperience({
     viewerUserId,
     onOpenZone: openZone,
     groupTeamsUnassigned,
+    bracketPrivateInvite,
   };
 
   if (pane === "overview") {
     return (
       <div className="mobile-bracket-root mobile-bracket-root--overview">
-        {bracketPrivateInvite && !groupTeamsUnassigned ? (
-          <BracketPrivateInviteLines {...bracketPrivateInvite} />
-        ) : null}
         <BracketBirdseye {...ctx} />
       </div>
     );

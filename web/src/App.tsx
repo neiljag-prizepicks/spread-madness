@@ -41,6 +41,7 @@ import {
   type MemberDocWithLegacy,
   type UserGroupLinkDoc,
 } from "./lib/firestore/groupsApi";
+import { tryCommitAutoAssignWhenFull } from "./lib/autoAssignWhenFull";
 import { PHYSICAL_TEAM_ID_COUNT } from "./lib/groupConstants";
 import {
   groupAssignPath,
@@ -881,6 +882,53 @@ export default function App() {
     [teams]
   );
 
+  const autoAssignAttemptedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!db || !activeGroupId || session?.kind !== "google" || !session.uid) {
+      return;
+    }
+    if (!firebaseGroupMode) return;
+    if (!activeGroupDoc?.autoAssignWhenFull) return;
+    if (activeGroupDoc.memberCount !== activeGroupDoc.maxMembers) return;
+    if (firestoreOwnership.length > 0) return;
+    if (allTeamIds.length !== PHYSICAL_TEAM_ID_COUNT) return;
+    if (!games.length) return;
+
+    const row = userGroupRows.find((r) => r.id === activeGroupId);
+    if (!row || row.data.role !== "admin") return;
+
+    if (autoAssignAttemptedRef.current.has(activeGroupId)) return;
+    autoAssignAttemptedRef.current.add(activeGroupId);
+
+    void (async () => {
+      const result = await tryCommitAutoAssignWhenFull(
+        db,
+        activeGroupId,
+        session.uid!,
+        games,
+        allTeamIds,
+        teamsById
+      );
+      if (!result.ok) {
+        autoAssignAttemptedRef.current.delete(activeGroupId);
+      }
+    })();
+  }, [
+    db,
+    activeGroupId,
+    session,
+    firebaseGroupMode,
+    activeGroupDoc?.autoAssignWhenFull,
+    activeGroupDoc?.memberCount,
+    activeGroupDoc?.maxMembers,
+    firestoreOwnership.length,
+    allTeamIds.length,
+    games,
+    teamsById,
+    userGroupRows,
+  ]);
+
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 
   const onGoogleSuccess = async (cred: CredentialResponse) => {
@@ -1079,6 +1127,10 @@ export default function App() {
       )
   );
 
+  const isActiveGroupMember = Boolean(
+    groupNavBase && userGroupRows.some((r) => r.id === groupNavBase)
+  );
+
   const bracketTabActive = groupNavBase
     ? location.pathname === bracketNavPath
     : location.pathname === "/bracket";
@@ -1088,7 +1140,8 @@ export default function App() {
   const settingsTabActive = Boolean(
     groupNavBase &&
       (location.pathname === settingsNavPath ||
-        location.pathname === groupAssignPath(groupNavBase))
+        (isActiveGroupAdmin &&
+          location.pathname === groupAssignPath(groupNavBase)))
   );
 
   return (
@@ -1225,7 +1278,7 @@ export default function App() {
             >
               Leaderboard
             </NavLink>
-            {isActiveGroupAdmin ? (
+            {isActiveGroupMember ? (
               <NavLink
                 to={settingsNavPath}
                 role="tab"

@@ -3,9 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { requireDb } from "../lib/firebase";
 import {
   deleteGroup,
+  leaveGroupAsMember,
   removeGroupMember,
   subscribeGroupDocument,
   subscribeGroupMembers,
+  updateGroupName,
   updatePrivateGroupPassword,
   type GroupDoc,
   type MemberDoc,
@@ -16,6 +18,74 @@ import { groupAssignPath } from "../lib/groupPaths";
 type Props = {
   uid: string;
 };
+
+function IconPencil({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+      />
+    </svg>
+  );
+}
+
+function IconWarning({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="22"
+      height="22"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"
+      />
+    </svg>
+  );
+}
+
+function IconUserPlus({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H5v3H2v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+      />
+    </svg>
+  );
+}
+
+function IconTrash({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+      />
+    </svg>
+  );
+}
 
 function CopyClipboardIcon() {
   return (
@@ -108,6 +178,9 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeGroupMembers(
@@ -133,10 +206,23 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     return () => unsub();
   }, [db, groupId]);
 
+  useEffect(() => {
+    if (groupDoc?.name != null) setNameDraft(groupDoc.name);
+  }, [groupDoc?.name]);
+
   const adminCount = useMemo(
     () => members.filter((m) => m.data.role === "admin").length,
     [members]
   );
+
+  const isAdmin = role === "admin";
+  const nameDirty =
+    groupDoc != null && nameDraft.trim() !== (groupDoc.name ?? "").trim();
+
+  const waitingCount =
+    groupDoc != null && groupDoc.memberCount < groupDoc.maxMembers
+      ? groupDoc.maxMembers - groupDoc.memberCount
+      : 0;
 
   const handleRemove = async (targetUid: string, displayName: string) => {
     if (
@@ -171,6 +257,28 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     }
   };
 
+  const handleLeaveGroup = async () => {
+    const label = groupDoc?.name || "this group";
+    if (
+      !window.confirm(
+        `Leave "${label}"? Your membership and access to this bracket will be removed. Other members are not affected. If you still have teams assigned, an admin must reassign them in Assign teams first or leaving will fail. You can only return by joining this group again.\n\nThis cannot be undone except by rejoining. Are you sure you want to continue?`
+      )
+    ) {
+      return;
+    }
+    setLeaving(true);
+    setError(null);
+    try {
+      await leaveGroupAsMember(db, groupId, uid);
+      writeStoredActiveGroupId(null);
+      navigate("/groups", { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLeaving(false);
+    }
+  };
+
   const handleDeleteGroup = async () => {
     const label = groupDoc?.name || "this group";
     if (
@@ -193,6 +301,22 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     }
   };
 
+  const handleSaveName = async () => {
+    if (!nameDraft.trim()) {
+      setError("Group name cannot be empty.");
+      return;
+    }
+    setError(null);
+    setSavingName(true);
+    try {
+      await updateGroupName(db, groupId, uid, nameDraft);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSavingName(false);
+    }
+  };
+
   if (role === null) {
     return (
       <div className="group-hub">
@@ -201,10 +325,10 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     );
   }
 
-  if (role !== "admin") {
+  if (role !== "admin" && role !== "member") {
     return (
       <div className="group-hub">
-        <p className="group-hub-error">Only group admins can manage group settings.</p>
+        <p className="group-hub-error">You do not have access to this group.</p>
         <Link to="/groups" className="btn-ghost">
           Back to groups
         </Link>
@@ -213,31 +337,73 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   }
 
   return (
-    <div className="group-settings">
-      <header className="group-hub-header">
-        <h1 className="group-hub-title">Group settings</h1>
-        {groupDoc?.name ? (
-          <p className="group-hub-lede">{groupDoc.name}</p>
-        ) : null}
+    <div className="group-settings group-settings-v2">
+      <header className="group-settings-v2-header">
+        <h1 className="group-settings-v2-title">Group Settings</h1>
       </header>
 
       {error ? (
-        <div className="group-hub-error" role="alert">
+        <div className="group-hub-error group-settings-v2-banner-error" role="alert">
           {error}
         </div>
       ) : null}
 
+      <section
+        className="group-settings-v2-card"
+        aria-labelledby="group-name-h"
+      >
+        <h2 id="group-name-h" className="group-settings-v2-card-title">
+          Group name
+        </h2>
+        {isAdmin ? (
+          <div className="group-settings-v2-name-row">
+            <input
+              id="group-settings-name"
+              className="group-hub-input group-settings-v2-name-input"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              maxLength={80}
+              placeholder="Group name"
+              aria-label="Group name"
+            />
+            <button
+              type="button"
+              className="group-settings-v2-icon-btn"
+              aria-label="Focus group name field"
+              onClick={() =>
+                document.getElementById("group-settings-name")?.focus()
+              }
+            >
+              <IconPencil />
+            </button>
+            {nameDirty ? (
+              <button
+                type="button"
+                className="btn-primary group-settings-v2-save-name"
+                disabled={savingName || !nameDraft.trim()}
+                onClick={() => void handleSaveName()}
+              >
+                {savingName ? "Saving…" : "Save name"}
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <p className="group-settings-v2-name-readonly">{groupDoc?.name ?? "—"}</p>
+        )}
+      </section>
+
       {groupDoc?.visibility === "private" ? (
         <section
-          className="group-settings-section"
+          className="group-settings-v2-card"
           aria-labelledby="private-invite-h"
         >
-          <h2 id="private-invite-h" className="group-hub-section-title">
-            Private invite
+          <h2 id="private-invite-h" className="group-settings-v2-card-title">
+            Join code &amp; password
           </h2>
-          <p className="group-settings-desc">
-            Share the join code and password so people can join from the groups
-            home page until the group is full.
+          <p className="group-settings-v2-desc">
+            Share these so people can join from the groups home until the pool
+            is full. Everyone in the group can copy; only admins can change the
+            password.
           </p>
           <dl className="group-settings-invite-dl">
             <div className="group-settings-invite-row">
@@ -259,91 +425,120 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
               </dd>
             </div>
           </dl>
-          <form className="group-settings-form" onSubmit={handleSavePassword}>
-            <label className="group-hub-label">
-              New password
-              <input
-                className="group-hub-input"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                autoComplete="new-password"
-                placeholder="Enter a new group password"
-              />
-            </label>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={savingPassword || !newPassword.trim()}
-            >
-              {savingPassword ? "Saving…" : "Update password"}
-            </button>
-          </form>
+          {isAdmin ? (
+            <form className="group-settings-form" onSubmit={handleSavePassword}>
+              <label className="group-hub-label">
+                New password
+                <input
+                  className="group-hub-input"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder="Enter a new group password"
+                />
+              </label>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={savingPassword || !newPassword.trim()}
+              >
+                {savingPassword ? "Saving…" : "Update password"}
+              </button>
+            </form>
+          ) : null}
+        </section>
+      ) : null}
+
+      {isAdmin && waitingCount > 0 ? (
+        <div
+          className="group-settings-v2-alert"
+          role="status"
+          aria-live="polite"
+        >
+          <IconWarning className="group-settings-v2-alert-icon" />
+          <p>
+            Waiting for {waitingCount} more member
+            {waitingCount === 1 ? "" : "s"} before assignment can be made.
+          </p>
+        </div>
+      ) : null}
+
+      {isAdmin ? (
+        <section
+          className="group-settings-v2-card"
+          aria-labelledby="manual-team-assignment-h"
+        >
+          <h2
+            id="manual-team-assignment-h"
+            className="group-settings-v2-card-title"
+          >
+            Manual team assignment
+          </h2>
+          <p className="group-settings-v2-desc">
+            Manually draft or assign tournament teams to group members. After
+            you save, assignments lock until you unlock from the Assign teams
+            page.
+          </p>
+          <Link
+            className="btn-primary group-settings-v2-assign-btn"
+            to={groupAssignPath(groupId)}
+          >
+            <IconUserPlus className="group-settings-v2-assign-btn-icon" />
+            Assign teams
+          </Link>
         </section>
       ) : null}
 
       <section
-        className="group-settings-section"
-        aria-labelledby="assign-teams-h"
+        className="group-settings-v2-card"
+        aria-labelledby="members-h"
       >
-        <h2 id="assign-teams-h" className="group-hub-section-title">
-          Assign teams
+        <h2 id="members-h" className="group-settings-v2-card-title">
+          Members
         </h2>
-        <p className="group-settings-desc">
-          Split tournament teams across members (First Four pairs stay together).
-        </p>
-        <Link className="btn-primary" to={groupAssignPath(groupId)}>
-          Assign teams
-        </Link>
-      </section>
-
-      <section
-        className="group-settings-section"
-        aria-labelledby="remove-players-h"
-      >
-        <h2 id="remove-players-h" className="group-hub-section-title">
-          Remove players
-        </h2>
-        <p className="group-settings-desc">
-          Players must have no teams assigned yet, or you need to reassign their
-          teams in Assign teams first.
+        <p className="group-settings-v2-desc">
+          {isAdmin
+            ? "Remove a player only if they have no teams assigned, or reassign their teams first in Assign teams."
+            : "People in this pool. Only admins can remove members."}
         </p>
         {members.length === 0 ? (
           <p className="group-hub-muted">No members loaded.</p>
         ) : (
-          <ul className="group-settings-member-list">
+          <ul className="group-settings-member-list group-settings-v2-member-list">
             {members.map((m) => {
               const isSelf = m.uid === uid;
-              const soleAdmin =
-                m.data.role === "admin" && adminCount <= 1;
+              const soleAdmin = m.data.role === "admin" && adminCount <= 1;
               const disableRemove = isSelf || soleAdmin;
               return (
                 <li key={m.uid} className="group-settings-member-row">
                   <div>
                     <span className="group-settings-member-name">
                       {m.data.displayName}
+                      {isSelf ? " (You)" : ""}
                     </span>
                     <span className="group-settings-member-role">
                       {" "}
                       · {m.data.role === "admin" ? "Admin" : "Member"}
-                      {isSelf ? " (you)" : ""}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-ghost btn-sm group-settings-remove"
-                    disabled={disableRemove || removingId === m.uid}
-                    onClick={() => void handleRemove(m.uid, m.data.displayName)}
-                    title={
-                      isSelf
-                        ? "You cannot remove yourself here"
-                        : soleAdmin
-                          ? "Cannot remove the only admin"
-                          : undefined
-                    }
-                  >
-                    {removingId === m.uid ? "Removing…" : "Remove"}
-                  </button>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      className="btn-ghost btn-sm group-settings-remove group-settings-v2-remove"
+                      disabled={disableRemove || removingId === m.uid}
+                      onClick={() => void handleRemove(m.uid, m.data.displayName)}
+                      title={
+                        isSelf
+                          ? "You cannot remove yourself here"
+                          : soleAdmin
+                            ? "Cannot remove the only admin"
+                            : undefined
+                      }
+                    >
+                      {removingId === m.uid ? "Removing…" : "Remove"}
+                    </button>
+                  ) : null}
                 </li>
               );
             })}
@@ -351,26 +546,53 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
         )}
       </section>
 
-      <section
-        className="group-settings-section group-settings-danger"
-        aria-labelledby="delete-group-h"
-      >
-        <h2 id="delete-group-h" className="group-hub-section-title">
-          Delete group
-        </h2>
-        <p className="group-settings-desc">
-          Permanently delete this group for everyone. This removes member links
-          and team ownership for this group.
-        </p>
-        <button
-          type="button"
-          className="group-settings-delete-btn"
-          disabled={deleting}
-          onClick={() => void handleDeleteGroup()}
+      {!isAdmin ? (
+        <section
+          className="group-settings-v2-card group-settings-danger"
+          aria-labelledby="leave-group-member-h"
         >
-          {deleting ? "Deleting…" : "Delete group"}
-        </button>
-      </section>
+          <h2 id="leave-group-member-h" className="group-settings-v2-card-title">
+            Leave group
+          </h2>
+          <p className="group-settings-v2-desc">
+            Remove yourself from this group. You will lose access to its bracket
+            until you join again. If you still have teams assigned, an admin must
+            reassign them in Assign teams before you can leave.
+          </p>
+          <button
+            type="button"
+            className="group-settings-delete-btn"
+            disabled={leaving}
+            onClick={() => void handleLeaveGroup()}
+          >
+            {leaving ? "Leaving…" : "Leave group"}
+          </button>
+        </section>
+      ) : null}
+
+      {isAdmin ? (
+        <section
+          className="group-settings-v2-card group-settings-danger"
+          aria-labelledby="delete-group-h"
+        >
+          <h2 id="delete-group-h" className="group-settings-v2-card-title">
+            Delete group
+          </h2>
+          <p className="group-settings-v2-desc">
+            Permanently delete this group for everyone. This removes member links
+            and team ownership for this group.
+          </p>
+          <button
+            type="button"
+            className="group-settings-delete-btn group-settings-v2-delete-btn"
+            disabled={deleting}
+            onClick={() => void handleDeleteGroup()}
+          >
+            <IconTrash className="group-settings-v2-delete-icon" />
+            {deleting ? "Deleting…" : "Delete group"}
+          </button>
+        </section>
+      ) : null}
     </div>
   );
 }

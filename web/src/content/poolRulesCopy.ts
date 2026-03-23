@@ -1,7 +1,7 @@
 /**
  * Group rules (Rules tab). Use **double asterisks** for bold segments in strings.
  */
-/** Legend label colors — match `.birdseye-legend-*` in App.css */
+/** Legend label colors — match `.pool-rules-legend-*` / overview slot hues in App.css */
 export type PoolRulesLegendClass =
   | "pool-rules-legend-live"
   | "pool-rules-legend-hit"
@@ -20,7 +20,7 @@ export type PoolRulesSection = {
   heading?: string;
   paragraphs?: string[];
   bullets?: string[];
-  /** Color key lines: colored label + rest (same hues as bracket overview). */
+  /** Color key lines: colored label + rest (same hues as overview cells). */
   colorKeyBullets?: PoolRulesColorKeyBullet[];
   /** Rendered after bullets when both exist (e.g. closing paragraph). */
   paragraphsAfterBullets?: string[];

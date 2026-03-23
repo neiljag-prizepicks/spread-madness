@@ -162,6 +162,8 @@ type Base = {
   onOpenZone: (pane: Exclude<BracketPane, "overview">) => void;
   /** When set, replaces the overview color key (teams not saved for this group yet). */
   groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
+  /** Private group not full, teams already assigned: invite lines under tab row (overview only here). */
+  bracketPrivateInvite?: { joinCode: string; password: string } | null;
   /** Desktop: larger cells + wider round spacing (same UI as mobile). */
   variant?: "compact" | "desktop";
 };
@@ -517,6 +519,7 @@ function CenterMini({
 export function BracketBirdseye({
   onOpenZone,
   groupTeamsUnassigned = null,
+  bracketPrivateInvite = null,
   variant = "compact",
   ...ctx
 }: Base) {
@@ -541,16 +544,19 @@ export function BracketBirdseye({
       {groupTeamsUnassigned ? (
         <GroupTeamsUnassignedHint {...groupTeamsUnassigned} />
       ) : (
-        <p className="birdseye-hint">
-          <strong className="birdseye-legend-live">Yellow</strong> = game is
-          actively in progress. When final:{" "}
-          <strong className="birdseye-legend-hit">green</strong> = you won
-          control,{" "}
-          <strong className="birdseye-legend-miss">red</strong> = you lost
-          control,{" "}
-          <strong className="birdseye-legend-neutral">purple</strong> = winner
-          didn’t involve you.
-        </p>
+        <>
+          {bracketPrivateInvite ? (
+            <BracketPrivateInviteLines {...bracketPrivateInvite} />
+          ) : null}
+          <p className="birdseye-hint">
+            <span className="birdseye-prize-dollar-below">$</span> = winning this
+            game qualifies you for a prize. Need a rules refresher?{" "}
+            <Link to="/rules#game-rules-h" className="group-hub-rules-link">
+              Check here
+            </Link>
+            .
+          </p>
+        </>
       )}
       <div
         className={`birdseye-arena birdseye-arena--quad${variant === "desktop" ? " birdseye-arena--quad-desktop" : ""}`}

@@ -31,6 +31,16 @@ export type GroupDoc = {
   createdAt: Timestamp;
   memberCount: number;
   maxMembers: number;
+  /**
+   * When true, a fair random assignment is committed once the group is full and
+   * ownership is still empty (see tryCommitAutoAssignWhenFull). Default false / omitted.
+   */
+  autoAssignWhenFull?: boolean;
+  /**
+   * After teams are saved, assignments are locked until an admin unlocks from settings.
+   * Omitted with existing ownership rows is treated as locked.
+   */
+  ownershipLocked?: boolean;
 };
 
 export type MemberDoc = {
@@ -110,6 +120,8 @@ export async function createGroup(
       createdAt: now,
       memberCount: 1,
       maxMembers: params.memberCap,
+      autoAssignWhenFull: false,
+      ownershipLocked: false,
     } satisfies GroupDoc);
 
     transaction.set(doc(firestore, "groups", groupId, "members", uid), {
@@ -444,12 +456,83 @@ export async function updatePrivateGroupPassword(
   await updateDoc(gRef, { joinPassword: trimmed });
 }
 
+export async function updateGroupName(
+  firestore: Firestore,
+  groupId: string,
+  adminUid: string,
+  name: string
+): Promise<void> {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Group name cannot be empty.");
+  if (trimmed.length > 80) {
+    throw new Error("Group name must be 80 characters or fewer.");
+  }
+
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only group admins can change the group name.");
+  }
+
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+
+  const membersSnap = await getDocs(
+    collection(firestore, "groups", groupId, "members")
+  );
+
+  const batch = writeBatch(firestore);
+  batch.update(gRef, { name: trimmed });
+  for (const d of membersSnap.docs) {
+    batch.update(doc(firestore, "users", d.id, "groups", groupId), {
+      name: trimmed,
+    });
+  }
+  await batch.commit();
+}
+
+export async function updateGroupAutoAssignWhenFull(
+  firestore: Firestore,
+  groupId: string,
+  adminUid: string,
+  enabled: boolean
+): Promise<void> {
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only group admins can change this setting.");
+  }
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+  await updateDoc(gRef, { autoAssignWhenFull: enabled });
+}
+
+export async function unlockGroupOwnershipForEditing(
+  firestore: Firestore,
+  groupId: string,
+  adminUid: string
+): Promise<void> {
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only group admins can unlock assignments.");
+  }
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+  await updateDoc(gRef, { ownershipLocked: false });
+}
+
 export async function setGroupOwnership(
   firestore: Firestore,
   groupId: string,
   pairs: { team_id: string; user_id: string }[]
 ): Promise<void> {
   const batch = writeBatch(firestore);
+  const gRef = doc(firestore, "groups", groupId);
+  batch.update(gRef, { ownershipLocked: true });
   for (const { team_id, user_id } of pairs) {
     const ref = doc(firestore, "groups", groupId, "ownership", team_id);
     batch.set(ref, { userId: user_id });

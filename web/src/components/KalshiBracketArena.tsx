@@ -12,7 +12,6 @@ import { useMediaQuery } from "../hooks/useMediaQuery";
 import {
   BracketBirdseye,
   BracketPrivateInviteLines,
-  GroupTeamsUnassignedHint,
   type BracketPane,
   type GroupTeamsUnassignedHintProps,
 } from "./BracketBirdseye";
@@ -242,16 +241,12 @@ export function KalshiBracketArena({
     viewerUserId: viewerUserId ?? null,
     onOpenZone: openZoneFromOverview,
     groupTeamsUnassigned,
+    bracketPrivateInvite,
     variant: "desktop" as const,
   };
 
   return (
     <>
-      {groupTeamsUnassigned ? (
-        <GroupTeamsUnassignedHint {...groupTeamsUnassigned} />
-      ) : bracketPrivateInvite ? (
-        <BracketPrivateInviteLines {...bracketPrivateInvite} />
-      ) : null}
       <div className="desktop-bracket-shell">
         <div
           className="desktop-bracket-tabs desktop-bracket-tabs--scroll"
