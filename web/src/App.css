@@ -2884,6 +2884,11 @@
   transform: translate(-50%, -50%);
 }
 
+/* Mini bracket: lines target band midpoints = game cell center; $ sits below without shifting Y. */
+.birdseye-mini-slot-anchor--frame-centered {
+  transform: translateX(-50%);
+}
+
 /* Game cell + optional prize $ below (Sweet 16+); keeps $ out of the slot chrome. */
 .birdseye-mini-slot-stack {
   display: flex;

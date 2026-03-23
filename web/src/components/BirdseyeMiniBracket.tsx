@@ -103,12 +103,16 @@ function MiniColumn({
       className="birdseye-mini-col birdseye-mini-col--bracket"
       style={{ height: heightPx, width: slotWidthPx, minWidth: slotWidthPx }}
     >
-      {games.map((g, i) => (
+      {games.map((g, i) => {
+        // Band midpoints match BracketConnectorBridge slotCenterY; anchor by frame center
+        // (not stack center) so optional prize "$" below does not pull lines off the cell.
+        const bandCenterY = ((2 * i + 1) / (2 * n)) * heightPx;
+        return (
         <div
           key={g.id}
-          className="birdseye-mini-slot-anchor"
+          className="birdseye-mini-slot-anchor birdseye-mini-slot-anchor--frame-centered"
           style={{
-            top: `${(100 * (2 * i + 1)) / (2 * n)}%`,
+            top: `${bandCenterY - slotHeightPx / 2}px`,
           }}
         >
           <div className="birdseye-mini-slot-stack">
@@ -128,7 +132,8 @@ function MiniColumn({
             ) : null}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
