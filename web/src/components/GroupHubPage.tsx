@@ -142,8 +142,11 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
     const id = location.hash.replace(/^#/, "");
     if (!id) return;
     requestAnimationFrame(() => {
+      const reduceMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       document.getElementById(id)?.scrollIntoView({
-        behavior: "smooth",
+        behavior: reduceMotion ? "auto" : "smooth",
         block: "start",
       });
     });

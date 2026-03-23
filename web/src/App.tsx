@@ -1241,6 +1241,10 @@ export default function App() {
             to="/rules#game-rules-h"
             replace
             className={`app-header-tab${rulesGameRulesTabActive ? " app-header-tab--active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/rules#game-rules-h", { replace: true });
+            }}
           >
             Game Rules
           </Link>
@@ -1248,6 +1252,10 @@ export default function App() {
             to="/rules#prize-structure-h"
             replace
             className={`app-header-tab${rulesPrizeTabActive ? " app-header-tab--active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/rules#prize-structure-h", { replace: true });
+            }}
           >
             Prize Structure
           </Link>
@@ -1260,26 +1268,42 @@ export default function App() {
           aria-label="Group page sections"
         >
           <a
-            href="#my-groups-h"
+            href="/groups#my-groups-h"
             className={`app-header-tab${groupsNavHash === "#my-groups-h" ? " app-header-tab--active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/groups#my-groups-h", { replace: true });
+            }}
           >
             My Groups
           </a>
           <a
-            href="#create-h"
+            href="/groups#create-h"
             className={`app-header-tab${groupsNavHash === "#create-h" ? " app-header-tab--active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/groups#create-h", { replace: true });
+            }}
           >
             Create Group
           </a>
           <a
-            href="#market-h"
+            href="/groups#market-h"
             className={`app-header-tab${groupsNavHash === "#market-h" ? " app-header-tab--active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/groups#market-h", { replace: true });
+            }}
           >
             Public Groups
           </a>
           <a
-            href="#priv-join-h"
+            href="/groups#priv-join-h"
             className={`app-header-tab${groupsNavHash === "#priv-join-h" ? " app-header-tab--active" : ""}`}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/groups#priv-join-h", { replace: true });
+            }}
           >
             Private Groups
           </a>

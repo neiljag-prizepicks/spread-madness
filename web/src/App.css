@@ -609,7 +609,7 @@
 }
 
 .pool-rules-anchor-section {
-  scroll-margin-top: 6rem;
+  scroll-margin-top: var(--app-hub-scroll-margin);
 }
 
 .pool-rules-divider--major {
@@ -1179,6 +1179,10 @@
 
 .leaderboard-table tbody td {
   color: var(--pp-fg-primary);
+}
+
+.leaderboard-table tbody td.leaderboard-col-in-control--zero {
+  color: var(--pp-negative);
 }
 
 /* Sticky Player column: left-aligned, stays visible on horizontal scroll */
@@ -3413,7 +3417,7 @@
 .group-hub-section-title {
   font-size: 0.95rem;
   margin: 0 0 0.75rem;
-  scroll-margin-top: 0.75rem;
+  scroll-margin-top: var(--app-hub-scroll-margin);
 }
 
 .group-hub-section-head {

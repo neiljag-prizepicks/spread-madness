@@ -1,4 +1,6 @@
 :root {
+  /* Sticky hub tabs (.app-header-tabs--groups-hub): keep section titles visible below the bar when scrolling to #anchors */
+  --app-hub-scroll-margin: calc(3.35rem + env(safe-area-inset-top, 0px));
   --pp-bg-primary: #0e0e0e;
   --pp-bg-secondary: #1a1a1a;
   --pp-bg-tertiary: #242424;
@@ -41,6 +43,13 @@ body,
 #root {
   min-height: 100%;
   margin: 0;
+}
+
+/* In-page anchors (#section) scroll smoothly unless the user prefers reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
