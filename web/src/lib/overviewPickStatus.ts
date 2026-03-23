@@ -24,7 +24,34 @@ export type OverviewSlotVisual = {
   livePair?: { a: string; b: string };
   /** In-progress game where the viewer owns one of the two sides (e.g. bolder initials in overview). */
   liveViewerInvolved?: boolean;
+  /** Elite 8 / Final Four / Championship, not yet live or final — show grey $ for prize milestone. */
+  prizeMarker?: boolean;
 };
+
+const PRIZE_MILESTONE_ROUNDS: ReadonlySet<BracketGame["round"]> = new Set([
+  "elite_8",
+  "final_four",
+  "championship",
+]);
+
+/**
+ * True when this overview cell is a prize-paying round milestone and the game
+ * has not started (or teams not yet resolved). Used for a grey "$" hint in birdseye.
+ */
+export function prizeMilestoneMarker(
+  game: BracketGame,
+  gm: Map<string, BracketGame>,
+  results: Map<string, GameResult>
+): boolean {
+  if (!PRIZE_MILESTONE_ROUNDS.has(game.round)) return false;
+  const ta = resolveTeamId(game, "side_a", gm, results, new Set());
+  const tb = resolveTeamId(game, "side_b", gm, results, new Set());
+  if (!ta || !tb) return true;
+  const r = results.get(game.id);
+  if (isOverviewLiveResult(r, ta, tb)) return false;
+  if (isGameFinal(game, gm, results)) return false;
+  return true;
+}
 
 /** Matches overview colors: green won pool / red lost ATS / purple not involved. */
 export type ViewerPoolOutcomeTone = "hit" | "miss" | "neutral";
@@ -107,7 +134,13 @@ export function overviewSlotVisual(
   const gm = gameMap(allGames);
   const ta = resolveTeamId(game, "side_a", gm, results, new Set());
   const tb = resolveTeamId(game, "side_b", gm, results, new Set());
-  if (!ta || !tb) return { status: "pending", initials: "" };
+  if (!ta || !tb) {
+    return {
+      status: "pending",
+      initials: "",
+      prizeMarker: prizeMilestoneMarker(game, gm, results),
+    };
+  }
 
   const r = results.get(game.id);
 
@@ -140,7 +173,13 @@ export function overviewSlotVisual(
   }
 
   const sides = isGameFinal(game, gm, results);
-  if (!sides) return { status: "pending", initials: "" };
+  if (!sides) {
+    return {
+      status: "pending",
+      initials: "",
+      prizeMarker: prizeMilestoneMarker(game, gm, results),
+    };
+  }
 
   const { ta: fa, tb: fb } = sides;
   const outcome = computePoolOutcome(

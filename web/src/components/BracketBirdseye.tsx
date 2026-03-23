@@ -145,15 +145,17 @@ function OverviewSlot({
   game: BracketGame;
   visual: OverviewSlotVisual;
 }) {
-  const { status, initials, livePair, liveViewerInvolved } = visual;
+  const { status, initials, livePair, liveViewerInvolved, prizeMarker } = visual;
   const label =
-    initials !== ""
-      ? `${game.id}: ${initials}${status === "live" ? " (live)" : ""}`
-      : `${game.id}${status === "pending" ? " (pending)" : ""}`;
+    prizeMarker && status === "pending"
+      ? `${game.id}: Prize payouts start here (not started)`
+      : initials !== ""
+        ? `${game.id}: ${initials}${status === "live" ? " (live)" : ""}`
+        : `${game.id}${status === "pending" ? " (pending)" : ""}`;
   const showLiveStack = status === "live" && livePair != null;
   return (
     <div
-      className={`overview-slot overview-slot--${status}${initials ? " overview-slot--has-initials" : ""}${liveViewerInvolved ? " overview-slot--live-involved" : ""}`}
+      className={`overview-slot overview-slot--${status}${initials ? " overview-slot--has-initials" : ""}${liveViewerInvolved ? " overview-slot--live-involved" : ""}${prizeMarker ? " overview-slot--prize-milestone" : ""}`}
       title={label}
       aria-label={label}
     >
@@ -172,6 +174,11 @@ function OverviewSlot({
           </span>
         )
       )}
+      {prizeMarker ? (
+        <span className="overview-slot-prize-marker" aria-hidden>
+          $
+        </span>
+      ) : null}
     </div>
   );
 }

@@ -3023,6 +3023,20 @@
   font-weight: 900;
 }
 
+/* Elite 8 / Final Four / championship: grey $ when game has not started (prize milestones) */
+.overview-slot-prize-marker {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.32);
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+}
+
+.birdseye-mini-slot-frame .overview-slot-prize-marker {
+  font-size: calc(8.5px + 4.25px * var(--birdseye-layout-scale, 1));
+}
+
 .overview-slot--pending,
 .overview-slot--neutral:not(.overview-slot--has-initials) {
   /* empty / not final */
