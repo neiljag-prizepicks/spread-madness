@@ -198,7 +198,15 @@ export function LeaderboardPage({
                     </span>
                   </Link>
                 </td>
-                <td>{r.teamsInControl}</td>
+                <td
+                  className={
+                    r.teamsInControl === 0
+                      ? "leaderboard-col-in-control--zero"
+                      : undefined
+                  }
+                >
+                  {r.teamsInControl}
+                </td>
                 <td>{formatPct(r.coverRate)}</td>
                 <td>{formatRoundCell(r.roundOf32)}</td>
                 <td>{formatRoundCell(r.sweet16)}</td>

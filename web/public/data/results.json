@@ -327,14 +327,23 @@
     },
     "scores_updated_at": "2026-03-21T21:04:12.688Z"
   },
-  "W-R32-1": {
-    "status": "in_progress",
-    "clock": "9:37 - 1st Half",
+  "E-R32-4": {
+    "status": "final",
+    "clock": null,
     "scores": {
-      "W01": 19,
-      "W09": 12
+      "E02": 73,
+      "E07": 57
     },
-    "scores_updated_at": "2026-03-23T00:36:58.417Z"
+    "scores_updated_at": "2026-03-23T03:56:09.556Z"
+  },
+  "W-R32-1": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "W01": 78,
+      "W09": 66
+    },
+    "scores_updated_at": "2026-03-23T02:33:32.936Z"
   },
   "W-R32-2": {
     "status": "final",
@@ -364,13 +373,13 @@
     "scores_updated_at": "2026-03-22T22:19:39.873Z"
   },
   "S-R32-1": {
-    "status": "in_progress",
-    "clock": "16:28 - 2nd Half",
+    "status": "final",
+    "clock": null,
     "scores": {
-      "S01": 37,
-      "S09": 41
+      "S01": 72,
+      "S09": 73
     },
-    "scores_updated_at": "2026-03-23T00:36:58.417Z"
+    "scores_updated_at": "2026-03-23T01:36:36.883Z"
   },
   "S-R32-2": {
     "status": "final",
@@ -408,14 +417,23 @@
     },
     "scores_updated_at": "2026-03-21T18:16:40.974Z"
   },
+  "MW-R32-2": {
+    "status": "final",
+    "clock": null,
+    "scores": {
+      "MW04": 90,
+      "MW05": 65
+    },
+    "scores_updated_at": "2026-03-23T04:19:23.177Z"
+  },
   "MW-R32-3": {
-    "status": "in_progress",
-    "clock": "0:08 - 2nd Half",
+    "status": "final",
+    "clock": null,
     "scores": {
       "MW03": 72,
-      "MW06": 77
+      "MW06": 79
     },
-    "scores_updated_at": "2026-03-23T00:36:58.417Z"
+    "scores_updated_at": "2026-03-23T00:38:59.316Z"
   },
   "MW-R32-4": {
     "status": "final",

@@ -24,6 +24,29 @@ function isRoundNotYetStarted(
   });
 }
 
+/**
+ * Show a round column once we can count teams there: either the round has begun by
+ * schedule, or at least one team slot is filled from a finalized feeder (e.g. S16
+ * counts appear as soon as R32 winners advance, not only after the first S16 tip).
+ */
+function isRoundColumnActive(
+  round: BracketGame["round"],
+  games: BracketGame[],
+  results: Map<string, GameResult>,
+  nowMs: number
+): boolean {
+  if (!isRoundNotYetStarted(round, games, nowMs)) return true;
+  const gm = gameMap(games);
+  for (const g of games) {
+    if (g.round !== round) continue;
+    for (const side of ["side_a", "side_b"] as const) {
+      const tid = resolveTeamId(g, side, gm, results, new Set());
+      if (tid) return true;
+    }
+  }
+  return false;
+}
+
 function countTeamsControlledInRound(
   userId: string,
   round: BracketGame["round"],
@@ -106,7 +129,7 @@ export type LeaderboardRow = {
   teamsInControl: number;
   /** 0–1 when the user has at least one finalized ATS game; otherwise null. */
   coverRate: number | null;
-  /** null when that round has not started yet (all tips unset or still in the future). */
+  /** null when that round column is not active yet (no tips due and no teams slotted). */
   roundOf32: number | null;
   sweet16: number | null;
   elite8: number | null;
@@ -123,11 +146,21 @@ export function buildLeaderboardRows(
 ): LeaderboardRow[] {
   const teamIds = [...teamsById.keys()];
   const nowMs = Date.now();
-  const r32Live = !isRoundNotYetStarted("round_of_32", games, nowMs);
-  const s16Live = !isRoundNotYetStarted("sweet_16", games, nowMs);
-  const e8Live = !isRoundNotYetStarted("elite_8", games, nowMs);
-  const ffLive = !isRoundNotYetStarted("final_four", games, nowMs);
-  const champLive = !isRoundNotYetStarted("championship", games, nowMs);
+  const r32Active = isRoundColumnActive(
+    "round_of_32",
+    games,
+    results,
+    nowMs
+  );
+  const s16Active = isRoundColumnActive("sweet_16", games, results, nowMs);
+  const e8Active = isRoundColumnActive("elite_8", games, results, nowMs);
+  const ffActive = isRoundColumnActive("final_four", games, results, nowMs);
+  const champActive = isRoundColumnActive(
+    "championship",
+    games,
+    results,
+    nowMs
+  );
 
   return users.map((u) => {
     let teamsInControl = 0;
@@ -154,7 +187,7 @@ export function buildLeaderboardRows(
       displayName: u.display_name,
       teamsInControl,
       coverRate: attempts > 0 ? covers / attempts : null,
-      roundOf32: r32Live
+      roundOf32: r32Active
         ? countTeamsControlledInRound(
             u.id,
             "round_of_32",
@@ -163,7 +196,7 @@ export function buildLeaderboardRows(
             ownershipRows
           )
         : null,
-      sweet16: s16Live
+      sweet16: s16Active
         ? countTeamsControlledInRound(
             u.id,
             "sweet_16",
@@ -172,7 +205,7 @@ export function buildLeaderboardRows(
             ownershipRows
           )
         : null,
-      elite8: e8Live
+      elite8: e8Active
         ? countTeamsControlledInRound(
             u.id,
             "elite_8",
@@ -181,7 +214,7 @@ export function buildLeaderboardRows(
             ownershipRows
           )
         : null,
-      finalFour: ffLive
+      finalFour: ffActive
         ? countTeamsControlledInRound(
             u.id,
             "final_four",
@@ -190,7 +223,7 @@ export function buildLeaderboardRows(
             ownershipRows
           )
         : null,
-      championship: champLive
+      championship: champActive
         ? countTeamsControlledInRound(
             u.id,
             "championship",
