@@ -1,3 +1,4 @@
+import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { requireDb } from "../lib/firebase";
@@ -61,6 +62,42 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
   const [publicActionGroupId, setPublicActionGroupId] = useState<string | null>(
     null
   );
+
+  /** Live member counts from each group document (user link docs don't include these). */
+  const [groupMemberFill, setGroupMemberFill] = useState<
+    Record<string, { memberCount: number; maxMembers: number }>
+  >({});
+
+  const myGroupIdsKey = useMemo(
+    () => myGroups.map((g) => g.id).sort().join("|"),
+    [myGroups]
+  );
+
+  useEffect(() => {
+    const firestore = db;
+    if (!myGroupIdsKey) {
+      setGroupMemberFill({});
+      return;
+    }
+    const ids = myGroupIdsKey.split("|");
+    setGroupMemberFill({});
+    const unsubs = ids.map((groupId) =>
+      onSnapshot(doc(firestore, "groups", groupId), (snap) => {
+        if (!snap.exists()) return;
+        const d = snap.data() as GroupDoc;
+        setGroupMemberFill((prev) => ({
+          ...prev,
+          [groupId]: {
+            memberCount: d.memberCount,
+            maxMembers: d.maxMembers,
+          },
+        }));
+      })
+    );
+    return () => {
+      for (const u of unsubs) u();
+    };
+  }, [db, myGroupIdsKey]);
 
   useEffect(() => {
     const unsub = subscribeUserGroups(
@@ -238,8 +275,22 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
                 <div>
                   <div className="group-hub-card-name">{g.name}</div>
                   <div className="group-hub-card-meta">
-                    {g.memberCap} members · {teamsPerMemberLabel(g.memberCap)} teams each ·{" "}
-                    {g.role === "admin" ? "Admin" : "Member"}
+                    {(() => {
+                      const fill = groupMemberFill[g.id];
+                      if (!fill) {
+                        return g.role === "admin" ? "Admin" : "Member";
+                      }
+                      const full = fill.memberCount >= fill.maxMembers;
+                      const membersPart = full
+                        ? `${fill.maxMembers} members`
+                        : `${fill.memberCount}/${fill.maxMembers} members`;
+                      return (
+                        <>
+                          {membersPart} ·{" "}
+                          {g.role === "admin" ? "Admin" : "Member"}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="group-hub-card-actions">
