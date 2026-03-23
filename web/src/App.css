@@ -600,6 +600,28 @@
   padding: 0 0.15rem 1rem;
 }
 
+.pool-rules-page-heading {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 0.85rem;
+  color: var(--pp-fg-primary);
+  letter-spacing: -0.02em;
+}
+
+.pool-rules-anchor-section {
+  scroll-margin-top: 6rem;
+}
+
+.pool-rules-divider--major {
+  margin: 1.75rem 0;
+}
+
+.pool-rules-tip {
+  font-style: italic;
+  color: var(--pp-fg-secondary);
+  margin-top: 0.65rem;
+}
+
 .pool-rules-tldr {
   margin-bottom: 1rem;
   font-size: 0.92rem;

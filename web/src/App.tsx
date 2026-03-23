@@ -172,7 +172,7 @@ function UserAccountMenu({
           ) : null}
           {showRulesLink ? (
             <Link
-              to="/rules"
+              to="/rules#game-rules-h"
               className="app-header-user-menu-item"
               role="menuitem"
               onClick={() => setOpen(false)}
@@ -940,6 +940,10 @@ export default function App() {
   const isAccountPage = location.pathname === "/account";
   const isGroupsHome = location.pathname === "/groups";
   const groupsNavHash = isGroupsHome ? location.hash : "";
+  const rulesNavHash = isRulesPage ? location.hash : "";
+  const rulesGameRulesTabActive =
+    isRulesPage && (!rulesNavHash || rulesNavHash === "#game-rules-h");
+  const rulesPrizeTabActive = isRulesPage && rulesNavHash === "#prize-structure-h";
 
   if (!session) {
     return (
@@ -1081,7 +1085,7 @@ export default function App() {
   return (
     <div className="app">
       <header
-        className={`app-header${isGroupsHome && !isRulesPage && !isAccountPage ? " app-header--groups-top" : ""}`}
+        className={`app-header${(isGroupsHome || isRulesPage) && !isAccountPage ? " app-header--groups-top" : ""}`}
       >
         <div className="app-header-top">
           {isRulesPage ? (
@@ -1227,6 +1231,26 @@ export default function App() {
           </nav>
         ) : null}
       </header>
+      {isRulesPage && !isAccountPage ? (
+        <nav
+          className="app-header-tabs app-header-tabs--groups-hub"
+          role="navigation"
+          aria-label="Rules page sections"
+        >
+          <a
+            href="#game-rules-h"
+            className={`app-header-tab${rulesGameRulesTabActive ? " app-header-tab--active" : ""}`}
+          >
+            Game Rules
+          </a>
+          <a
+            href="#prize-structure-h"
+            className={`app-header-tab${rulesPrizeTabActive ? " app-header-tab--active" : ""}`}
+          >
+            Prize Structure
+          </a>
+        </nav>
+      ) : null}
       {!isRulesPage && !isAccountPage && isGroupsHome ? (
         <nav
           className="app-header-tabs app-header-tabs--groups-hub"

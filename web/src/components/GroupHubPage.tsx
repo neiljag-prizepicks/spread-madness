@@ -262,7 +262,7 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
             </p>
             <p className="group-hub-muted">
               New here? Need a rules refresher? Check out the{" "}
-              <Link to="/rules" className="group-hub-rules-link">
+              <Link to="/rules#game-rules-h" className="group-hub-rules-link">
                 {POOL_RULES_PAGE_TITLE}
               </Link>{" "}
               page.

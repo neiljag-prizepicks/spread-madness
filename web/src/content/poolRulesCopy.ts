@@ -24,13 +24,15 @@ export type PoolRulesSection = {
   colorKeyBullets?: PoolRulesColorKeyBullet[];
   /** Rendered after bullets when both exist (e.g. closing paragraph). */
   paragraphsAfterBullets?: string[];
+  /** Italic-style closing note (e.g. tip line). */
+  tip?: string;
 };
 
 export const POOL_RULES_PAGE_TITLE = "Spread Madness Rules";
 
 /** Shown under the page title, above the first section. Use ** for bold (e.g. **TL;DR:**). */
 export const POOL_RULES_TLDR =
-  "**TL;DR:** Beat the spread to advance. If your team loses the game but beats the spread, you take control of your opponent's team.";
+  "**TL;DR:** Beat the spread to advance. If your team loses the game but beats the spread, you take control of your opponent's team. Make it to at least the Elite Eight to qualify for prizes. Last player standing wins.";
 
 export const POOL_RULES_SECTIONS: PoolRulesSection[] = [
   {
@@ -78,5 +80,44 @@ export const POOL_RULES_SECTIONS: PoolRulesSection[] = [
         rest: " — The game is actively in progress and each team is controlled by their current owner.",
       },
     ],
+  },
+];
+
+/** Prize structure — buy-ins, milestones, and example payouts (user-facing). */
+export const PRIZE_RULES_SECTIONS: PoolRulesSection[] = [
+  {
+    paragraphs: [
+      "Games can be either free-to-play or played with a buy-in. In buy-in games, the total prize pool is split across key tournament milestones—so you can win multiple times as your team advances.",
+      "**How payouts work:**",
+    ],
+    bullets: [
+      "**Elite 8 (8 teams):** 25% of the pool (split evenly)",
+      "**Final Four (4 teams):** 25% of the pool (split evenly)",
+      "**Championship Game (2 teams):** 18.75% of the pool (split evenly)",
+      "**Champion:** 18.75% of the pool",
+      "**Bonus Pool:** 12.5% (awarded for special achievements)",
+    ],
+  },
+  {
+    heading: "Example (16 players, $100 buy-in = $1,600 prize pool)",
+    bullets: [
+      "**Elite 8:** $400 total → **$50 per team**",
+      "**Final Four:** $400 total → **$100 per team**",
+      "**Championship:** $300 total → **$150 per team**",
+      "**Champion:** $300 bonus",
+      "**Bonuses:** $200 total → typically **$50 per bonus**",
+    ],
+  },
+  {
+    heading: "What you can win",
+    paragraphs: ["As your team advances, your winnings stack:"],
+    bullets: [
+      "**Elite 8 exit:** $50",
+      "**Final Four exit:** $150 total",
+      "**Runner-up:** $300 total",
+      "**Champion:** **$600 total**",
+      "**Bonuses:** Earn extra for special achievements along the way",
+    ],
+    tip: "The deeper your team goes, the more you earn—and you can still win bonuses even if you don't win it all.",
   },
 ];
