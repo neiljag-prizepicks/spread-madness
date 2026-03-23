@@ -18,8 +18,12 @@ export type OverviewSlotStatus =
 
 export type OverviewSlotVisual = {
   status: OverviewSlotStatus;
-  /** Two-letter initials; empty when pending or unknown */
+  /** Two-letter initials; empty when pending or unknown. For live games, compact "IA·IB" for aria/title. */
   initials: string;
+  /** Live games only: stack side_a / side_b initials vertically in the cell. */
+  livePair?: { a: string; b: string };
+  /** In-progress game where the viewer owns one of the two sides (e.g. bolder initials in overview). */
+  liveViewerInvolved?: boolean;
 };
 
 /** Matches overview colors: green won pool / red lost ATS / purple not involved. */
@@ -124,7 +128,15 @@ export function overviewSlotVisual(
     );
     const ia = initialsForUserId(uidA, usersById, displayName);
     const ib = initialsForUserId(uidB, usersById, displayName);
-    return { status: "live", initials: `${ia}·${ib}` };
+    const liveViewerInvolved = Boolean(
+      viewerId && (uidA === viewerId || uidB === viewerId)
+    );
+    return {
+      status: "live",
+      initials: `${ia}·${ib}`,
+      livePair: { a: ia, b: ib },
+      liveViewerInvolved,
+    };
   }
 
   const sides = isGameFinal(game, gm, results);

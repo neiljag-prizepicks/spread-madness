@@ -2653,46 +2653,52 @@
   margin-bottom: 0.5rem;
 }
 
-/* Top row: East | (gap) | West; middle row: compact Final Four hub; bottom: South | hub | Midwest */
-.birdseye-arena {
+/* 2×2 regional grid; Final Four is absolutely centered on the cross (not a grid row) */
+.birdseye-arena.birdseye-arena--quad {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr minmax(72px, 32vw) 1fr;
-  grid-template-rows: minmax(130px, 1fr) auto minmax(130px, 1fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(160px, 1fr) minmax(160px, 1fr);
+  gap: 10px;
   width: 100%;
   min-height: 0;
   align-items: stretch;
 }
 
-.birdseye-zone--east {
+.birdseye-arena--quad .birdseye-zone--east {
   grid-column: 1;
   grid-row: 1;
 }
 
-.birdseye-zone--west {
-  grid-column: 3;
+.birdseye-arena--quad .birdseye-zone--west {
+  grid-column: 2;
   grid-row: 1;
 }
 
-.birdseye-zone--south {
+.birdseye-arena--quad .birdseye-zone--south {
   grid-column: 1;
-  grid-row: 3;
+  grid-row: 2;
 }
 
-.birdseye-zone--midwest {
-  grid-column: 3;
-  grid-row: 3;
-}
-
-.birdseye-zone--center {
+.birdseye-arena--quad .birdseye-zone--midwest {
   grid-column: 2;
   grid-row: 2;
-  align-self: center;
-  justify-self: center;
+}
+
+.birdseye-arena--quad .birdseye-zone--center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
   width: max-content;
-  max-width: 100%;
-  padding: 5px 7px;
+  max-width: min(92vw, 260px);
+  min-width: 0;
+  align-self: auto;
+  justify-self: auto;
+  overflow: hidden;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .birdseye-zone {
@@ -2700,23 +2706,36 @@
   flex-direction: column;
   align-items: stretch;
   margin: 0;
-  padding: 6px 5px;
+  padding: 8px 8px;
   text-align: center;
   font: inherit;
   color: inherit;
   background: var(--pp-bg-secondary);
   border: 2px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   min-height: 0;
+  min-width: 0;
   transition:
     border-color 0.12s ease,
-    background 0.12s ease;
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+/* Keep mini bracket + connectors inside the rounded region card */
+.birdseye-zone:not(.birdseye-zone--center) {
+  overflow: hidden;
+}
+
+.birdseye-zone.birdseye-zone--center {
+  padding: 10px 11px;
 }
 
 .birdseye-zone:hover {
   border-color: var(--pp-action);
   background: var(--pp-bg-tertiary);
+  box-shadow: 0 3px 18px rgba(0, 0, 0, 0.32);
 }
 
 .birdseye-zone:focus-visible {
@@ -2735,8 +2754,18 @@
   flex-shrink: 0;
 }
 
+/* Figma: South / Midwest region title at bottom of card */
+.birdseye-zone--label-bottom {
+  flex-direction: column-reverse;
+}
+
+.birdseye-zone--label-bottom .birdseye-zone-label {
+  margin-bottom: 0;
+  margin-top: 5px;
+}
+
 .birdseye-zone--center .birdseye-zone-label {
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .birdseye-mini-tree {
@@ -2759,23 +2788,144 @@
   min-width: 0;
 }
 
+.birdseye-zone-bracket-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2px 2px 4px;
+  box-sizing: border-box;
+}
+
+/* CBS-style: spaced rounds + orthogonal SVG connectors; fills region vertically */
+.birdseye-mini-tree--bracket {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  align-items: stretch;
+  justify-content: center;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.birdseye-mini-tree--bracket-empty {
+  width: 100%;
+}
+
+/* West / Midwest: R64 on the screen-outer edge, Elite 8 toward the center hub */
+.birdseye-mini-tree--bracket.birdseye-mini-tree--progress-rtl {
+  transform: scaleX(-1);
+  transform-origin: center center;
+}
+
+.birdseye-mini-tree--progress-rtl .birdseye-mini-slot-frame {
+  transform: scaleX(-1);
+}
+
+.birdseye-mini-tree-segment {
+  display: flex;
+  flex-direction: row;
+  flex: 0 0 auto;
+  align-items: stretch;
+}
+
+.birdseye-mini-col--bracket {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.birdseye-mini-slot-anchor {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.birdseye-mini-slot-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.birdseye-mini-slot-frame .overview-slot {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Finalized (hit/miss/neutral): smaller than legacy single rule so glyphs stay inside padding */
+.birdseye-mini-slot-frame .overview-slot:not(.overview-slot--live) .overview-slot-initials {
+  font-size: calc(6.35px + 3.15px * var(--birdseye-layout-scale, 1));
+  letter-spacing: -0.04em;
+}
+
+.birdseye-mini-tree--bracket .overview-slot--live .overview-slot-initials {
+  font-size: calc(
+    5.5px + 3.8px * var(--birdseye-layout-scale, 1)
+  );
+}
+
+.birdseye-mini-tree--bracket .overview-slot--live .overview-slot-initials--live-stack {
+  font-size: calc(4.4px + 3.1px * var(--birdseye-layout-scale, 1));
+}
+
+.birdseye-mini-slot-frame .overview-slot--live .overview-slot-initials--live-stack {
+  font-size: calc(4.6px + 3.2px * var(--birdseye-layout-scale, 1));
+}
+
+.birdseye-mini-bridge {
+  position: relative;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.birdseye-mini-bridge-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.birdseye-zone-center-hub-host {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .birdseye-center-mini {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  gap: 6px;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   justify-content: center;
   align-items: center;
   padding: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .overview-slot {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  min-height: 22px;
-  border-radius: 4px;
+  box-sizing: border-box;
+  width: 39px;
+  height: 39px;
+  min-width: 39px;
+  min-height: 39px;
+  padding: 4px 5px;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
@@ -2785,11 +2935,30 @@
 }
 
 .overview-slot-initials {
-  font-size: 8px;
-  line-height: 1;
+  font-size: 11px;
+  line-height: 1.1;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* In-progress (yellow): side_a / side_b initials stacked like Figma */
+.overview-slot-initials--live-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.06em;
+  line-height: 1;
+  text-align: center;
+}
+
+.overview-slot-initials-line {
+  display: block;
+  line-height: 1.08;
 }
 
 .overview-slot--hit.overview-slot--has-initials {
@@ -2818,8 +2987,18 @@
 }
 
 .overview-slot--live .overview-slot-initials {
-  font-size: 5.5px;
-  letter-spacing: -0.06em;
+  font-size: 7.5px;
+  letter-spacing: -0.04em;
+}
+
+.overview-slot--live .overview-slot-initials--live-stack {
+  font-size: 6.4px;
+  letter-spacing: -0.03em;
+}
+
+/* In-progress game where you own a side: same yellow box, heavier initials */
+.overview-slot--live.overview-slot--live-involved .overview-slot-initials {
+  font-weight: 900;
 }
 
 .overview-slot--pending,
@@ -2974,10 +3153,10 @@
     flex-shrink: 0;
   }
 
-  .mobile-bracket-root--overview .birdseye-arena {
+  .mobile-bracket-root--overview .birdseye-arena--quad {
     flex: 1 1 auto;
     min-height: 0;
-    grid-template-rows: 1fr auto 1fr;
+    grid-template-rows: 1fr 1fr;
   }
 
   /*

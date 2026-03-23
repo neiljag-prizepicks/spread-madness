@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
@@ -7,6 +7,13 @@ import {
   overviewSlotVisual,
   type OverviewSlotVisual,
 } from "../lib/overviewPickStatus";
+import { BirdseyeMiniBracket } from "./BirdseyeMiniBracket";
+import {
+  BIRDSEYE_CHAMPION_SLOT_FACTOR,
+  BIRDSEYE_SLOT_NATURAL,
+  computeOverviewSlotMetrics,
+  type BirdseyeOverviewMetrics,
+} from "../lib/birdseyeOverviewLayout";
 
 export type BracketPane =
   | "overview"
@@ -138,21 +145,32 @@ function OverviewSlot({
   game: BracketGame;
   visual: OverviewSlotVisual;
 }) {
-  const { status, initials } = visual;
+  const { status, initials, livePair, liveViewerInvolved } = visual;
   const label =
     initials !== ""
       ? `${game.id}: ${initials}${status === "live" ? " (live)" : ""}`
       : `${game.id}${status === "pending" ? " (pending)" : ""}`;
+  const showLiveStack = status === "live" && livePair != null;
   return (
     <div
-      className={`overview-slot overview-slot--${status}${initials ? " overview-slot--has-initials" : ""}`}
+      className={`overview-slot overview-slot--${status}${initials ? " overview-slot--has-initials" : ""}${liveViewerInvolved ? " overview-slot--live-involved" : ""}`}
       title={label}
       aria-label={label}
     >
-      {initials !== "" && (
-        <span className="overview-slot-initials" aria-hidden>
-          {initials}
+      {showLiveStack ? (
+        <span
+          className="overview-slot-initials overview-slot-initials--live-stack"
+          aria-hidden
+        >
+          <span className="overview-slot-initials-line">{livePair.a}</span>
+          <span className="overview-slot-initials-line">{livePair.b}</span>
         </span>
+      ) : (
+        initials !== "" && (
+          <span className="overview-slot-initials" aria-hidden>
+            {initials}
+          </span>
+        )
       )}
     </div>
   );
@@ -160,38 +178,39 @@ function OverviewSlot({
 
 function MiniRegionTree({
   region,
-  mirrored,
+  onLayoutMetrics,
   ...ctx
-}: { region: string; mirrored: boolean } & Omit<Base, "onOpenZone">) {
+}: {
+  region: string;
+  onLayoutMetrics?: (m: BirdseyeOverviewMetrics) => void;
+} & Omit<Base, "onOpenZone">) {
+  /** R64 → R32 → S16 → E8 for all regions so fork lines match real feeder rounds. */
   const columns = regionGamesByColumn(region, ctx.allGames);
-  const ordered = mirrored ? [...columns].reverse() : columns;
   const dn = (uid: string) => ctx.usersById.get(uid)?.display_name ?? uid;
+  const progressDirection =
+    region === "West" || region === "Midwest" ? "rtl" : "ltr";
 
   return (
-    <div
-      className={`birdseye-mini-tree${mirrored ? " birdseye-mini-tree--rtl" : ""}`}
-    >
-      {ordered.map((col, ci) => (
-        <div key={ci} className="birdseye-mini-col">
-          {col.map((g) => (
-            <OverviewSlot
-              key={g.id}
-              game={g}
-              visual={overviewSlotVisual(
-                g,
-                ctx.viewerUserId,
-                ctx.allGames,
-                ctx.results,
-                ctx.ownershipRows,
-                ctx.teamsById,
-                ctx.usersById,
-                dn
-              )}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
+    <BirdseyeMiniBracket
+      columns={columns}
+      progressDirection={progressDirection}
+      onLayoutMetrics={region === "East" ? onLayoutMetrics : undefined}
+      renderSlot={(g) => (
+        <OverviewSlot
+          game={g}
+          visual={overviewSlotVisual(
+            g,
+            ctx.viewerUserId,
+            ctx.allGames,
+            ctx.results,
+            ctx.ownershipRows,
+            ctx.teamsById,
+            ctx.usersById,
+            dn
+          )}
+        />
+      )}
+    />
   );
 }
 
@@ -199,12 +218,16 @@ function CenterMini({
   ff1,
   ff2,
   ncg,
+  eastLayoutMetrics,
   ...ctx
 }: {
   ff1: BracketGame | undefined;
   ff2: BracketGame | undefined;
   ncg: BracketGame[];
+  eastLayoutMetrics: BirdseyeOverviewMetrics | null;
 } & Omit<Base, "onOpenZone">) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [hostW, setHostW] = useState(0);
   const dn = (uid: string) => ctx.usersById.get(uid)?.display_name ?? uid;
   const champ = ncg[0];
   const cells: { key: string; game: BracketGame | undefined; aria: string }[] =
@@ -214,32 +237,80 @@ function CenterMini({
       { key: "ff2", game: ff2, aria: "Final Four game 2" },
     ];
 
+  useLayoutEffect(() => {
+    const el = hostRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      setHostW(el.getBoundingClientRect().width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const gapBase = 7;
+  const padInner = 4;
+  const fallback = hostW > 0 ? computeOverviewSlotMetrics(hostW) : null;
+  const slotBase =
+    eastLayoutMetrics?.slotPx ?? fallback?.slotPx ?? BIRDSEYE_SLOT_NATURAL;
+  const champBase = slotBase * BIRDSEYE_CHAMPION_SLOT_FACTOR;
+  const gapUnscaled = Math.max(4, gapBase * (slotBase / BIRDSEYE_SLOT_NATURAL));
+  const stripNeed =
+    slotBase + gapUnscaled + champBase + gapUnscaled + slotBase + 2 * padInner;
+  const fit =
+    hostW > 0 && stripNeed > hostW ? Math.min(1, hostW / stripNeed) : 1;
+  const slotPx = slotBase * fit;
+  const champPx = champBase * fit;
+  const gapPx = gapUnscaled * fit;
+  const layoutScaleSide = slotPx / BIRDSEYE_SLOT_NATURAL;
+  const layoutScaleChamp = champPx / BIRDSEYE_SLOT_NATURAL;
+
   return (
-    <div className="birdseye-center-mini">
-      {cells.map(({ key, game, aria }) =>
-        game ? (
-          <OverviewSlot
-            key={game.id}
-            game={game}
-            visual={overviewSlotVisual(
-              game,
-              ctx.viewerUserId,
-              ctx.allGames,
-              ctx.results,
-              ctx.ownershipRows,
-              ctx.teamsById,
-              ctx.usersById,
-              dn
-            )}
-          />
-        ) : (
-          <div
-            key={key}
-            className="overview-slot overview-slot--pending"
-            aria-label={`${aria} (not in data)`}
-          />
-        )
-      )}
+    <div ref={hostRef} className="birdseye-zone-center-hub-host">
+      <div className="birdseye-center-mini" style={{ gap: `${gapPx}px` }}>
+        {cells.map(({ key, game, aria }) => {
+          const isChamp = key === "ncg";
+          const w = isChamp ? champPx : slotPx;
+          const h = isChamp ? champPx : slotPx;
+          const scale = isChamp ? layoutScaleChamp : layoutScaleSide;
+          const frameStyle = {
+            width: w,
+            height: h,
+            "--birdseye-layout-scale": String(scale),
+          } as CSSProperties;
+          return game ? (
+            <div
+              key={game.id}
+              className={`birdseye-mini-slot-frame${isChamp ? " birdseye-mini-slot-frame--championship" : ""}`}
+              style={frameStyle}
+            >
+              <OverviewSlot
+                game={game}
+                visual={overviewSlotVisual(
+                  game,
+                  ctx.viewerUserId,
+                  ctx.allGames,
+                  ctx.results,
+                  ctx.ownershipRows,
+                  ctx.teamsById,
+                  ctx.usersById,
+                  dn
+                )}
+              />
+            </div>
+          ) : (
+            <div
+              key={key}
+              className={`birdseye-mini-slot-frame${isChamp ? " birdseye-mini-slot-frame--championship" : ""}`}
+              style={frameStyle}
+            >
+              <div
+                className="overview-slot overview-slot--pending"
+                aria-label={`${aria} (not in data)`}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -253,6 +324,8 @@ export function BracketBirdseye({
   const ff1 = allGames.find((g) => g.id === "FF-1");
   const ff2 = allGames.find((g) => g.id === "FF-2");
   const ncg = allGames.filter((g) => g.round === "championship");
+  const [eastLayoutMetrics, setEastLayoutMetrics] =
+    useState<BirdseyeOverviewMetrics | null>(null);
 
   return (
     <div className="birdseye-wrap">
@@ -270,14 +343,18 @@ export function BracketBirdseye({
           didn’t involve you.
         </p>
       )}
-      <div className="birdseye-arena" role="presentation">
+      <div className="birdseye-arena birdseye-arena--quad" role="presentation">
         <button
           type="button"
           className="birdseye-zone birdseye-zone--east"
           onClick={() => onOpenZone("East")}
         >
           <span className="birdseye-zone-label">East</span>
-          <MiniRegionTree region="East" mirrored={false} {...ctx} />
+          <MiniRegionTree
+            region="East"
+            onLayoutMetrics={setEastLayoutMetrics}
+            {...ctx}
+          />
         </button>
         <button
           type="button"
@@ -285,7 +362,23 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("West")}
         >
           <span className="birdseye-zone-label">West</span>
-          <MiniRegionTree region="West" mirrored {...ctx} />
+          <MiniRegionTree region="West" {...ctx} />
+        </button>
+        <button
+          type="button"
+          className="birdseye-zone birdseye-zone--south birdseye-zone--label-bottom"
+          onClick={() => onOpenZone("South")}
+        >
+          <span className="birdseye-zone-label">South</span>
+          <MiniRegionTree region="South" {...ctx} />
+        </button>
+        <button
+          type="button"
+          className="birdseye-zone birdseye-zone--midwest birdseye-zone--label-bottom"
+          onClick={() => onOpenZone("Midwest")}
+        >
+          <span className="birdseye-zone-label">Midwest</span>
+          <MiniRegionTree region="Midwest" {...ctx} />
         </button>
         <button
           type="button"
@@ -293,23 +386,13 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("final-four")}
         >
           <span className="birdseye-zone-label">Final Four</span>
-          <CenterMini ff1={ff1} ff2={ff2} ncg={ncg} {...ctx} />
-        </button>
-        <button
-          type="button"
-          className="birdseye-zone birdseye-zone--south"
-          onClick={() => onOpenZone("South")}
-        >
-          <span className="birdseye-zone-label">South</span>
-          <MiniRegionTree region="South" mirrored={false} {...ctx} />
-        </button>
-        <button
-          type="button"
-          className="birdseye-zone birdseye-zone--midwest"
-          onClick={() => onOpenZone("Midwest")}
-        >
-          <span className="birdseye-zone-label">Midwest</span>
-          <MiniRegionTree region="Midwest" mirrored {...ctx} />
+          <CenterMini
+            ff1={ff1}
+            ff2={ff2}
+            ncg={ncg}
+            eastLayoutMetrics={eastLayoutMetrics}
+            {...ctx}
+          />
         </button>
       </div>
     </div>

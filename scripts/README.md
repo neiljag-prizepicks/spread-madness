@@ -151,6 +151,12 @@ ESPN_DATES=auto POLL_SECONDS=120 ./scripts/poll-espn-all.sh
 
 ---
 
+## Bracket overview (birdseye) initials
+
+The mobile **overview** uses the same slot logic for **East, West, South, and Midwest**. A cell shows **player initials** only when both sides of that game have a **resolved `team_id`** (from the bracket template and `results.json` advancement). If a cell is empty (pending), check that `games_*.json` + `results.json` resolve teams for that game—**not** a region-specific UI bug. Demo data in [`web/public/data/games_2026_march_madness.json`](../web/public/data/games_2026_march_madness.json) includes games for all four regions.
+
+---
+
 ### Automated feeds (production)
 
 A licensed API should emit the same `results.json` shape, or POST to your backend; replace the ESPN script when ready.
