@@ -1237,18 +1237,20 @@ export default function App() {
           role="navigation"
           aria-label="Rules page sections"
         >
-          <a
-            href="#game-rules-h"
+          <Link
+            to="/rules#game-rules-h"
+            replace
             className={`app-header-tab${rulesGameRulesTabActive ? " app-header-tab--active" : ""}`}
           >
             Game Rules
-          </a>
-          <a
-            href="#prize-structure-h"
+          </Link>
+          <Link
+            to="/rules#prize-structure-h"
+            replace
             className={`app-header-tab${rulesPrizeTabActive ? " app-header-tab--active" : ""}`}
           >
             Prize Structure
-          </a>
+          </Link>
         </nav>
       ) : null}
       {!isRulesPage && !isAccountPage && isGroupsHome ? (
