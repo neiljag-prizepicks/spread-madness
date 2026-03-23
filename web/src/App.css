@@ -228,6 +228,12 @@
   background: var(--pp-bg-secondary);
   width: 100%;
   box-sizing: border-box;
+  /*
+   * Sticky mobile bracket chrome (region + round rows) uses z-index 45–50; without this,
+   * the account + brand dropdowns tie at 50 and paint under <main> (later in DOM).
+   */
+  position: relative;
+  z-index: 80;
 }
 
 .app-header-top {
@@ -447,7 +453,8 @@
   border: 1px solid var(--pp-border);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  z-index: 50;
+  /* Above in-header tabs/triggers; header itself stacks above bracket chrome. */
+  z-index: 5;
 }
 
 .app-header-user-menu-item {
@@ -3581,7 +3588,7 @@
   border: 1px solid var(--pp-border);
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  z-index: 60;
+  z-index: 5;
 }
 
 .app-header-brand-menu-item {

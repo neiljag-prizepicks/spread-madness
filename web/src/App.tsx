@@ -552,6 +552,14 @@ export default function App() {
     };
   }, [session]);
 
+  /** Signed-out and logged-out states still matched deep URLs; normalize to `/` for a clean address bar. */
+  useEffect(() => {
+    if (session !== null) return;
+    if (isFirebaseConfigured() && !authReady) return;
+    if (location.pathname === "/") return;
+    navigate("/", { replace: true });
+  }, [session, authReady, location.pathname, navigate]);
+
   /** Apply focus from router state (e.g. My Teams → bracket) and clear state so refresh/back behave. */
   useEffect(() => {
     if (!location.pathname.endsWith("/bracket")) return;
@@ -1033,6 +1041,7 @@ export default function App() {
     if (auth) await signOut(auth);
     setSession(null);
     writeStoredActiveGroupId(null);
+    navigate("/", { replace: true });
   };
 
   const bracketArenaProps = {
