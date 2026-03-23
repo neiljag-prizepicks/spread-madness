@@ -1,5 +1,6 @@
 import {
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -7,9 +8,14 @@ import {
 } from "react";
 import type { BracketGame } from "../types";
 import {
-  BIRDSEYE_BRIDGE_NATURAL as BRIDGE_NATURAL,
-  BIRDSEYE_SLOT_NATURAL as SLOT_NATURAL,
+  isPrizePayoutRoundOverview,
+  prizeDollarBelowAriaLabel,
+} from "../lib/overviewPickStatus";
+import {
+  BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO,
+  BIRDSEYE_DESKTOP_PAD_X,
   computeOverviewSlotMetrics,
+  type BirdseyeNaturalDimensions,
   type BirdseyeOverviewMetrics,
 } from "../lib/birdseyeOverviewLayout";
 
@@ -65,15 +71,18 @@ function BracketConnectorBridge({
   );
 }
 
+
 function MiniColumn({
   games,
   heightPx,
-  slotPx,
+  slotWidthPx,
+  slotHeightPx,
   renderSlot,
 }: {
   games: BracketGame[];
   heightPx: number;
-  slotPx: number;
+  slotWidthPx: number;
+  slotHeightPx: number;
   renderSlot: (game: BracketGame) => ReactNode;
 }) {
   const n = games.length;
@@ -81,14 +90,18 @@ function MiniColumn({
     return (
       <div
         className="birdseye-mini-col birdseye-mini-col--bracket"
-        style={{ height: heightPx, width: slotPx, minWidth: slotPx }}
+        style={{
+          height: heightPx,
+          width: slotWidthPx,
+          minWidth: slotWidthPx,
+        }}
       />
     );
   }
   return (
     <div
       className="birdseye-mini-col birdseye-mini-col--bracket"
-      style={{ height: heightPx, width: slotPx, minWidth: slotPx }}
+      style={{ height: heightPx, width: slotWidthPx, minWidth: slotWidthPx }}
     >
       {games.map((g, i) => (
         <div
@@ -98,11 +111,21 @@ function MiniColumn({
             top: `${(100 * (2 * i + 1)) / (2 * n)}%`,
           }}
         >
-          <div
-            className="birdseye-mini-slot-frame"
-            style={{ width: slotPx, height: slotPx }}
-          >
-            {renderSlot(g)}
+          <div className="birdseye-mini-slot-stack">
+            <div
+              className={`birdseye-mini-slot-frame${slotWidthPx > slotHeightPx ? " birdseye-mini-slot-frame--desktop-landscape" : ""}`}
+              style={{ width: slotWidthPx, height: slotHeightPx }}
+            >
+              {renderSlot(g)}
+            </div>
+            {isPrizePayoutRoundOverview(g) ? (
+              <span
+                className="birdseye-prize-dollar-below"
+                aria-label={prizeDollarBelowAriaLabel(g)}
+              >
+                $
+              </span>
+            ) : null}
           </div>
         </div>
       ))}
@@ -117,20 +140,55 @@ type Props = {
   progressDirection?: "ltr" | "rtl";
   /** When set (e.g. East region), reports slot size so Final Four can match. */
   onLayoutMetrics?: (m: BirdseyeOverviewMetrics) => void;
+  /** Larger slot/bridge bases (desktop overview). */
+  naturalDimensions?: BirdseyeNaturalDimensions;
+  minTreeHeightPx?: number;
+  /** Keeps stacked squares from overlapping when height is tight. */
+  verticalGapPx?: number;
 };
 
 /**
- * Regional overview: fills the region card vertically; scales down horizontally
- * so the bracket stays inside rounded borders (no bleed).
+ * Regional overview: fills the region card; layout scale grows or shrinks so the
+ * tree uses available width (and height) without bleeding past the zone.
  */
 export function BirdseyeMiniBracket({
   columns,
   renderSlot,
   progressDirection = "ltr",
   onLayoutMetrics,
+  naturalDimensions,
+  minTreeHeightPx,
+  verticalGapPx = 0,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [box, setBox] = useState({ w: 0, h: MIN_TREE_HEIGHT });
+  const lastSentMetricsKey = useRef<string>("");
+  const minH = minTreeHeightPx ?? MIN_TREE_HEIGHT;
+  const [box, setBox] = useState({ w: 0, h: minH });
+
+  const maxColumnGames = useMemo(
+    () => Math.max(1, ...columns.map((c) => c.length)),
+    [columns]
+  );
+
+  const metrics = useMemo(
+    () =>
+      computeOverviewSlotMetrics(
+        box.w,
+        naturalDimensions,
+        naturalDimensions && box.h > 0
+          ? {
+              availableHostHeight: box.h,
+              maxColumnGames: maxColumnGames,
+              verticalGapPx,
+              slotVerticalFactor: BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO,
+            }
+          : null,
+        naturalDimensions
+          ? { horizontalPadPx: BIRDSEYE_DESKTOP_PAD_X }
+          : undefined
+      ),
+    [box.w, box.h, naturalDimensions, maxColumnGames, verticalGapPx]
+  );
 
   useLayoutEffect(() => {
     const el = hostRef.current;
@@ -139,19 +197,42 @@ export function BirdseyeMiniBracket({
       const cr = entries[0]?.contentRect;
       if (!cr) return;
       const w = cr.width;
-      const h = Math.max(MIN_TREE_HEIGHT, cr.height);
-      setBox({ w, h });
-      if (onLayoutMetrics && w > 0) {
-        onLayoutMetrics(computeOverviewSlotMetrics(w));
-      }
+      const h = Math.max(minH, cr.height);
+      setBox((prev) => {
+        if (
+          Math.abs(prev.w - w) < 0.5 &&
+          Math.abs(prev.h - h) < 0.5
+        ) {
+          return prev;
+        }
+        return { w, h };
+      });
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [onLayoutMetrics]);
+  }, [minH]);
 
   const hasAny = columns.some((c) => c.length > 0);
-  const { layoutScale, slotPx, bridgeW } = computeOverviewSlotMetrics(box.w);
+  const { layoutScale, slotPx, bridgeW } = metrics;
   const heightPx = box.h;
+
+  const maxSlotH =
+    box.h > 0 && maxColumnGames > 0
+      ? box.h / maxColumnGames - verticalGapPx
+      : Number.POSITIVE_INFINITY;
+  const slotWidthPx = slotPx;
+  const slotHeightPx = naturalDimensions
+    ? Math.min(slotPx * BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO, maxSlotH)
+    : slotPx;
+
+  useLayoutEffect(() => {
+    if (!onLayoutMetrics || box.w <= 0) return;
+    const m: BirdseyeOverviewMetrics = { ...metrics, slotHeightPx };
+    const key = `${m.layoutScale.toFixed(5)}:${m.slotPx.toFixed(3)}:${m.bridgeW.toFixed(3)}:${slotHeightPx.toFixed(3)}`;
+    if (key === lastSentMetricsKey.current) return;
+    lastSentMetricsKey.current = key;
+    onLayoutMetrics(m);
+  }, [onLayoutMetrics, metrics, box.w, slotHeightPx]);
 
   const treeStyle = {
     "--birdseye-tree-h": `${heightPx}px`,
@@ -165,7 +246,7 @@ export function BirdseyeMiniBracket({
       <div ref={hostRef} className="birdseye-zone-bracket-host">
         <div
           className={`birdseye-mini-tree birdseye-mini-tree--bracket birdseye-mini-tree--bracket-empty${progressDirection === "rtl" ? " birdseye-mini-tree--progress-rtl" : ""}`}
-          style={{ ...treeStyle, minHeight: MIN_TREE_HEIGHT }}
+          style={{ ...treeStyle, minHeight: minH }}
         />
       </div>
     );
@@ -191,7 +272,8 @@ export function BirdseyeMiniBracket({
               <MiniColumn
                 games={col}
                 heightPx={heightPx}
-                slotPx={slotPx}
+                slotWidthPx={slotWidthPx}
+                slotHeightPx={slotHeightPx}
                 renderSlot={renderSlot}
               />
               {showBridge ? (

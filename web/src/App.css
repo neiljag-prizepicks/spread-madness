@@ -2823,7 +2823,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 2px 2px 4px;
+  /* Inset mini-bracket from zone edges (R64 outer side, Elite 8 inner side). */
+  padding: 2px 8px 4px;
   box-sizing: border-box;
 }
 
@@ -2839,6 +2840,9 @@
   min-width: 0;
   min-height: 0;
   box-sizing: border-box;
+  /* Inherit no gap from .birdseye-mini-tree — gap would sit between segment groups
+     after each bridge SVG and before the next column, so lines would not meet cells. */
+  gap: 0;
 }
 
 .birdseye-mini-tree--bracket-empty {
@@ -2873,11 +2877,51 @@
   transform: translate(-50%, -50%);
 }
 
+/* Game cell + optional prize $ below (Sweet 16+); keeps $ out of the slot chrome. */
+.birdseye-mini-slot-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+}
+
+.birdseye-mini-slot-stack--center-hub {
+  flex-shrink: 0;
+}
+
+.birdseye-prize-dollar-below {
+  font-size: calc(7.5px + 3.75px * var(--birdseye-layout-scale, 1));
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.32);
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* West/Midwest: tree is mirrored; slot frames counter-flip — un-mirror the $. */
+.birdseye-mini-tree--progress-rtl .birdseye-prize-dollar-below {
+  transform: scaleX(-1);
+}
+
 .birdseye-mini-slot-frame {
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+}
+
+/* Keep cells inside column width; .overview-slot defaults (min-width 39px, flex-shrink 0) can force overflow and overlap the next round. */
+.birdseye-mini-tree--bracket .birdseye-mini-slot-frame {
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.birdseye-mini-tree--bracket .birdseye-mini-slot-frame .overview-slot {
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  flex-shrink: 1;
 }
 
 .birdseye-mini-slot-frame .overview-slot {
@@ -2911,6 +2955,8 @@
   position: relative;
   align-self: stretch;
   flex-shrink: 0;
+  flex-grow: 0;
+  box-sizing: border-box;
 }
 
 .birdseye-mini-bridge-svg {
@@ -3027,20 +3073,6 @@
   font-weight: 900;
 }
 
-/* Sweet 16 (feeds Elite 8) / Elite 8 / Final Four / championship: grey $ when game has not started */
-.overview-slot-prize-marker {
-  font-size: 1rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.32);
-  line-height: 1;
-  user-select: none;
-  pointer-events: none;
-}
-
-.birdseye-mini-slot-frame .overview-slot-prize-marker {
-  font-size: calc(8.5px + 4.25px * var(--birdseye-layout-scale, 1));
-}
-
 .overview-slot--pending,
 .overview-slot--neutral:not(.overview-slot--has-initials) {
   /* empty / not final */
@@ -3064,6 +3096,237 @@
 .birdseye-hint .birdseye-legend-live {
   color: #ffd54f;
   font-weight: 700;
+}
+
+/* Desktop (≥700px): same birdseye look as mobile, larger cells + wider round gaps */
+@media (min-width: 700px) {
+  .desktop-bracket-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .desktop-bracket-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.15rem;
+    padding: 0 0 0.55rem;
+    border-bottom: 1px solid var(--pp-border);
+  }
+
+  .desktop-bracket-tab {
+    margin: 0;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--pp-fg-tertiary);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .desktop-bracket-tab:hover {
+    color: var(--pp-fg-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .desktop-bracket-tab--active {
+    color: var(--pp-fg-primary);
+    box-shadow: inset 0 -2px 0 0 var(--pp-action);
+  }
+
+  .desktop-bracket-tabs--scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.65rem;
+    scrollbar-width: thin;
+    gap: 0.35rem;
+    margin-left: -0.15rem;
+    margin-right: -0.15rem;
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+  }
+
+  .desktop-bracket-tabs--scroll .desktop-bracket-tab {
+    flex-shrink: 0;
+  }
+
+  .desktop-bracket-regional-detail {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .desktop-bracket-regional-detail .kalshi-quadrant {
+    min-height: 420px;
+  }
+
+  .desktop-bracket-private-invite {
+    margin-bottom: 0.65rem;
+  }
+
+  .desktop-bracket-overview-root {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: max(36rem, calc(100dvh - 7rem));
+    min-height: max(36rem, calc(100svh - 7rem));
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .desktop-bracket-overview-root .birdseye-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .desktop-bracket-overview-root .birdseye-arena--quad {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-rows: minmax(220px, 1fr) minmax(220px, 1fr);
+  }
+
+  .birdseye-arena--quad-desktop {
+    gap: 11px;
+  }
+
+  .birdseye-wrap--desktop .birdseye-zone:not(.birdseye-zone--center) {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  .birdseye-wrap--desktop .birdseye-zone-bracket-host {
+    padding: 2px 12px 4px;
+    align-items: stretch;
+  }
+
+  .birdseye-wrap--desktop .birdseye-zone-label {
+    font-size: 0.72rem;
+  }
+
+  .birdseye-wrap--desktop .birdseye-zone--center {
+    max-width: min(94vw, 360px);
+  }
+
+  .birdseye-wrap--desktop .birdseye-mini-slot-frame--desktop-landscape .overview-slot--desktop-rich {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 8px 10px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .overview-slot--desktop-rich .overview-slot-desktop-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    min-width: 0;
+    width: 100%;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .overview-slot-desktop-live-split {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.35rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .overview-slot-desktop-live-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.12rem;
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .overview-slot-desktop-name {
+    font-size: max(
+      11px,
+      calc(6px + 4.2px * var(--birdseye-layout-scale, 1))
+    );
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    text-transform: none;
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .overview-slot-desktop-name--primary {
+    font-size: max(
+      11.5px,
+      calc(6.5px + 4.5px * var(--birdseye-layout-scale, 1))
+    );
+    line-height: 1.18;
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .overview-slot-desktop-meta {
+    font-size: max(
+      10px,
+      calc(5.2px + 3.55px * var(--birdseye-layout-scale, 1))
+    );
+    font-weight: 600;
+    line-height: 1.2;
+    color: rgba(255, 255, 255, 0.82);
+    max-width: 100%;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .overview-slot-desktop-meta--detail {
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    font-weight: 700;
+  }
+
+  .overview-slot--desktop-rich.overview-slot--live .overview-slot-desktop-meta--detail {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .overview-slot--desktop-rich.overview-slot--live .overview-slot-desktop-name {
+    color: inherit;
+  }
 }
 
 .mobile-bracket-tabs-scroll {

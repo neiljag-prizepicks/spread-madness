@@ -6,6 +6,7 @@ import {
 import { isPoolSettledForGame } from "./gameResult";
 import type { OwnershipRow } from "./ownershipMap";
 import { buildTeamToUserId } from "./ownershipMap";
+import { teamAbbrev } from "./teamLabels";
 import { userInitialsFromUser } from "./userInitials";
 import { gameMap, resolveTeamId } from "./resolveTeams";
 
@@ -24,7 +25,7 @@ export type OverviewSlotVisual = {
   livePair?: { a: string; b: string };
   /** In-progress game where the viewer owns one of the two sides (e.g. bolder initials in overview). */
   liveViewerInvolved?: boolean;
-  /** Sweet 16 / Elite 8 / Final Four / Championship, not yet live or final — grey $ (path to or at prize rounds). */
+  /** Pending prize-path cell (see prizeMilestoneMarker); $ renders below the cell in overview. */
   prizeMarker?: boolean;
 };
 
@@ -34,6 +35,25 @@ const PRIZE_MILESTONE_ROUNDS: ReadonlySet<BracketGame["round"]> = new Set([
   "final_four",
   "championship",
 ]);
+
+/** Sweet 16 through championship — games on the prize-payout path in overview. */
+export function isPrizePayoutRoundOverview(game: BracketGame): boolean {
+  return PRIZE_MILESTONE_ROUNDS.has(game.round);
+}
+
+/** aria-label for the $ rendered below prize-round overview cells. */
+export function prizeDollarBelowAriaLabel(game: BracketGame): string {
+  if (game.round === "sweet_16") {
+    return `${game.id}: Sweet 16 — winner advances to Elite 8 (prize payouts)`;
+  }
+  if (game.round === "elite_8") {
+    return `${game.id}: Elite Eight — prize payout round`;
+  }
+  if (game.round === "final_four") {
+    return `${game.id}: Final Four — prize payout round`;
+  }
+  return `${game.id}: National championship — prize payout round`;
+}
 
 /** Accessible name when the grey $ is shown on a pending overview cell. */
 export function overviewPrizeMarkerLabel(game: BracketGame): string {
@@ -236,4 +256,176 @@ export function overviewSlotVisual(
   }
 
   return { status: "neutral", initials: poolOwnerInitials };
+}
+
+/** Desktop overview: "First L." style for pool owner / viewer. */
+export function firstNameLastInitialFromUser(
+  user: User | undefined,
+  displayNameFallback: string
+): string {
+  const f = user?.first_name?.trim();
+  const l = user?.last_name?.trim();
+  if (f && l) {
+    return `${f} ${l[0]}.`;
+  }
+  const dn = user?.display_name?.trim() || displayNameFallback.trim();
+  if (!dn) return "";
+  const parts = dn.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    return parts[0].length > 14 ? `${parts[0].slice(0, 11)}…` : parts[0];
+  }
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  return `${first} ${last[0]}.`;
+}
+
+/** Figma desktop: one line like "SIENA +28.5 vs. DUKE" (dog +points vs favorite). */
+function matchupSpreadLine(
+  game: BracketGame,
+  ta: string,
+  tb: string,
+  teamsById: Map<string, Team>
+): string {
+  const fav = game.favorite_team_id;
+  const sp = game.spread_from_favorite_perspective;
+  const a = teamAbbrev(ta, teamsById);
+  const b = teamAbbrev(tb, teamsById);
+  if (fav == null || sp == null) {
+    return `${a} vs. ${b}`;
+  }
+  const dog = fav === ta ? tb : ta;
+  const dogAbbr = teamAbbrev(dog, teamsById);
+  const favAbbr = teamAbbrev(fav, teamsById);
+  const pts = Math.abs(sp).toFixed(1);
+  return `${dogAbbr} +${pts} vs. ${favAbbr}`;
+}
+
+function teamSpreadTail(
+  teamId: string,
+  favId: string | null,
+  sp: number | null,
+  teamsById: Map<string, Team>
+): string {
+  const abbr = teamAbbrev(teamId, teamsById);
+  if (!favId || sp == null) return abbr;
+  if (teamId === favId) {
+    return `${abbr} ${sp.toFixed(1)}`;
+  }
+  return `${abbr} +${Math.abs(sp).toFixed(1)}`;
+}
+
+export type OverviewDesktopCellCopy = {
+  /** Colored name row (final / won / lost / neutral). */
+  primaryLine?: string;
+  /** White caps line: matchup + spread (Figma). */
+  detailLine?: string;
+  /** Live: two columns — name + team/spread line per side. */
+  liveLeft?: { name: string; tail: string };
+  liveRight?: { name: string; tail: string };
+};
+
+/**
+ * Desktop overview (Figma): owner name + single matchup/spread line; live = two columns.
+ * No final scores, clocks, or separate “Spread …” line.
+ */
+export function overviewDesktopCellCopy(
+  game: BracketGame,
+  viewerId: string | null,
+  allGames: BracketGame[],
+  results: Map<string, GameResult>,
+  ownershipRows: OwnershipRow[],
+  teamsById: Map<string, Team>,
+  usersById: Map<string, User>,
+  displayName: (userId: string) => string
+): OverviewDesktopCellCopy | null {
+  const gm = gameMap(allGames);
+  const ta = resolveTeamId(game, "side_a", gm, results, new Set());
+  const tb = resolveTeamId(game, "side_b", gm, results, new Set());
+  const r = results.get(game.id);
+  const fav = game.favorite_team_id;
+  const sp = game.spread_from_favorite_perspective;
+
+  if (!ta || !tb) {
+    return null;
+  }
+
+  if (isOverviewLiveResult(r, ta, tb)) {
+    const uidA = getOwnerUserIdForSide(
+      game,
+      "side_a",
+      allGames,
+      results,
+      ownershipRows
+    );
+    const uidB = getOwnerUserIdForSide(
+      game,
+      "side_b",
+      allGames,
+      results,
+      ownershipRows
+    );
+    const nameA = firstNameLastInitialFromUser(
+      uidA ? usersById.get(uidA) : undefined,
+      uidA ? displayName(uidA) : "—"
+    );
+    const nameB = firstNameLastInitialFromUser(
+      uidB ? usersById.get(uidB) : undefined,
+      uidB ? displayName(uidB) : "—"
+    );
+    return {
+      liveLeft: {
+        name: nameA,
+        tail: teamSpreadTail(ta, fav, sp, teamsById),
+      },
+      liveRight: {
+        name: nameB,
+        tail: teamSpreadTail(tb, fav, sp, teamsById),
+      },
+    };
+  }
+
+  const sides = isGameFinal(game, gm, results);
+  if (sides) {
+    const { ta: fa, tb: fb } = sides;
+    const detailLine = matchupSpreadLine(game, fa, fb, teamsById);
+
+    const outcome = computePoolOutcome(
+      game,
+      allGames,
+      results,
+      ownershipRows,
+      teamsById,
+      displayName
+    );
+    let primaryLine = "";
+    if (outcome) {
+      const tone = viewerPoolOutcomeTone(
+        viewerId,
+        outcome.poolOwnerUserId,
+        fa,
+        fb,
+        ownershipRows
+      );
+      if (tone === "hit" && viewerId) {
+        primaryLine = firstNameLastInitialFromUser(
+          usersById.get(viewerId),
+          displayName(viewerId)
+        );
+      } else {
+        primaryLine = firstNameLastInitialFromUser(
+          usersById.get(outcome.poolOwnerUserId),
+          displayName(outcome.poolOwnerUserId)
+        );
+      }
+    }
+
+    return {
+      primaryLine,
+      detailLine,
+    };
+  }
+
+  return {
+    detailLine: matchupSpreadLine(game, ta, tb, teamsById),
+  };
 }

@@ -1,20 +1,45 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { Link } from "react-router-dom";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import { regionGamesByColumn } from "../lib/regionRoundColumns";
 import {
+  isPrizePayoutRoundOverview,
+  overviewDesktopCellCopy,
   overviewPrizeMarkerLabel,
   overviewSlotVisual,
+  prizeDollarBelowAriaLabel,
+  type OverviewDesktopCellCopy,
   type OverviewSlotVisual,
 } from "../lib/overviewPickStatus";
 import { BirdseyeMiniBracket } from "./BirdseyeMiniBracket";
 import {
   BIRDSEYE_CHAMPION_SLOT_FACTOR,
+  BIRDSEYE_DESKTOP_BRIDGE_NATURAL,
+  BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO,
+  BIRDSEYE_DESKTOP_PAD_X,
+  BIRDSEYE_DESKTOP_SLOT_NATURAL,
   BIRDSEYE_SLOT_NATURAL,
+  birdseyeMetricsEqual,
   computeOverviewSlotMetrics,
   type BirdseyeOverviewMetrics,
 } from "../lib/birdseyeOverviewLayout";
+
+const DESKTOP_OVERVIEW_MIN_TREE_H = 560;
+/** Matches `verticalGapPx` on East `MiniRegionTree` (used in regional slot-height fallback). */
+const EAST_OVERVIEW_VERTICAL_GAP_PX = 4;
+const EAST_OVERVIEW_MAX_COLUMN_GAMES = 8;
+
+/** Center hub semifinals only — championship cell keeps champPx square. */
+const DESKTOP_CENTER_SEMI_HEIGHT_LANDSCAPE_MULT = 1.22;
+const DESKTOP_CENTER_SEMI_MAX_HOST_H_FRAC = 0.52;
+const COMPACT_CENTER_SEMI_HEIGHT_MULT = 1.08;
 
 export type BracketPane =
   | "overview"
@@ -137,36 +162,92 @@ type Base = {
   onOpenZone: (pane: Exclude<BracketPane, "overview">) => void;
   /** When set, replaces the overview color key (teams not saved for this group yet). */
   groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
+  /** Desktop: larger cells + wider round spacing (same UI as mobile). */
+  variant?: "compact" | "desktop";
 };
 
 function OverviewSlot({
   game,
   visual,
+  desktopCopy = null,
 }: {
   game: BracketGame;
   visual: OverviewSlotVisual;
+  desktopCopy?: OverviewDesktopCellCopy | null;
 }) {
   const { status, initials, livePair, liveViewerInvolved, prizeMarker } = visual;
+  const hasDesktopRich = Boolean(
+    desktopCopy &&
+      (desktopCopy.liveLeft ||
+        desktopCopy.liveRight ||
+        desktopCopy.primaryLine ||
+        desktopCopy.detailLine)
+  );
+  const ariaDesktop =
+    hasDesktopRich && desktopCopy
+      ? desktopCopy.liveLeft && desktopCopy.liveRight
+        ? `${desktopCopy.liveLeft.name}, ${desktopCopy.liveLeft.tail}. ${desktopCopy.liveRight.name}, ${desktopCopy.liveRight.tail}`
+        : [desktopCopy.primaryLine, desktopCopy.detailLine]
+            .filter((s) => s && String(s).trim() !== "")
+            .join(". ")
+      : null;
   const label =
-    prizeMarker && status === "pending"
+    prizeMarker && status === "pending" && !hasDesktopRich
       ? overviewPrizeMarkerLabel(game)
       : initials !== ""
         ? `${game.id}: ${initials}${status === "live" ? " (live)" : ""}`
         : `${game.id}${status === "pending" ? " (pending)" : ""}`;
-  const showLiveStack = status === "live" && livePair != null;
+  const showLiveStack =
+    status === "live" && livePair != null && !hasDesktopRich;
   return (
     <div
-      className={`overview-slot overview-slot--${status}${initials ? " overview-slot--has-initials" : ""}${liveViewerInvolved ? " overview-slot--live-involved" : ""}${prizeMarker ? " overview-slot--prize-milestone" : ""}`}
-      title={label}
-      aria-label={label}
+      className={`overview-slot overview-slot--${status}${initials ? " overview-slot--has-initials" : ""}${liveViewerInvolved ? " overview-slot--live-involved" : ""}${prizeMarker ? " overview-slot--prize-milestone" : ""}${hasDesktopRich ? " overview-slot--desktop-rich" : ""}`}
+      title={ariaDesktop ?? label}
+      aria-label={ariaDesktop ?? label}
     >
-      {showLiveStack ? (
+      {hasDesktopRich && desktopCopy ? (
+        <span className="overview-slot-desktop-stack" aria-hidden>
+          {desktopCopy.liveLeft && desktopCopy.liveRight ? (
+            <span className="overview-slot-desktop-live-split">
+              <span className="overview-slot-desktop-live-col">
+                <span className="overview-slot-desktop-name">
+                  {desktopCopy.liveLeft.name}
+                </span>
+                <span className="overview-slot-desktop-meta overview-slot-desktop-meta--detail">
+                  {desktopCopy.liveLeft.tail}
+                </span>
+              </span>
+              <span className="overview-slot-desktop-live-col">
+                <span className="overview-slot-desktop-name">
+                  {desktopCopy.liveRight.name}
+                </span>
+                <span className="overview-slot-desktop-meta overview-slot-desktop-meta--detail">
+                  {desktopCopy.liveRight.tail}
+                </span>
+              </span>
+            </span>
+          ) : (
+            <>
+              {desktopCopy.primaryLine ? (
+                <span className="overview-slot-desktop-name overview-slot-desktop-name--primary">
+                  {desktopCopy.primaryLine}
+                </span>
+              ) : null}
+              {desktopCopy.detailLine ? (
+                <span className="overview-slot-desktop-meta overview-slot-desktop-meta--detail">
+                  {desktopCopy.detailLine}
+                </span>
+              ) : null}
+            </>
+          )}
+        </span>
+      ) : showLiveStack ? (
         <span
           className="overview-slot-initials overview-slot-initials--live-stack"
           aria-hidden
         >
-          <span className="overview-slot-initials-line">{livePair.a}</span>
-          <span className="overview-slot-initials-line">{livePair.b}</span>
+          <span className="overview-slot-initials-line">{livePair!.a}</span>
+          <span className="overview-slot-initials-line">{livePair!.b}</span>
         </span>
       ) : (
         initials !== "" && (
@@ -175,11 +256,6 @@ function OverviewSlot({
           </span>
         )
       )}
-      {prizeMarker ? (
-        <span className="overview-slot-prize-marker" aria-hidden>
-          $
-        </span>
-      ) : null}
     </div>
   );
 }
@@ -187,25 +263,51 @@ function OverviewSlot({
 function MiniRegionTree({
   region,
   onLayoutMetrics,
+  variant = "compact",
   ...ctx
 }: {
   region: string;
   onLayoutMetrics?: (m: BirdseyeOverviewMetrics) => void;
+  variant?: "compact" | "desktop";
 } & Omit<Base, "onOpenZone">) {
   /** R64 → R32 → S16 → E8 for all regions so fork lines match real feeder rounds. */
   const columns = regionGamesByColumn(region, ctx.allGames);
   const dn = (uid: string) => ctx.usersById.get(uid)?.display_name ?? uid;
   const progressDirection =
     region === "West" || region === "Midwest" ? "rtl" : "ltr";
+  const isDesktop = variant === "desktop";
+  const naturalDims = isDesktop
+    ? {
+        slot: BIRDSEYE_DESKTOP_SLOT_NATURAL,
+        bridge: BIRDSEYE_DESKTOP_BRIDGE_NATURAL,
+      }
+    : undefined;
 
   return (
     <BirdseyeMiniBracket
       columns={columns}
       progressDirection={progressDirection}
       onLayoutMetrics={region === "East" ? onLayoutMetrics : undefined}
+      naturalDimensions={naturalDims}
+      minTreeHeightPx={isDesktop ? DESKTOP_OVERVIEW_MIN_TREE_H : undefined}
+      verticalGapPx={isDesktop ? 4 : 0}
       renderSlot={(g) => (
         <OverviewSlot
           game={g}
+          desktopCopy={
+            isDesktop
+              ? overviewDesktopCellCopy(
+                  g,
+                  ctx.viewerUserId,
+                  ctx.allGames,
+                  ctx.results,
+                  ctx.ownershipRows,
+                  ctx.teamsById,
+                  ctx.usersById,
+                  dn
+                )
+              : null
+          }
           visual={overviewSlotVisual(
             g,
             ctx.viewerUserId,
@@ -227,16 +329,29 @@ function CenterMini({
   ff2,
   ncg,
   eastLayoutMetrics,
+  variant = "compact",
   ...ctx
 }: {
   ff1: BracketGame | undefined;
   ff2: BracketGame | undefined;
   ncg: BracketGame[];
   eastLayoutMetrics: BirdseyeOverviewMetrics | null;
+  variant?: "compact" | "desktop";
 } & Omit<Base, "onOpenZone">) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [hostW, setHostW] = useState(0);
+  const [hostH, setHostH] = useState(0);
   const dn = (uid: string) => ctx.usersById.get(uid)?.display_name ?? uid;
+  const isDesktop = variant === "desktop";
+  const naturalDims = isDesktop
+    ? {
+        slot: BIRDSEYE_DESKTOP_SLOT_NATURAL,
+        bridge: BIRDSEYE_DESKTOP_BRIDGE_NATURAL,
+      }
+    : undefined;
+  const naturalSlot = isDesktop
+    ? BIRDSEYE_DESKTOP_SLOT_NATURAL
+    : BIRDSEYE_SLOT_NATURAL;
   const champ = ncg[0];
   const cells: { key: string; game: BracketGame | undefined; aria: string }[] =
     [
@@ -249,7 +364,9 @@ function CenterMini({
     const el = hostRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
-      setHostW(el.getBoundingClientRect().width);
+      const r = el.getBoundingClientRect();
+      setHostW(r.width);
+      setHostH(r.height);
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -257,11 +374,26 @@ function CenterMini({
 
   const gapBase = 7;
   const padInner = 4;
-  const fallback = hostW > 0 ? computeOverviewSlotMetrics(hostW) : null;
+  const fallback =
+    hostW > 0
+      ? computeOverviewSlotMetrics(
+          hostW,
+          naturalDims,
+          isDesktop
+            ? {
+                availableHostHeight: hostH > 0 ? hostH : DESKTOP_OVERVIEW_MIN_TREE_H,
+                maxColumnGames: 8,
+                verticalGapPx: 4,
+                slotVerticalFactor: BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO,
+              }
+            : null,
+          isDesktop ? { horizontalPadPx: BIRDSEYE_DESKTOP_PAD_X } : undefined
+        )
+      : null;
   const slotBase =
-    eastLayoutMetrics?.slotPx ?? fallback?.slotPx ?? BIRDSEYE_SLOT_NATURAL;
+    eastLayoutMetrics?.slotPx ?? fallback?.slotPx ?? naturalSlot;
   const champBase = slotBase * BIRDSEYE_CHAMPION_SLOT_FACTOR;
-  const gapUnscaled = Math.max(4, gapBase * (slotBase / BIRDSEYE_SLOT_NATURAL));
+  const gapUnscaled = Math.max(4, gapBase * (slotBase / naturalSlot));
   const stripNeed =
     slotBase + gapUnscaled + champBase + gapUnscaled + slotBase + 2 * padInner;
   const fit =
@@ -269,8 +401,19 @@ function CenterMini({
   const slotPx = slotBase * fit;
   const champPx = champBase * fit;
   const gapPx = gapUnscaled * fit;
-  const layoutScaleSide = slotPx / BIRDSEYE_SLOT_NATURAL;
-  const layoutScaleChamp = champPx / BIRDSEYE_SLOT_NATURAL;
+  const layoutScaleSide = slotPx / naturalSlot;
+  const layoutScaleChamp = champPx / naturalSlot;
+
+  /** Same pixel height as East regional overview cells (before center-hub horizontal `fit` shrink). */
+  const regionalOverviewCellHeightPx =
+    eastLayoutMetrics?.slotHeightPx ??
+    (isDesktop
+      ? Math.min(
+          slotBase * BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO,
+          DESKTOP_OVERVIEW_MIN_TREE_H / EAST_OVERVIEW_MAX_COLUMN_GAMES -
+            EAST_OVERVIEW_VERTICAL_GAP_PX
+        )
+      : slotBase);
 
   return (
     <div ref={hostRef} className="birdseye-zone-center-hub-host">
@@ -278,7 +421,24 @@ function CenterMini({
         {cells.map(({ key, game, aria }) => {
           const isChamp = key === "ncg";
           const w = isChamp ? champPx : slotPx;
-          const h = isChamp ? champPx : slotPx;
+          const h = isChamp
+            ? champPx
+            : isDesktop
+              ? Math.max(
+                  regionalOverviewCellHeightPx,
+                  Math.min(
+                    slotPx *
+                      BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO *
+                      DESKTOP_CENTER_SEMI_HEIGHT_LANDSCAPE_MULT,
+                    hostH > 0
+                      ? hostH * DESKTOP_CENTER_SEMI_MAX_HOST_H_FRAC
+                      : slotPx
+                  )
+                )
+              : Math.max(
+                  regionalOverviewCellHeightPx,
+                  slotPx * COMPACT_CENTER_SEMI_HEIGHT_MULT
+                );
           const scale = isChamp ? layoutScaleChamp : layoutScaleSide;
           const frameStyle = {
             width: w,
@@ -288,22 +448,53 @@ function CenterMini({
           return game ? (
             <div
               key={game.id}
-              className={`birdseye-mini-slot-frame${isChamp ? " birdseye-mini-slot-frame--championship" : ""}`}
-              style={frameStyle}
+              className="birdseye-mini-slot-stack birdseye-mini-slot-stack--center-hub"
+              style={
+                {
+                  "--birdseye-layout-scale": String(scale),
+                } as CSSProperties
+              }
             >
-              <OverviewSlot
-                game={game}
-                visual={overviewSlotVisual(
-                  game,
-                  ctx.viewerUserId,
-                  ctx.allGames,
-                  ctx.results,
-                  ctx.ownershipRows,
-                  ctx.teamsById,
-                  ctx.usersById,
-                  dn
-                )}
-              />
+              <div
+                className={`birdseye-mini-slot-frame${isChamp ? " birdseye-mini-slot-frame--championship" : ""}${isDesktop && !isChamp ? " birdseye-mini-slot-frame--desktop-landscape" : ""}`}
+                style={frameStyle}
+              >
+                <OverviewSlot
+                  game={game}
+                  desktopCopy={
+                    isDesktop
+                      ? overviewDesktopCellCopy(
+                          game,
+                          ctx.viewerUserId,
+                          ctx.allGames,
+                          ctx.results,
+                          ctx.ownershipRows,
+                          ctx.teamsById,
+                          ctx.usersById,
+                          dn
+                        )
+                      : null
+                  }
+                  visual={overviewSlotVisual(
+                    game,
+                    ctx.viewerUserId,
+                    ctx.allGames,
+                    ctx.results,
+                    ctx.ownershipRows,
+                    ctx.teamsById,
+                    ctx.usersById,
+                    dn
+                  )}
+                />
+              </div>
+              {isPrizePayoutRoundOverview(game) ? (
+                <span
+                  className="birdseye-prize-dollar-below"
+                  aria-label={prizeDollarBelowAriaLabel(game)}
+                >
+                  $
+                </span>
+              ) : null}
             </div>
           ) : (
             <div
@@ -326,6 +517,7 @@ function CenterMini({
 export function BracketBirdseye({
   onOpenZone,
   groupTeamsUnassigned = null,
+  variant = "compact",
   ...ctx
 }: Base) {
   const { allGames } = ctx;
@@ -335,8 +527,17 @@ export function BracketBirdseye({
   const [eastLayoutMetrics, setEastLayoutMetrics] =
     useState<BirdseyeOverviewMetrics | null>(null);
 
+  const commitEastLayoutMetrics = useCallback((m: BirdseyeOverviewMetrics) => {
+    setEastLayoutMetrics((prev) => {
+      if (prev && birdseyeMetricsEqual(prev, m)) return prev;
+      return m;
+    });
+  }, []);
+
   return (
-    <div className="birdseye-wrap">
+    <div
+      className={`birdseye-wrap${variant === "desktop" ? " birdseye-wrap--desktop" : ""}`}
+    >
       {groupTeamsUnassigned ? (
         <GroupTeamsUnassignedHint {...groupTeamsUnassigned} />
       ) : (
@@ -351,7 +552,10 @@ export function BracketBirdseye({
           didn’t involve you.
         </p>
       )}
-      <div className="birdseye-arena birdseye-arena--quad" role="presentation">
+      <div
+        className={`birdseye-arena birdseye-arena--quad${variant === "desktop" ? " birdseye-arena--quad-desktop" : ""}`}
+        role="presentation"
+      >
         <button
           type="button"
           className="birdseye-zone birdseye-zone--east"
@@ -360,7 +564,8 @@ export function BracketBirdseye({
           <span className="birdseye-zone-label">East</span>
           <MiniRegionTree
             region="East"
-            onLayoutMetrics={setEastLayoutMetrics}
+            onLayoutMetrics={commitEastLayoutMetrics}
+            variant={variant}
             {...ctx}
           />
         </button>
@@ -370,7 +575,7 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("West")}
         >
           <span className="birdseye-zone-label">West</span>
-          <MiniRegionTree region="West" {...ctx} />
+          <MiniRegionTree region="West" variant={variant} {...ctx} />
         </button>
         <button
           type="button"
@@ -378,7 +583,7 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("South")}
         >
           <span className="birdseye-zone-label">South</span>
-          <MiniRegionTree region="South" {...ctx} />
+          <MiniRegionTree region="South" variant={variant} {...ctx} />
         </button>
         <button
           type="button"
@@ -386,7 +591,7 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("Midwest")}
         >
           <span className="birdseye-zone-label">Midwest</span>
-          <MiniRegionTree region="Midwest" {...ctx} />
+          <MiniRegionTree region="Midwest" variant={variant} {...ctx} />
         </button>
         <button
           type="button"
@@ -399,6 +604,7 @@ export function BracketBirdseye({
             ff2={ff2}
             ncg={ncg}
             eastLayoutMetrics={eastLayoutMetrics}
+            variant={variant}
             {...ctx}
           />
         </button>
