@@ -558,8 +558,20 @@ export function buildMyTeamsSections(
     );
 
     const inActive = alive && controller === viewerUserId;
+    const viewerHeldEliminatedSlot =
+      frontier.kind === "eliminated" &&
+      poolOwnerUserIdEnteringGameForTeam(
+        frontier.game,
+        teamId,
+        games,
+        results,
+        ownershipRows,
+        teamsById
+      ) === viewerUserId;
+    const viewerHasMyTeamsStake =
+      draftedByViewer.has(teamId) || viewerHeldEliminatedSlot;
     const inLost =
-      draftedByViewer.has(teamId) && (!alive || controller !== viewerUserId);
+      viewerHasMyTeamsStake && (!alive || controller !== viewerUserId);
 
     if (!inActive && !inLost) continue;
 
