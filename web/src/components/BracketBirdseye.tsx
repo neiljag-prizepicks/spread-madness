@@ -4,6 +4,7 @@ import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import { regionGamesByColumn } from "../lib/regionRoundColumns";
 import {
+  overviewPrizeMarkerLabel,
   overviewSlotVisual,
   type OverviewSlotVisual,
 } from "../lib/overviewPickStatus";
@@ -148,7 +149,7 @@ function OverviewSlot({
   const { status, initials, livePair, liveViewerInvolved, prizeMarker } = visual;
   const label =
     prizeMarker && status === "pending"
-      ? `${game.id}: Prize payouts start here (not started)`
+      ? overviewPrizeMarkerLabel(game)
       : initials !== ""
         ? `${game.id}: ${initials}${status === "live" ? " (live)" : ""}`
         : `${game.id}${status === "pending" ? " (pending)" : ""}`;

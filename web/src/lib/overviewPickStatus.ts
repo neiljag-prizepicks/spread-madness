@@ -24,19 +24,29 @@ export type OverviewSlotVisual = {
   livePair?: { a: string; b: string };
   /** In-progress game where the viewer owns one of the two sides (e.g. bolder initials in overview). */
   liveViewerInvolved?: boolean;
-  /** Elite 8 / Final Four / Championship, not yet live or final — show grey $ for prize milestone. */
+  /** Sweet 16 / Elite 8 / Final Four / Championship, not yet live or final — grey $ (path to or at prize rounds). */
   prizeMarker?: boolean;
 };
 
 const PRIZE_MILESTONE_ROUNDS: ReadonlySet<BracketGame["round"]> = new Set([
+  "sweet_16",
   "elite_8",
   "final_four",
   "championship",
 ]);
 
+/** Accessible name when the grey $ is shown on a pending overview cell. */
+export function overviewPrizeMarkerLabel(game: BracketGame): string {
+  if (game.round === "sweet_16") {
+    return `${game.id}: Sweet 16 winner advances to Elite 8 — prize rounds (not started)`;
+  }
+  return `${game.id}: Prize payouts start here (not started)`;
+}
+
 /**
- * True when this overview cell is a prize-paying round milestone and the game
- * has not started (or teams not yet resolved). Used for a grey "$" hint in birdseye.
+ * True when this overview cell is on the path to prize rounds (Sweet 16 feeds Elite 8)
+ * or is a direct prize milestone, and the game has not started (or teams not yet resolved).
+ * Used for a grey "$" hint in birdseye.
  */
 export function prizeMilestoneMarker(
   game: BracketGame,

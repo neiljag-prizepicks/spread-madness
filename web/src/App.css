@@ -3027,7 +3027,7 @@
   font-weight: 900;
 }
 
-/* Elite 8 / Final Four / championship: grey $ when game has not started (prize milestones) */
+/* Sweet 16 (feeds Elite 8) / Elite 8 / Final Four / championship: grey $ when game has not started */
 .overview-slot-prize-marker {
   font-size: 1rem;
   font-weight: 700;
