@@ -1,6 +1,11 @@
 import type { BracketGame, GameSide, Team } from "../types";
 import type { GroupMemberCap } from "./groupConstants";
-import { buildOwnershipUnits, type OwnershipUnit } from "./ownershipUnits";
+import { regionMinMaxLogicalUnitsPerMember } from "./assignableTeams";
+import {
+  buildOwnershipUnits,
+  logicalBracketSlotsForUser,
+  type OwnershipUnit,
+} from "./ownershipUnits";
 import type { OwnershipRow } from "./ownershipMap";
 
 /**
@@ -196,30 +201,86 @@ export function buildRegionAssignRows(
 export const REGION_SEED_LINE_COUNT = 16;
 
 /**
+ * Dropdown value for a region row. First Four pair: if only the surviving team remains in
+ * `local` (eliminated opponent dropped from the skeleton), the survivor’s `user_id` still
+ * represents the whole seed line.
+ */
+export function regionAssignRowSelectValue(
+  row: RegionAssignRow,
+  local: OwnershipRow[]
+): string {
+  if (row.teamIds.length === 0) return "";
+  const byTeam = new Map(local.map((r) => [r.team_id, r.user_id]));
+  if (row.isPair && row.teamIds.length >= 2) {
+    const [a, b] = row.teamIds;
+    const ua = byTeam.get(a);
+    const ub = byTeam.get(b);
+    const ha = ua !== undefined;
+    const hb = ub !== undefined;
+    const sa = ua ?? "";
+    const sb = ub ?? "";
+    const nz = (s: string) => String(s).trim() !== "";
+    if (ha && hb) {
+      if (!nz(sa) || !nz(sb) || sa !== sb) return "";
+      return sa;
+    }
+    if (ha && !hb) return nz(sa) ? sa : "";
+    if (!ha && hb) return nz(sb) ? sb : "";
+    return "";
+  }
+  const tid = row.teamIds[0]!;
+  const u = byTeam.get(tid);
+  return u != null && String(u).trim() !== "" ? u : "";
+}
+
+/**
+ * Team id to pass to `updateTeamOwner` for this row: when exactly one side of an FF pair is
+ * still assignable, use that survivor so the control stays enabled and updates the right row.
+ */
+export function representativeTeamIdForAssignUi(
+  row: RegionAssignRow,
+  assignableTeamIds: Set<string>
+): string {
+  if (row.teamIds.length === 0) return "";
+  if (row.isPair && row.teamIds.length >= 2) {
+    const [a, b] = row.teamIds;
+    const aOk = assignableTeamIds.has(a);
+    const bOk = assignableTeamIds.has(b);
+    if (aOk && !bOk) return a;
+    if (!aOk && bOk) return b;
+  }
+  return row.representativeTeamId;
+}
+
+/**
  * Tab fraction: **assigned seed lines / seed lines to fill** (First Four pair = 1 line).
  * Denominator is {@link REGION_SEED_LINE_COUNT} unless the grid has extra rows (bad data).
  */
+/** Seed-line progress counting only rows that still have at least one assignable team. */
+export function regionSeedSlotProgressAssignable(
+  rows: RegionAssignRow[],
+  local: OwnershipRow[],
+  assignableTeamIds: Set<string>
+): { assigned: number; total: number } {
+  const filtered = rows.filter((row) =>
+    row.teamIds.some((tid) => assignableTeamIds.has(tid))
+  );
+  return regionSeedSlotProgress(filtered, local);
+}
+
 export function regionSeedSlotProgress(
   rows: RegionAssignRow[],
   local: OwnershipRow[]
 ): { assigned: number; total: number } {
-  const m = new Map(local.map((r) => [r.team_id, r.user_id]));
   let assigned = 0;
   for (const row of rows) {
     if (row.teamIds.length === 0) continue;
     if (row.isPair && row.teamIds.length >= 2) {
-      const a = row.teamIds[0]!;
-      const b = row.teamIds[1]!;
-      const ua = m.get(a) ?? "";
-      const ub = m.get(b) ?? "";
-      const ok =
-        String(ua).trim() !== "" &&
-        String(ub).trim() !== "" &&
-        ua === ub;
-      if (ok) assigned++;
+      const v = regionAssignRowSelectValue(row, local);
+      if (String(v).trim() !== "") assigned++;
     } else {
       const tid = row.teamIds[0]!;
-      const u = m.get(tid);
+      const u = local.find((r) => r.team_id === tid)?.user_id;
       if (u != null && String(u).trim() !== "") assigned++;
     }
   }
@@ -282,12 +343,84 @@ export function logicalUnitsOwnedInRegion(
   local: OwnershipRow[]
 ): number {
   const units = buildOwnershipUnits(games, allTeamIds, teamsById);
+  return logicalUnitsOwnedInRegionForUnits(memberUid, region, units, local);
+}
+
+/** Same as {@link logicalUnitsOwnedInRegion} but uses a pre-built assignment unit list (mid-tournament). */
+export function logicalUnitsOwnedInRegionForUnits(
+  memberUid: string,
+  region: string,
+  units: OwnershipUnit[],
+  local: OwnershipRow[]
+): number {
   let n = 0;
   for (const u of units) {
     if (u.region !== region) continue;
     if (ownerForUnit(u, local) === memberUid) n++;
   }
   return n;
+}
+
+/**
+ * Validates local ownership against assignment `units` (survivors-only list), FF pairing, and
+ * per-member / per-region fairness (including uneven splits when L % N !== 0).
+ */
+export function validateAssignableOwnership(
+  local: OwnershipRow[],
+  memberUids: string[],
+  memberCap: number,
+  units: OwnershipUnit[],
+  ffPairMap: Map<string, string>
+): boolean {
+  const teamIds = new Set<string>();
+  for (const u of units) {
+    for (const t of u.teamIds) teamIds.add(t);
+  }
+  if (local.length !== teamIds.size) return false;
+  const byTeam = new Map(local.map((r) => [r.team_id, r.user_id]));
+  for (const t of teamIds) {
+    if (!byTeam.has(t)) return false;
+  }
+  for (const r of local) {
+    if (!teamIds.has(r.team_id)) return false;
+    if (!String(r.user_id ?? "").trim()) return false;
+  }
+  for (const [tid, other] of ffPairMap) {
+    if (!teamIds.has(tid) || !teamIds.has(other)) continue;
+    if (tid.localeCompare(other) >= 0) continue;
+    if (byTeam.get(tid) !== byTeam.get(other)) return false;
+  }
+
+  const L = units.length;
+  const low = Math.floor(L / memberCap);
+  const high = Math.ceil(L / memberCap);
+  const numHigh = L - low * memberCap;
+
+  if (L % memberCap === 0) {
+    const per = L / memberCap;
+    for (const uid of memberUids) {
+      if (logicalBracketSlotsForUser(uid, local, ffPairMap) !== per) return false;
+    }
+  } else {
+    let hi = 0;
+    for (const uid of memberUids) {
+      const logical = logicalBracketSlotsForUser(uid, local, ffPairMap);
+      if (logical !== low && logical !== high) return false;
+      if (logical % 2 !== 0) return false;
+      if (logical === high) hi++;
+    }
+    if (hi !== numHigh) return false;
+  }
+
+  const mm = regionMinMaxLogicalUnitsPerMember(units, memberCap);
+  for (const uid of memberUids) {
+    for (const reg of mm.keys()) {
+      const c = logicalUnitsOwnedInRegionForUnits(uid, reg, units, local);
+      const bounds = mm.get(reg);
+      if (!bounds || c < bounds.min || c > bounds.max) return false;
+    }
+  }
+  return true;
 }
 
 export function ownershipRowsEqual(

@@ -3,6 +3,40 @@ import { findFeeder, gameMap, ncaaWinner, resolveTeamId } from "./resolveTeams";
 import type { OwnershipRow } from "./ownershipMap";
 import { buildTeamToUserId } from "./ownershipMap";
 
+export function parseUtcMs(iso: string | null | undefined): number | null {
+  if (iso == null || String(iso).trim() === "") return null;
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? null : t;
+}
+
+/**
+ * Whether `teamId`'s current ownership row should participate in pool logic for `game`
+ * (assigned on or before tip). Missing `assigned_at` grandfathers in mock / legacy rows.
+ */
+export function assignmentEligibleForTeamAtGame(
+  teamId: string,
+  game: BracketGame,
+  ownershipRows: OwnershipRow[]
+): boolean {
+  const row = ownershipRows.find((r) => r.team_id === teamId);
+  const assignedMs = parseUtcMs(row?.assigned_at ?? undefined);
+  if (assignedMs == null) return true;
+  const tipMs = parseUtcMs(game.scheduled_tip_utc);
+  if (tipMs == null) return true;
+  return assignedMs <= tipMs;
+}
+
+function poolOwnerOrDraft(
+  poolUserId: string | undefined | null,
+  advancingTeamId: string,
+  teamToUser: Map<string, string>
+): string {
+  if (poolUserId != null && String(poolUserId).trim() !== "") {
+    return poolUserId;
+  }
+  return teamToUser.get(advancingTeamId) ?? "";
+}
+
 export type PoolOutcome = {
   ncaaWinnerId: string;
   poolOwnerUserId: string;
@@ -65,6 +99,10 @@ function resolvePoolOwnerEnteringGameSide(
     return teamToUser.get(tid) ?? "";
   }
 
+  if (!assignmentEligibleForTeamAtGame(tid, feeder, ownershipRows)) {
+    return teamToUser.get(tid) ?? "";
+  }
+
   const out = computePoolOutcome(
     feeder,
     games,
@@ -73,7 +111,8 @@ function resolvePoolOwnerEnteringGameSide(
     teamsById,
     (id) => id
   );
-  return out?.poolOwnerUserId ?? teamToUser.get(tid) ?? "";
+  if (!out) return teamToUser.get(tid) ?? "";
+  return poolOwnerOrDraft(out.poolOwnerUserId, tid, teamToUser);
 }
 
 /**
@@ -243,6 +282,10 @@ export function computePoolOutcome(
     message = `${coverLead} ${marginPhrase}. The final score was ${scoreSummary}.`;
   }
 
+  if (!String(poolOwnerUserId).trim()) {
+    poolOwnerUserId = ownerOf(ncaaWinnerId, teamToUser);
+  }
+
   const winAbbrev = abbrev(ncaaWinnerId);
   const ctrlLabel = poolOwnerUserId ? displayName(poolOwnerUserId) : "—";
 
@@ -310,7 +353,9 @@ export function getPoolOwnerForSide(
     teamsById,
     (id) => id
   );
-  return out?.poolOwnerUserId ?? teamToUser.get(tid) ?? null;
+  if (!out) return teamToUser.get(tid) ?? null;
+  const uid = poolOwnerOrDraft(out.poolOwnerUserId, tid, teamToUser);
+  return uid !== "" ? uid : null;
 }
 
 /** Owner label for UI: R64 direct pick, or pool controller from feeder if resolved. */
@@ -347,7 +392,16 @@ export function getOwnerDisplayForSide(
     teamsById,
     displayName
   );
-  return out ? displayName(out.poolOwnerUserId) : displayName(teamToUser.get(tid) ?? "");
+  if (!out) {
+    const u = teamToUser.get(tid);
+    return u ? displayName(u) : "—";
+  }
+  const uid = poolOwnerOrDraft(out.poolOwnerUserId, tid, teamToUser);
+  if (!uid) {
+    const u = teamToUser.get(tid);
+    return u ? displayName(u) : "—";
+  }
+  return displayName(uid);
 }
 
 /** User id shown as owner for `side` — same resolution as {@link getOwnerDisplayForSide}. */
@@ -381,6 +435,7 @@ export function getOwnerUserIdForSide(
     teamsById,
     (id) => id
   );
-  const uid = out?.poolOwnerUserId ?? teamToUser.get(tid);
-  return uid && uid !== "" ? uid : null;
+  if (!out) return teamToUser.get(tid) ?? null;
+  const uid = poolOwnerOrDraft(out.poolOwnerUserId, tid, teamToUser);
+  return uid !== "" ? uid : null;
 }

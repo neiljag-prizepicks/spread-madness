@@ -47,6 +47,11 @@ export type GroupDoc = {
    * Omitted with existing ownership rows is treated as locked.
    */
   ownershipLocked?: boolean;
+  /**
+   * Private groups only: when true, admins may assign eliminated teams (full 68-row behavior).
+   * Omitted/false: surviving teams only (same as public). Ignored for public groups.
+   */
+  allowAssignEliminatedTeams?: boolean;
 };
 
 export type MemberDoc = {
@@ -379,19 +384,38 @@ export function subscribeUserGroups(
   );
 }
 
+function assignedAtFromFirestoreValue(v: unknown): string | undefined {
+  if (v == null) return undefined;
+  if (typeof v === "string" && v.trim() !== "") return v;
+  if (
+    typeof v === "object" &&
+    v !== null &&
+    "toDate" in v &&
+    typeof (v as { toDate: () => Date }).toDate === "function"
+  ) {
+    return (v as { toDate: () => Date }).toDate().toISOString();
+  }
+  return undefined;
+}
+
 export function subscribeGroupOwnership(
   firestore: Firestore,
   groupId: string,
-  onNext: (rows: { user_id: string; team_id: string }[]) => void,
+  onNext: (rows: { user_id: string; team_id: string; assigned_at?: string }[]) => void,
   onError?: (e: Error) => void
 ): Unsubscribe {
   return onSnapshot(
     collection(firestore, "groups", groupId, "ownership"),
     (snap) => {
-      const rows = snap.docs.map((d) => ({
-        team_id: d.id,
-        user_id: (d.data() as { userId: string }).userId,
-      }));
+      const rows = snap.docs.map((d) => {
+        const data = d.data() as { userId: string; assignedAt?: unknown };
+        const assigned_at = assignedAtFromFirestoreValue(data.assignedAt);
+        return {
+          team_id: d.id,
+          user_id: data.userId,
+          ...(assigned_at ? { assigned_at } : {}),
+        };
+      });
       onNext(rows);
     },
     onError
@@ -560,12 +584,64 @@ export async function setGroupOwnership(
 ): Promise<void> {
   const batch = writeBatch(firestore);
   const gRef = doc(firestore, "groups", groupId);
+  const ownCol = collection(firestore, "groups", groupId, "ownership");
+  const existing = await getDocs(ownCol);
+  const incoming = new Set(pairs.map((p) => p.team_id));
+  for (const d of existing.docs) {
+    if (!incoming.has(d.id)) {
+      batch.delete(d.ref);
+    }
+  }
   batch.update(gRef, { ownershipLocked: true });
+  const nowIso = new Date().toISOString();
+  const prevByTeam = new Map(
+    existing.docs.map((d) => {
+      const data = d.data() as { userId?: string; assignedAt?: unknown };
+      return [
+        d.id,
+        {
+          userId: data.userId ?? "",
+          assignedAt: assignedAtFromFirestoreValue(data.assignedAt),
+        },
+      ] as const;
+    })
+  );
   for (const { team_id, user_id } of pairs) {
     const ref = doc(firestore, "groups", groupId, "ownership", team_id);
-    batch.set(ref, { userId: user_id });
+    const prev = prevByTeam.get(team_id);
+    let assignedAt = nowIso;
+    if (
+      prev &&
+      prev.userId === user_id &&
+      prev.assignedAt &&
+      String(user_id).trim() !== ""
+    ) {
+      assignedAt = prev.assignedAt;
+    }
+    batch.set(ref, { userId: user_id, assignedAt });
   }
   await batch.commit();
+}
+
+export async function updateGroupAllowAssignEliminatedTeams(
+  firestore: Firestore,
+  groupId: string,
+  adminUid: string,
+  allow: boolean
+): Promise<void> {
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only a group admin can change this setting.");
+  }
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+  const g = gSnap.data() as GroupDoc;
+  if (g.visibility !== "private") {
+    throw new Error("This setting applies to private groups only.");
+  }
+  await updateDoc(gRef, { allowAssignEliminatedTeams: allow });
 }
 
 /** Admin removes another member. Fails if the player still has teams in ownership. */

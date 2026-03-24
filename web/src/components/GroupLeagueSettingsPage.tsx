@@ -24,6 +24,7 @@ import {
 import type { GameResult } from "../types";
 import { writeStoredActiveGroupId } from "../lib/activeGroupStorage";
 import { groupAssignPath } from "../lib/groupPaths";
+import { PasswordFieldWithToggle } from "./PasswordFieldWithToggle";
 
 type Props = {
   uid: string;
@@ -607,15 +608,17 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
             </div>
           </dl>
           {isAdmin ? (
-            <form className="group-settings-form" onSubmit={handleSavePassword}>
+            <form
+              className="group-settings-form"
+              onSubmit={handleSavePassword}
+              autoComplete="off"
+            >
               <label className="group-hub-label">
                 New password
-                <input
-                  className="group-hub-input"
-                  type="password"
+                <PasswordFieldWithToggle
+                  name="group-shared-secret"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  autoComplete="new-password"
                   placeholder="Enter a new group password"
                 />
               </label>

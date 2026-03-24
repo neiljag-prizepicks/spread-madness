@@ -6,14 +6,20 @@ import {
   writeBatch,
   type Firestore,
 } from "firebase/firestore";
-import type { BracketGame, Team } from "../types";
+import type { BracketGame, GameResult, Team } from "../types";
+import {
+  buildAssignmentOwnershipUnits,
+  assignableTeamIdsSet,
+  shouldRestrictToSurvivingTeams,
+} from "./assignableTeams";
 import {
   canSplitTournamentEvenly,
   isValidMemberCap,
+  LOGICAL_BRACKET_SLOTS,
   PHYSICAL_TEAM_ID_COUNT,
   type GroupMemberCap,
 } from "./groupConstants";
-import { buildBalancedOwnership } from "./ownershipUnits";
+import { assignUnitsForAssignmentList } from "./ownershipUnits";
 import type { GroupDoc, MemberDoc } from "./firestore/groupsApi";
 
 /**
@@ -39,7 +45,8 @@ export async function tryCommitAutoAssignWhenFull(
   adminUid: string,
   games: BracketGame[],
   allTeamIds: string[],
-  teamsById: Map<string, Team>
+  teamsById: Map<string, Team>,
+  results: Map<string, GameResult>
 ): Promise<{ ok: true } | { ok: false; reason: string }> {
   const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
   const adminSnap = await getDoc(adminRef);
@@ -58,8 +65,8 @@ export async function tryCommitAutoAssignWhenFull(
   if (g.memberCount !== g.maxMembers) {
     return { ok: false, reason: "Group is not full." };
   }
-  if (!isValidMemberCap(g.memberCap) || !canSplitTournamentEvenly(g.memberCap)) {
-    return { ok: false, reason: "This group size cannot auto-assign evenly." };
+  if (!isValidMemberCap(g.memberCap)) {
+    return { ok: false, reason: "Invalid group size." };
   }
 
   const ownershipSnap = await getDocs(
@@ -83,12 +90,37 @@ export async function tryCommitAutoAssignWhenFull(
   const memberUids = membersSnap.docs.map((d) => d.id).sort((a, b) => a.localeCompare(b));
   const memberCap = g.memberCap as GroupMemberCap;
 
+  const restrict = shouldRestrictToSurvivingTeams(
+    g.visibility,
+    g.allowAssignEliminatedTeams
+  );
+  const assignable = assignableTeamIdsSet(allTeamIds, games, results, restrict);
+  const units = buildAssignmentOwnershipUnits(
+    games,
+    allTeamIds,
+    teamsById,
+    assignable
+  );
+  if (units.length === 0) {
+    return { ok: false, reason: "No assignable teams for this bracket state." };
+  }
+  if (units.length < memberCap) {
+    return {
+      ok: false,
+      reason: "Not enough surviving teams to give each member at least one.",
+    };
+  }
+  if (
+    units.length === LOGICAL_BRACKET_SLOTS &&
+    !canSplitTournamentEvenly(memberCap)
+  ) {
+    return { ok: false, reason: "This group size cannot auto-assign evenly." };
+  }
+
   let pairs: { team_id: string; user_id: string }[];
   try {
-    pairs = buildBalancedOwnership(
-      games,
-      allTeamIds,
-      teamsById,
+    pairs = assignUnitsForAssignmentList(
+      units,
       memberUids,
       memberCap,
       true
@@ -100,11 +132,12 @@ export async function tryCommitAutoAssignWhenFull(
     };
   }
 
+  const assignedAt = new Date().toISOString();
   const batch = writeBatch(firestore);
   batch.update(gRef, { ownershipLocked: true });
   for (const { team_id, user_id } of pairs) {
     const ref = doc(firestore, "groups", groupId, "ownership", team_id);
-    batch.set(ref, { userId: user_id });
+    batch.set(ref, { userId: user_id, assignedAt });
   }
   await batch.commit();
 

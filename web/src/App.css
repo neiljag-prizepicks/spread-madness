@@ -4319,6 +4319,27 @@
   align-items: center;
 }
 
+.group-hub-password-field {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.group-hub-password-field .group-hub-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.group-hub-password-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  padding-left: 0.65rem;
+  padding-right: 0.65rem;
+}
+
 .group-hub-fieldset {
   border: none;
   padding: 0;
@@ -4439,6 +4460,20 @@
   color: var(--pp-fg-tertiary);
   margin: 0 0 0.5rem;
   font-weight: 700;
+}
+
+.group-assign-v2-card-header-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.group-assign-v2-card-title--header-action {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .group-assign-v2-desc {
@@ -4619,6 +4654,10 @@
 
 .group-assign-v2-team-label {
   min-width: 0;
+}
+
+.group-assign-v2-team-label--eliminated {
+  color: var(--pp-fg-secondary);
 }
 
 .group-assign-v2-select {

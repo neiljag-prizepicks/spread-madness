@@ -18,6 +18,7 @@ import {
   type GroupDoc,
 } from "../lib/firestore/groupsApi";
 
+import { PasswordFieldWithToggle } from "./PasswordFieldWithToggle";
 import { POOL_RULES_PAGE_TITLE } from "../content/poolRulesCopy";
 import { writeStoredActiveGroupId } from "../lib/activeGroupStorage";
 import { groupSettingsPath } from "../lib/groupPaths";
@@ -342,7 +343,11 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
         <h2 id="create-h" className="group-hub-section-title">
           Create a group
         </h2>
-        <form className="group-hub-form" onSubmit={handleCreate}>
+        <form
+          className="group-hub-form"
+          onSubmit={handleCreate}
+          autoComplete="off"
+        >
           <label className="group-hub-label">
             Group name
             <input
@@ -420,13 +425,11 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
               </label>
               <label className="group-hub-label">
                 Password
-                <input
-                  className="group-hub-input"
-                  type="password"
+                <PasswordFieldWithToggle
+                  name="group-shared-secret"
                   value={createPass}
                   onChange={(e) => setCreatePass(e.target.value)}
                   required
-                  autoComplete="new-password"
                 />
               </label>
             </>
@@ -504,7 +507,11 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
         <h2 id="priv-join-h" className="group-hub-section-title">
           Join a private group
         </h2>
-        <form className="group-hub-form" onSubmit={handleJoinPrivate}>
+        <form
+          className="group-hub-form"
+          onSubmit={handleJoinPrivate}
+          autoComplete="off"
+        >
           <label className="group-hub-label">
             Join code
             <input
@@ -516,12 +523,10 @@ export function GroupHubPage({ uid, displayName, onEnterGroup }: Props) {
           </label>
           <label className="group-hub-label">
             Password
-            <input
-              className="group-hub-input"
-              type="password"
+            <PasswordFieldWithToggle
+              name="group-shared-secret"
               value={privPass}
               onChange={(e) => setPrivPass(e.target.value)}
-              autoComplete="off"
             />
           </label>
           <button type="submit" className="btn-primary">

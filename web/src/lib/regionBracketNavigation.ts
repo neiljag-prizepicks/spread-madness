@@ -2,12 +2,12 @@ import type { BracketGame, GameResult } from "../types";
 import { withoutFirstFour } from "./bracketFilters";
 
 /** Rounds rendered in each regional quadrant tree (horizontal scroll). */
-export const REGION_TREE_ROUNDS: BracketGame["round"][] = [
+export const REGION_TREE_ROUNDS = [
   "round_of_64",
   "round_of_32",
   "sweet_16",
   "elite_8",
-];
+] as const satisfies readonly BracketGame["round"][];
 
 export type RegionTreeRound = (typeof REGION_TREE_ROUNDS)[number];
 
