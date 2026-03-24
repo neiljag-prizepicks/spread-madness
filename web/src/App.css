@@ -4089,6 +4089,328 @@
   background: color-mix(in srgb, var(--pp-link, #5c9fd6) 14%, transparent);
 }
 
+/* Group settings — Figma handoff (Neil's Playground 2025, node 314:4563) */
+.group-settings-v2--figma-handoff {
+  --gs-card-bg: #1f202d;
+  --gs-input-bg: #121320;
+  --gs-input-border: #2c2c39;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-card {
+  margin-top: 1rem;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--gs-card-bg);
+  border: 1px solid var(--gs-input-border);
+}
+
+.group-settings-v2--figma-handoff .group-settings-danger .group-settings-v2-section-heading {
+  color: var(--pp-fg-primary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-section-heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--pp-fg-primary);
+  text-transform: none;
+  margin: 0 0 12px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-field-label-lg {
+  display: block;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--pp-fg-primary);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-name-row--figma {
+  align-items: stretch;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-input-shell {
+  display: flex;
+  align-items: center;
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 12px;
+  background: var(--gs-input-bg);
+  border: 1px solid var(--gs-input-border);
+  border-radius: 8px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-input-shell-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  margin: 0;
+  background: transparent;
+  color: var(--pp-fg-primary);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.4;
+  padding: 10px 8px 10px 0;
+  outline: none;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-input-shell-field::placeholder {
+  color: var(--pp-fg-tertiary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-input-shell-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--pp-fg-primary);
+  cursor: pointer;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-input-shell-btn:hover {
+  color: var(--pp-fg-accent);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-desc--tight {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--pp-fg-primary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-desc--after-heading {
+  margin: -4px 0 12px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-desc--flush {
+  margin: 0;
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--pp-fg-primary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-inline-link {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--pp-link);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-kicker-label {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.33px;
+  text-transform: uppercase;
+  color: var(--pp-fg-secondary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-prize-select {
+  background: var(--gs-input-bg);
+  border-color: var(--gs-input-border);
+  border-radius: 6px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-alert--amber {
+  margin-top: 0;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #ffce6f;
+  color: #050614;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-alert--amber .group-settings-v2-alert-icon {
+  color: #050614;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-alert--amber p {
+  color: #050614;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-card--assign-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-card--assign-teams > .group-settings-v2-section-heading {
+  margin-bottom: 0;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-team-assign-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-subheading {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--pp-fg-primary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-assign-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-assign-inline-desc {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--pp-fg-primary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-assign-btn--pill {
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-assign-footnote {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--pp-fg-tertiary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 12px;
+  background: var(--gs-input-bg);
+  border: 1px solid var(--gs-input-border);
+  border-radius: 8px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slot-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slot-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pp-fg-primary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slot-role {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--pp-fg-tertiary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-slot-remove {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 4px 2px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--pp-link);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-slot-remove--disabled {
+  color: #60606b;
+  cursor: not-allowed;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slot--invite {
+  color: var(--pp-fg-secondary);
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slot-invite-label {
+  font-size: 1rem;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-member-slot-invite-icon {
+  display: flex;
+  color: var(--pp-fg-primary);
+  opacity: 0.9;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-delete-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-card--delete-inline > .group-settings-v2-section-heading {
+  margin-bottom: 8px;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-delete-btn--pill {
+  flex-shrink: 0;
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: var(--pp-negative);
+  color: #fbf9ff;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.group-settings-v2--figma-handoff .group-settings-v2-delete-btn--pill:hover:not(:disabled) {
+  filter: brightness(1.08);
+  background: var(--pp-negative);
+}
+
 .group-settings-section {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
