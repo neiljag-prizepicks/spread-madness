@@ -230,5 +230,53 @@
     "favorite_team_id": "MW05",
     "spread_from_favorite_perspective": -1.5,
     "spread_updated_at": "2026-03-21T16:55:26.910Z"
+  },
+  "W-S16-2": {
+    "scheduled_tip_utc": "2026-03-26T23:10Z",
+    "favorite_team_id": "W02",
+    "spread_from_favorite_perspective": -6.5,
+    "spread_updated_at": "2026-03-24T00:16:28.114Z"
+  },
+  "S-S16-1": {
+    "scheduled_tip_utc": "2026-03-26T23:30Z",
+    "favorite_team_id": "S04",
+    "spread_from_favorite_perspective": -1.5,
+    "spread_updated_at": "2026-03-24T00:16:28.297Z"
+  },
+  "W-S16-1": {
+    "scheduled_tip_utc": "2026-03-27T01:45Z",
+    "favorite_team_id": "W01",
+    "spread_from_favorite_perspective": -7.5,
+    "spread_updated_at": "2026-03-24T00:16:28.498Z"
+  },
+  "S-S16-2": {
+    "scheduled_tip_utc": "2026-03-27T02:05Z",
+    "favorite_team_id": "S02",
+    "spread_from_favorite_perspective": -3.5,
+    "spread_updated_at": "2026-03-24T00:16:28.717Z"
+  },
+  "E-S16-1": {
+    "scheduled_tip_utc": "2026-03-27T23:10Z",
+    "favorite_team_id": "E01",
+    "spread_from_favorite_perspective": -6.5,
+    "spread_updated_at": "2026-03-24T00:16:29.103Z"
+  },
+  "MW-S16-1": {
+    "scheduled_tip_utc": "2026-03-27T23:35Z",
+    "favorite_team_id": "MW01",
+    "spread_from_favorite_perspective": -10.5,
+    "spread_updated_at": "2026-03-24T00:16:29.317Z"
+  },
+  "E-S16-2": {
+    "scheduled_tip_utc": "2026-03-28T01:45Z",
+    "favorite_team_id": "E02",
+    "spread_from_favorite_perspective": -2.5,
+    "spread_updated_at": "2026-03-24T00:16:29.497Z"
+  },
+  "MW-S16-2": {
+    "scheduled_tip_utc": "2026-03-28T02:10Z",
+    "favorite_team_id": "MW02",
+    "spread_from_favorite_perspective": -4.5,
+    "spread_updated_at": "2026-03-24T00:16:29.925Z"
   }
 }
