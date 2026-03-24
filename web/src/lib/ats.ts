@@ -15,7 +15,11 @@ export type PoolOutcome = {
    */
   message: string;
   /**
-   * Regional bracket matchup secondary line: scoreboard winner won by N (no final score sentence).
+   * Regional bracket bold line: spread cover, advances (same controller, no line), or won the game.
+   */
+  bracketHeadline: string;
+  /**
+   * Regional bracket secondary line: winner margin + who controls the winner going forward.
    */
   bracketMarginLine: string;
 };
@@ -138,93 +142,54 @@ export function computePoolOutcome(
   );
 
   const abbrev = (id: string) => teamsById.get(id)?.abbrev ?? id;
+  const samePoolControllerEntering = Boolean(oa && ob && oa === ob);
 
-  if (oa && ob && oa === ob) {
-    const ncaaWinnerId = sa > sb ? ta : tb;
-    const scoreSummary = `${abbrev(ta)} ${sa}, ${abbrev(tb)} ${sb}`;
-    const winMargin = Math.abs(sa - sb);
-    const winWord = winMargin === 1 ? "point" : "points";
-    const wonByPhrase = `${abbrev(ncaaWinnerId)} won by ${winMargin} ${winWord}`;
-    const msg = `${abbrev(ncaaWinnerId)} advances. ${wonByPhrase}. The final score was ${scoreSummary}.`;
-    return {
-      ncaaWinnerId,
-      poolOwnerUserId: oa,
-      coveredTeamId: ncaaWinnerId,
-      favoriteId: ta,
-      dogId: tb,
-      marginFromFavorite: 0,
-      message: msg,
-      bracketMarginLine: `${wonByPhrase}.`,
-    };
-  }
-
+  const ncaaWinnerId = sa > sb ? ta : tb;
   const fav = game.favorite_team_id;
   const spread = game.spread_from_favorite_perspective;
+  const noLine = fav == null || spread == null;
 
-  if (!fav || spread == null) {
-    const ncaaWinnerId = sa > sb ? ta : tb;
-    const winSide = sideForTeam(game, ncaaWinnerId, gm, results);
-    const owner =
-      resolvePoolOwnerEnteringGameSide(
-        game,
-        winSide,
-        games,
-        results,
-        ownershipRows,
-        teamsById
-      ) || ownerOf(ncaaWinnerId, teamToUser);
-    const scoreSummary = `${abbrev(ta)} ${sa}, ${abbrev(tb)} ${sb}`;
-    const winMargin = Math.abs(sa - sb);
-    const winWord = winMargin === 1 ? "point" : "points";
-    const wonByPhrase = `${abbrev(ncaaWinnerId)} won by ${winMargin} ${winWord}`;
-    return {
-      ncaaWinnerId,
-      poolOwnerUserId: owner,
-      coveredTeamId: ncaaWinnerId,
-      favoriteId: fav ?? ta,
-      dogId: fav === ta ? tb : ta,
-      marginFromFavorite: sa - sb,
-      message: `${wonByPhrase}. The final score was ${scoreSummary}.`,
-      bracketMarginLine: `${wonByPhrase}.`,
-    };
-  }
+  const scoreSummary = `${abbrev(ta)} ${sa}, ${abbrev(tb)} ${sb}`;
+  const winMargin = Math.abs(sa - sb);
+  const winWord = winMargin === 1 ? "point" : "points";
+  const wonByPhrase = `${abbrev(ncaaWinnerId)} won by ${winMargin} ${winWord}`;
 
-  const dog = fav === ta ? tb : ta;
-  const favScore = fav === ta ? sa : sb;
-  const dogScore = fav === ta ? sb : sa;
-  const line = Math.abs(spread);
-
-  let ncaaWinnerId: string;
   let coveredTeamId: string;
   let poolOwnerUserId: string;
+  let favoriteId: string;
+  let dogId: string;
+  let marginFromFavorite: number;
+  let message: string;
 
-  if (dogScore > favScore) {
-    ncaaWinnerId = dog;
-    coveredTeamId = dog;
-    poolOwnerUserId =
-      resolvePoolOwnerEnteringGameSide(
-        game,
-        sideForTeam(game, dog, gm, results),
-        games,
-        results,
-        ownershipRows,
-        teamsById
-      ) || ownerOf(dog, teamToUser);
-  } else {
-    ncaaWinnerId = fav;
-    const margin = favScore - dogScore;
-    if (margin > line) {
-      coveredTeamId = fav;
+  if (noLine) {
+    coveredTeamId = ncaaWinnerId;
+    const winSide = sideForTeam(game, ncaaWinnerId, gm, results);
+    if (samePoolControllerEntering) {
+      poolOwnerUserId = oa;
+    } else {
       poolOwnerUserId =
         resolvePoolOwnerEnteringGameSide(
           game,
-          sideForTeam(game, fav, gm, results),
+          winSide,
           games,
           results,
           ownershipRows,
           teamsById
-        ) || ownerOf(fav, teamToUser);
-    } else {
+        ) || ownerOf(ncaaWinnerId, teamToUser);
+    }
+    favoriteId = fav ?? ta;
+    dogId = fav === ta ? tb : ta;
+    marginFromFavorite = sa - sb;
+    message = samePoolControllerEntering
+      ? `${abbrev(ncaaWinnerId)} advances. ${wonByPhrase}. The final score was ${scoreSummary}.`
+      : `${wonByPhrase}. The final score was ${scoreSummary}.`;
+  } else {
+    const dog = fav === ta ? tb : ta;
+    const favScore = fav === ta ? sa : sb;
+    const dogScore = fav === ta ? sb : sa;
+    const line = Math.abs(spread);
+
+    if (dogScore > favScore) {
       coveredTeamId = dog;
       poolOwnerUserId =
         resolvePoolOwnerEnteringGameSide(
@@ -235,30 +200,81 @@ export function computePoolOutcome(
           ownershipRows,
           teamsById
         ) || ownerOf(dog, teamToUser);
+    } else {
+      const margin = favScore - dogScore;
+      if (margin > line) {
+        coveredTeamId = fav;
+        poolOwnerUserId =
+          resolvePoolOwnerEnteringGameSide(
+            game,
+            sideForTeam(game, fav, gm, results),
+            games,
+            results,
+            ownershipRows,
+            teamsById
+          ) || ownerOf(fav, teamToUser);
+      } else {
+        coveredTeamId = dog;
+        poolOwnerUserId =
+          resolvePoolOwnerEnteringGameSide(
+            game,
+            sideForTeam(game, dog, gm, results),
+            games,
+            results,
+            ownershipRows,
+            teamsById
+          ) || ownerOf(dog, teamToUser);
+      }
     }
+
+    if (samePoolControllerEntering) {
+      poolOwnerUserId = oa;
+    }
+
+    marginFromFavorite = fav === ta ? sa - sb : sb - sa;
+    favoriteId = fav;
+    dogId = dog;
+    const opponentId = coveredTeamId === ta ? tb : ta;
+    const coveredWonNcaa = coveredTeamId === ncaaWinnerId;
+    const marginPhrase = coveredWonNcaa
+      ? `${abbrev(coveredTeamId)} won by ${winMargin} ${winWord}`
+      : `${abbrev(coveredTeamId)} lost by ${winMargin} ${winWord}`;
+    const coverLead = `${abbrev(coveredTeamId)} covered the spread vs. ${abbrev(opponentId)}!`;
+    message = `${coverLead} ${marginPhrase}. The final score was ${scoreSummary}.`;
   }
 
-  const marginFromFavorite = fav === ta ? sa - sb : sb - sa;
-  const opponentId = coveredTeamId === ta ? tb : ta;
-  const scoreSummary = `${abbrev(ta)} ${sa}, ${abbrev(tb)} ${sb}`;
-  const winMargin = Math.abs(sa - sb);
-  const winWord = winMargin === 1 ? "point" : "points";
-  const coveredWonNcaa = coveredTeamId === ncaaWinnerId;
-  const marginPhrase = coveredWonNcaa
-    ? `${abbrev(coveredTeamId)} won by ${winMargin} ${winWord}`
-    : `${abbrev(coveredTeamId)} lost by ${winMargin} ${winWord}`;
-  const coverLead = `${abbrev(coveredTeamId)} covered the spread vs. ${abbrev(opponentId)}!`;
-  const msg = `${coverLead} ${marginPhrase}. The final score was ${scoreSummary}.`;
+  const winAbbrev = abbrev(ncaaWinnerId);
+  const ctrlLabel = poolOwnerUserId ? displayName(poolOwnerUserId) : "—";
+
+  let bracketHeadline: string;
+  if (noLine) {
+    bracketHeadline = samePoolControllerEntering
+      ? `${winAbbrev} advances!`
+      : `${winAbbrev} won the game!`;
+  } else {
+    const other = coveredTeamId === ta ? tb : ta;
+    bracketHeadline = `${abbrev(coveredTeamId)} covered the spread vs. ${abbrev(other)}!`;
+  }
+
+  const winnerCovered = coveredTeamId === ncaaWinnerId || noLine;
+  const marginPart = winnerCovered
+    ? `${winAbbrev} won by ${winMargin} ${winWord}`
+    : `${winAbbrev} only won by ${winMargin} ${winWord}`;
+  const controlPart = winnerCovered
+    ? `${ctrlLabel} stays in control of ${winAbbrev}`
+    : `${ctrlLabel} now controls ${winAbbrev}`;
+  const bracketMarginLine = `${marginPart}. ${controlPart}.`;
 
   return {
     ncaaWinnerId,
     poolOwnerUserId,
     coveredTeamId,
-    favoriteId: fav,
-    dogId: dog,
+    favoriteId,
+    dogId,
     marginFromFavorite,
-    message: msg,
-    bracketMarginLine: `${marginPhrase}.`,
+    message,
+    bracketHeadline,
+    bracketMarginLine,
   };
 }
 
