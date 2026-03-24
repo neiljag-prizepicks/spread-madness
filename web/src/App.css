@@ -3866,6 +3866,73 @@
   color: var(--pp-fg-primary);
 }
 
+.group-settings-v2-field-label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pp-fg-tertiary);
+}
+
+.group-settings-v2-prize-field {
+  margin-top: 4px;
+}
+
+.group-settings-v2-prize-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.group-settings-v2-prize-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  padding: 12px 44px 12px 14px;
+  font-size: 1rem;
+  color: var(--pp-fg-primary);
+  background: var(--pp-bg-secondary);
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.group-settings-v2-prize-select:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.group-settings-v2-prize-select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--pp-link, #64b4ff) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.group-settings-v2-prize-select-adorn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pp-fg-secondary);
+  pointer-events: none;
+}
+
+.group-settings-v2-prize-select-svg {
+  display: block;
+}
+
+.group-settings-v2-prize-footnote {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--pp-fg-tertiary);
+}
+
 .group-settings-v2-banner-error {
   margin-top: 0.5rem;
 }

@@ -1,17 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { requireDb } from "../lib/firebase";
+import { anyBracketGameStarted } from "../lib/bracketGameStarted";
 import {
   deleteGroup,
   leaveGroupAsMember,
   removeGroupMember,
   subscribeGroupDocument,
   subscribeGroupMembers,
+  subscribeGroupOwnership,
   updateGroupName,
+  updateGroupPrizeStartRound,
   updatePrivateGroupPassword,
   type GroupDoc,
   type MemberDoc,
 } from "../lib/firestore/groupsApi";
+import { normalizeResultsFileObject } from "../lib/gameResult";
+import {
+  PRIZE_START_ROUND_OPTIONS,
+  parsePrizeStartRound,
+  type PrizeStartRound,
+} from "../lib/prizeStartRound";
+import type { GameResult } from "../types";
 import { writeStoredActiveGroupId } from "../lib/activeGroupStorage";
 import { groupAssignPath } from "../lib/groupPaths";
 
@@ -65,6 +75,40 @@ function IconUserPlus({ className }: { className?: string }) {
       <path
         fill="currentColor"
         d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H5v3H2v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+      />
+    </svg>
+  );
+}
+
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M7 10l5 5 5-5H7z"
+      />
+    </svg>
+  );
+}
+
+function IconLock({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"
       />
     </svg>
   );
@@ -181,6 +225,13 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   const [leaving, setLeaving] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
   const [savingName, setSavingName] = useState(false);
+  const [ownershipRows, setOwnershipRows] = useState<
+    { user_id: string; team_id: string }[]
+  >([]);
+  const [bracketResults, setBracketResults] = useState<
+    Map<string, GameResult>
+  >(() => new Map());
+  const [savingPrizeRound, setSavingPrizeRound] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeGroupMembers(
@@ -210,6 +261,51 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     if (groupDoc?.name != null) setNameDraft(groupDoc.name);
   }, [groupDoc?.name]);
 
+  useEffect(() => {
+    const unsub = subscribeGroupOwnership(
+      db,
+      groupId,
+      setOwnershipRows,
+      (e) => setError(String(e.message))
+    );
+    return () => unsub();
+  }, [db, groupId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/data/results.json")
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((raw) => {
+        if (!cancelled) setBracketResults(normalizeResultsFileObject(raw));
+      })
+      .catch(() => {
+        if (!cancelled) setBracketResults(new Map());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (import.meta.env.VITE_LIVE_POLL !== "1") return;
+    const ms = Number(import.meta.env.VITE_LIVE_POLL_MS ?? 90_000);
+    const tick = async () => {
+      try {
+        const r = await fetch(`/api/live/data?ts=${Date.now()}`);
+        if (!r.ok) return;
+        const data = (await r.json()) as { results?: unknown };
+        if (data.results && typeof data.results === "object") {
+          setBracketResults(normalizeResultsFileObject(data.results));
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    const id = window.setInterval(() => void tick(), ms);
+    void tick();
+    return () => clearInterval(id);
+  }, []);
+
   const adminCount = useMemo(
     () => members.filter((m) => m.data.role === "admin").length,
     [members]
@@ -223,6 +319,24 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     groupDoc != null && groupDoc.memberCount < groupDoc.maxMembers
       ? groupDoc.maxMembers - groupDoc.memberCount
       : 0;
+
+  const teamsAssigned = ownershipRows.length > 0;
+  const tournamentStarted = anyBracketGameStarted(bracketResults);
+  const prizeRoundLocked = teamsAssigned && tournamentStarted;
+  const prizeSelectDisabled = !isAdmin || prizeRoundLocked || savingPrizeRound;
+
+  const handlePrizeStartChange = async (value: PrizeStartRound) => {
+    if (!isAdmin || prizeRoundLocked) return;
+    setError(null);
+    setSavingPrizeRound(true);
+    try {
+      await updateGroupPrizeStartRound(db, groupId, uid, value);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSavingPrizeRound(false);
+    }
+  };
 
   const handleRemove = async (targetUid: string, displayName: string) => {
     if (
@@ -391,6 +505,73 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
           <p className="group-settings-v2-name-readonly">{groupDoc?.name ?? "—"}</p>
         )}
       </section>
+
+      {groupDoc?.visibility === "private" ? (
+        <section
+          className="group-settings-v2-card"
+          aria-labelledby="prizes-h"
+        >
+          <h2 id="prizes-h" className="group-settings-v2-card-title">
+            Prizes
+          </h2>
+          <p className="group-settings-v2-desc">
+            View default prize structure and rules{" "}
+            <Link
+              to="/rules#prize-structure-h"
+              className="group-hub-rules-link"
+            >
+              here
+            </Link>
+            .
+          </p>
+          <div className="group-settings-v2-prize-field">
+            <label
+              className="group-settings-v2-field-label"
+              htmlFor="prize-start-round"
+            >
+              Prizes start in
+            </label>
+            <div className="group-settings-v2-prize-select-wrap">
+              <select
+                id="prize-start-round"
+                className="group-settings-v2-prize-select"
+                value={parsePrizeStartRound(groupDoc?.prizeStartRound)}
+                disabled={prizeSelectDisabled}
+                aria-disabled={prizeSelectDisabled}
+                onChange={(e) =>
+                  void handlePrizeStartChange(e.target.value as PrizeStartRound)
+                }
+              >
+                {PRIZE_START_ROUND_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <span
+                className="group-settings-v2-prize-select-adorn"
+                aria-hidden
+              >
+                {prizeSelectDisabled ? (
+                  <IconLock className="group-settings-v2-prize-select-svg" />
+                ) : (
+                  <IconChevronDown className="group-settings-v2-prize-select-svg" />
+                )}
+              </span>
+            </div>
+            {!isAdmin ? (
+              <p className="group-settings-v2-prize-footnote">
+                Only admins can change this setting.
+              </p>
+            ) : prizeRoundLocked ? (
+              <p className="group-settings-v2-prize-footnote">
+                This can’t be changed after teams are assigned and the
+                tournament has started.
+              </p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {groupDoc?.visibility === "private" ? (
         <section

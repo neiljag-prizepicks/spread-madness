@@ -8,6 +8,10 @@ import {
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import { scrollHorizontallyToElement } from "../lib/regionBracketNavigation";
+import {
+  DEFAULT_PRIZE_START_ROUND,
+  type PrizeStartRound,
+} from "../lib/prizeStartRound";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import {
   BracketBirdseye,
@@ -38,6 +42,8 @@ export type KalshiBracketArenaProps = MProps & {
   groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
   /** Private group not full: show invite lines when teams are already assigned (no unassigned hint). */
   bracketPrivateInvite?: { joinCode: string; password: string } | null;
+  /** Private pool: where overview prize ($) hints start; mock/public default Elite 8. */
+  prizeStartRound?: PrizeStartRound;
 };
 
 function sortByOrder(gs: BracketGame[]) {
@@ -87,6 +93,7 @@ export function KalshiBracketArena({
   onFocusGameConsumed,
   groupTeamsUnassigned = null,
   bracketPrivateInvite = null,
+  prizeStartRound = DEFAULT_PRIZE_START_ROUND,
 }: KalshiBracketArenaProps) {
   const isMobile = useMediaQuery("(max-width: 699px)");
   const [desktopPane, setDesktopPane] = useState<BracketPane>("overview");
@@ -209,6 +216,7 @@ export function KalshiBracketArena({
         onFocusGameConsumed={onFocusGameConsumed}
         groupTeamsUnassigned={groupTeamsUnassigned}
         bracketPrivateInvite={bracketPrivateInvite}
+        prizeStartRound={prizeStartRound}
       />
     );
   }
@@ -242,6 +250,7 @@ export function KalshiBracketArena({
     onOpenZone: openZoneFromOverview,
     groupTeamsUnassigned,
     bracketPrivateInvite,
+    prizeStartRound,
     variant: "desktop" as const,
   };
 

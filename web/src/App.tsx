@@ -65,6 +65,10 @@ import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
 import { normalizeUserRow } from "./lib/normalizeUserRow";
+import {
+  DEFAULT_PRIZE_START_ROUND,
+  parsePrizeStartRound,
+} from "./lib/prizeStartRound";
 import { POOL_RULES_PAGE_TITLE } from "./content/poolRulesCopy";
 
 const ACCOUNT_SETTINGS_PAGE_TITLE = "Account settings";
@@ -771,6 +775,13 @@ export default function App() {
     };
   }, [firebaseGroupMode, activeGroupDoc]);
 
+  const bracketPrizeStartRound = useMemo(() => {
+    if (firebaseGroupMode && activeGroupDoc?.visibility === "private") {
+      return parsePrizeStartRound(activeGroupDoc.prizeStartRound);
+    }
+    return DEFAULT_PRIZE_START_ROUND;
+  }, [firebaseGroupMode, activeGroupDoc]);
+
   useEffect(() => {
     if (!firebaseGroupMode || !userGroupsLoaded || userGroupRows.length > 0)
       return;
@@ -929,7 +940,9 @@ export default function App() {
     userGroupRows,
   ]);
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
+  const googleClientId = String(
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ""
+  ).trim();
 
   const onGoogleSuccess = async (cred: CredentialResponse) => {
     if (!cred.credential) return;
@@ -1105,6 +1118,7 @@ export default function App() {
     onFocusGameConsumed: () => setBracketFocusGameId(null),
     groupTeamsUnassigned,
     bracketPrivateInvite: groupTeamsUnassigned ? null : bracketPrivateInvite,
+    prizeStartRound: bracketPrizeStartRound,
   } satisfies KalshiBracketArenaProps;
 
   const bracketNavPath = groupNavBase
