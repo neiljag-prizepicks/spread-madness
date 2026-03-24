@@ -30,6 +30,10 @@ import {
   computeOverviewSlotMetrics,
   type BirdseyeOverviewMetrics,
 } from "../lib/birdseyeOverviewLayout";
+import {
+  DEFAULT_PRIZE_START_ROUND,
+  type PrizeStartRound,
+} from "../lib/prizeStartRound";
 
 const DESKTOP_OVERVIEW_MIN_TREE_H = 560;
 /** Matches `verticalGapPx` on East `MiniRegionTree` (used in regional slot-height fallback). */
@@ -166,16 +170,20 @@ type Base = {
   bracketPrivateInvite?: { joinCode: string; password: string } | null;
   /** Desktop: larger cells + wider round spacing (same UI as mobile). */
   variant?: "compact" | "desktop";
+  /** Private group setting: first round that counts for prize hints on overview (default Elite 8). */
+  prizeStartRound?: PrizeStartRound;
 };
 
 function OverviewSlot({
   game,
   visual,
   desktopCopy = null,
+  prizeStartRound = DEFAULT_PRIZE_START_ROUND,
 }: {
   game: BracketGame;
   visual: OverviewSlotVisual;
   desktopCopy?: OverviewDesktopCellCopy | null;
+  prizeStartRound?: PrizeStartRound;
 }) {
   const { status, initials, livePair, liveViewerInvolved, prizeMarker } = visual;
   const hasDesktopRich = Boolean(
@@ -195,7 +203,7 @@ function OverviewSlot({
       : null;
   const label =
     prizeMarker && status === "pending" && !hasDesktopRich
-      ? overviewPrizeMarkerLabel(game)
+      ? overviewPrizeMarkerLabel(game, prizeStartRound)
       : initials !== ""
         ? `${game.id}: ${initials}${status === "live" ? " (live)" : ""}`
         : `${game.id}${status === "pending" ? " (pending)" : ""}`;
@@ -272,6 +280,7 @@ function MiniRegionTree({
   onLayoutMetrics?: (m: BirdseyeOverviewMetrics) => void;
   variant?: "compact" | "desktop";
 } & Omit<Base, "onOpenZone">) {
+  const prizeStartRound = ctx.prizeStartRound ?? DEFAULT_PRIZE_START_ROUND;
   /** R64 → R32 → S16 → E8 for all regions so fork lines match real feeder rounds. */
   const columns = regionGamesByColumn(region, ctx.allGames);
   const dn = (uid: string) => ctx.usersById.get(uid)?.display_name ?? uid;
@@ -293,9 +302,11 @@ function MiniRegionTree({
       naturalDimensions={naturalDims}
       minTreeHeightPx={isDesktop ? DESKTOP_OVERVIEW_MIN_TREE_H : undefined}
       verticalGapPx={isDesktop ? 4 : 0}
+      prizeStartRound={prizeStartRound}
       renderSlot={(g) => (
         <OverviewSlot
           game={g}
+          prizeStartRound={prizeStartRound}
           desktopCopy={
             isDesktop
               ? overviewDesktopCellCopy(
@@ -318,7 +329,8 @@ function MiniRegionTree({
             ctx.ownershipRows,
             ctx.teamsById,
             ctx.usersById,
-            dn
+            dn,
+            prizeStartRound
           )}
         />
       )}
@@ -340,6 +352,7 @@ function CenterMini({
   eastLayoutMetrics: BirdseyeOverviewMetrics | null;
   variant?: "compact" | "desktop";
 } & Omit<Base, "onOpenZone">) {
+  const prizeStartRound = ctx.prizeStartRound ?? DEFAULT_PRIZE_START_ROUND;
   const hostRef = useRef<HTMLDivElement>(null);
   const [hostW, setHostW] = useState(0);
   const [hostH, setHostH] = useState(0);
@@ -463,6 +476,7 @@ function CenterMini({
               >
                 <OverviewSlot
                   game={game}
+                  prizeStartRound={prizeStartRound}
                   desktopCopy={
                     isDesktop
                       ? overviewDesktopCellCopy(
@@ -485,14 +499,18 @@ function CenterMini({
                     ctx.ownershipRows,
                     ctx.teamsById,
                     ctx.usersById,
-                    dn
+                    dn,
+                    prizeStartRound
                   )}
                 />
               </div>
-              {isPrizePayoutRoundOverview(game) ? (
+              {isPrizePayoutRoundOverview(game, prizeStartRound) ? (
                 <span
                   className="birdseye-prize-dollar-below"
-                  aria-label={prizeDollarBelowAriaLabel(game)}
+                  aria-label={prizeDollarBelowAriaLabel(
+                    game,
+                    prizeStartRound
+                  )}
                 >
                   $
                 </span>
@@ -521,8 +539,11 @@ export function BracketBirdseye({
   groupTeamsUnassigned = null,
   bracketPrivateInvite = null,
   variant = "compact",
+  prizeStartRound: prizeStartRoundProp,
   ...ctx
 }: Base) {
+  const prizeStartRound = prizeStartRoundProp ?? DEFAULT_PRIZE_START_ROUND;
+  const ctxWithPrize = { ...ctx, prizeStartRound };
   const { allGames } = ctx;
   const ff1 = allGames.find((g) => g.id === "FF-1");
   const ff2 = allGames.find((g) => g.id === "FF-2");
@@ -549,8 +570,9 @@ export function BracketBirdseye({
             <BracketPrivateInviteLines {...bracketPrivateInvite} />
           ) : null}
           <p className="birdseye-hint">
-            <span className="birdseye-prize-dollar-below">$</span> = winning this
-            game qualifies you for a prize. Need a rules refresher?{" "}
+            <span className="birdseye-prize-dollar-below">$</span> = this game is on
+            your pool’s prize path (including the matchup you must win to reach the
+            first prize round). Need a rules refresher?{" "}
             <Link to="/rules#game-rules-h" className="group-hub-rules-link">
               Check here
             </Link>
@@ -572,7 +594,7 @@ export function BracketBirdseye({
             region="East"
             onLayoutMetrics={commitEastLayoutMetrics}
             variant={variant}
-            {...ctx}
+            {...ctxWithPrize}
           />
         </button>
         <button
@@ -581,7 +603,7 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("West")}
         >
           <span className="birdseye-zone-label">West</span>
-          <MiniRegionTree region="West" variant={variant} {...ctx} />
+          <MiniRegionTree region="West" variant={variant} {...ctxWithPrize} />
         </button>
         <button
           type="button"
@@ -589,7 +611,7 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("South")}
         >
           <span className="birdseye-zone-label">South</span>
-          <MiniRegionTree region="South" variant={variant} {...ctx} />
+          <MiniRegionTree region="South" variant={variant} {...ctxWithPrize} />
         </button>
         <button
           type="button"
@@ -597,7 +619,7 @@ export function BracketBirdseye({
           onClick={() => onOpenZone("Midwest")}
         >
           <span className="birdseye-zone-label">Midwest</span>
-          <MiniRegionTree region="Midwest" variant={variant} {...ctx} />
+          <MiniRegionTree region="Midwest" variant={variant} {...ctxWithPrize} />
         </button>
         <button
           type="button"
@@ -611,7 +633,7 @@ export function BracketBirdseye({
             ncg={ncg}
             eastLayoutMetrics={eastLayoutMetrics}
             variant={variant}
-            {...ctx}
+            {...ctxWithPrize}
           />
         </button>
       </div>

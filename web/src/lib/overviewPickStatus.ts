@@ -6,6 +6,16 @@ import {
 import { isPoolSettledForGame } from "./gameResult";
 import type { OwnershipRow } from "./ownershipMap";
 import { buildTeamToUserId } from "./ownershipMap";
+import {
+  DEFAULT_PRIZE_START_ROUND,
+  advanceTargetPhrase,
+  bracketRoundShortLabel,
+  type PrizeStartRound,
+  isPrizeMilestoneFromStartRound,
+  isPrizePathFeederRound,
+  isPrizePayoutRoundForStart,
+  prizeStartRoundLabel,
+} from "./prizeStartRound";
 import { teamAbbrev } from "./teamLabels";
 import { userInitialsFromUser } from "./userInitials";
 import { gameMap, resolveTeamId } from "./resolveTeams";
@@ -29,51 +39,67 @@ export type OverviewSlotVisual = {
   prizeMarker?: boolean;
 };
 
-const PRIZE_MILESTONE_ROUNDS: ReadonlySet<BracketGame["round"]> = new Set([
-  "sweet_16",
-  "elite_8",
-  "final_four",
-  "championship",
-]);
-
-/** Sweet 16 through championship — games on the prize-payout path in overview. */
-export function isPrizePayoutRoundOverview(game: BracketGame): boolean {
-  return PRIZE_MILESTONE_ROUNDS.has(game.round);
+/** Games on the prize-payout path in overview for this pool setting. */
+export function isPrizePayoutRoundOverview(
+  game: BracketGame,
+  prizeStartRound: PrizeStartRound = DEFAULT_PRIZE_START_ROUND
+): boolean {
+  return isPrizePayoutRoundForStart(game.round, prizeStartRound);
 }
 
-/** aria-label for the $ rendered below prize-round overview cells. */
-export function prizeDollarBelowAriaLabel(game: BracketGame): string {
-  if (game.round === "sweet_16") {
-    return `${game.id}: Sweet 16 — winner advances to Elite 8 (prize payouts)`;
+/** aria-label for the $ rendered below overview cells on the pool’s prize path. */
+export function prizeDollarBelowAriaLabel(
+  game: BracketGame,
+  prizeStartRound: PrizeStartRound = DEFAULT_PRIZE_START_ROUND
+): string {
+  if (!isPrizePayoutRoundForStart(game.round, prizeStartRound)) {
+    return `${game.id}: Bracket game`;
   }
-  if (game.round === "elite_8") {
-    return `${game.id}: Elite Eight — prize payout round`;
+  const r = bracketRoundShortLabel(game.round);
+  if (
+    isPrizePathFeederRound(game.round, prizeStartRound) &&
+    !isPrizeMilestoneFromStartRound(game.round, prizeStartRound)
+  ) {
+    const to = advanceTargetPhrase(prizeStartRound);
+    const at = prizeStartRoundLabel(prizeStartRound);
+    return `${game.id}: ${r} — win to advance to ${to}; pool prizes start at ${at}`;
   }
-  if (game.round === "final_four") {
-    return `${game.id}: Final Four — prize payout round`;
+  if (prizeStartRound === "champion_winner_take_all") {
+    return `${game.id}: ${r} — winner-take-all pool prize path`;
   }
-  return `${game.id}: National championship — prize payout round`;
+  return `${game.id}: ${r} — pool prize path`;
 }
 
 /** Accessible name when the grey $ is shown on a pending overview cell. */
-export function overviewPrizeMarkerLabel(game: BracketGame): string {
-  if (game.round === "sweet_16") {
-    return `${game.id}: Sweet 16 winner advances to Elite 8 — prize rounds (not started)`;
+export function overviewPrizeMarkerLabel(
+  game: BracketGame,
+  prizeStartRound: PrizeStartRound = DEFAULT_PRIZE_START_ROUND
+): string {
+  if (!isPrizePayoutRoundForStart(game.round, prizeStartRound)) {
+    return `${game.id}: Bracket cell (not started)`;
   }
-  return `${game.id}: Prize payouts start here (not started)`;
+  if (
+    isPrizePathFeederRound(game.round, prizeStartRound) &&
+    !isPrizeMilestoneFromStartRound(game.round, prizeStartRound)
+  ) {
+    const to = advanceTargetPhrase(prizeStartRound);
+    const at = prizeStartRoundLabel(prizeStartRound);
+    return `${game.id}: Win to reach ${to} — pool prizes start at ${at} (not started)`;
+  }
+  return `${game.id}: ${bracketRoundShortLabel(game.round)} — pool prize path (not started)`;
 }
 
 /**
- * True when this overview cell is on the path to prize rounds (Sweet 16 feeds Elite 8)
- * or is a direct prize milestone, and the game has not started (or teams not yet resolved).
- * Used for a grey "$" hint in birdseye.
+ * True when this cell is on the pool’s prize path (feeder or milestone rounds),
+ * and the game has not started (or teams not yet resolved).
  */
 export function prizeMilestoneMarker(
   game: BracketGame,
   gm: Map<string, BracketGame>,
-  results: Map<string, GameResult>
+  results: Map<string, GameResult>,
+  prizeStartRound: PrizeStartRound = DEFAULT_PRIZE_START_ROUND
 ): boolean {
-  if (!PRIZE_MILESTONE_ROUNDS.has(game.round)) return false;
+  if (!isPrizePayoutRoundForStart(game.round, prizeStartRound)) return false;
   const ta = resolveTeamId(game, "side_a", gm, results, new Set());
   const tb = resolveTeamId(game, "side_b", gm, results, new Set());
   if (!ta || !tb) return true;
@@ -159,7 +185,8 @@ export function overviewSlotVisual(
   ownershipRows: OwnershipRow[],
   teamsById: Map<string, Team>,
   usersById: Map<string, User>,
-  displayName: (userId: string) => string
+  displayName: (userId: string) => string,
+  prizeStartRound: PrizeStartRound = DEFAULT_PRIZE_START_ROUND
 ): OverviewSlotVisual {
   const gm = gameMap(allGames);
   const ta = resolveTeamId(game, "side_a", gm, results, new Set());
@@ -168,7 +195,7 @@ export function overviewSlotVisual(
     return {
       status: "pending",
       initials: "",
-      prizeMarker: prizeMilestoneMarker(game, gm, results),
+      prizeMarker: prizeMilestoneMarker(game, gm, results, prizeStartRound),
     };
   }
 
@@ -207,7 +234,7 @@ export function overviewSlotVisual(
     return {
       status: "pending",
       initials: "",
-      prizeMarker: prizeMilestoneMarker(game, gm, results),
+      prizeMarker: prizeMilestoneMarker(game, gm, results, prizeStartRound),
     };
   }
 

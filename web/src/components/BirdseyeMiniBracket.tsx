@@ -12,6 +12,10 @@ import {
   prizeDollarBelowAriaLabel,
 } from "../lib/overviewPickStatus";
 import {
+  DEFAULT_PRIZE_START_ROUND,
+  type PrizeStartRound,
+} from "../lib/prizeStartRound";
+import {
   BIRDSEYE_DESKTOP_LANDSCAPE_HEIGHT_RATIO,
   BIRDSEYE_DESKTOP_PAD_X,
   computeOverviewSlotMetrics,
@@ -78,12 +82,14 @@ function MiniColumn({
   slotWidthPx,
   slotHeightPx,
   renderSlot,
+  prizeStartRound,
 }: {
   games: BracketGame[];
   heightPx: number;
   slotWidthPx: number;
   slotHeightPx: number;
   renderSlot: (game: BracketGame) => ReactNode;
+  prizeStartRound: PrizeStartRound;
 }) {
   const n = games.length;
   if (n === 0) {
@@ -122,10 +128,10 @@ function MiniColumn({
             >
               {renderSlot(g)}
             </div>
-            {isPrizePayoutRoundOverview(g) ? (
+            {isPrizePayoutRoundOverview(g, prizeStartRound) ? (
               <span
                 className="birdseye-prize-dollar-below"
-                aria-label={prizeDollarBelowAriaLabel(g)}
+                aria-label={prizeDollarBelowAriaLabel(g, prizeStartRound)}
               >
                 $
               </span>
@@ -141,6 +147,7 @@ function MiniColumn({
 type Props = {
   columns: BracketGame[][];
   renderSlot: (game: BracketGame) => ReactNode;
+  prizeStartRound?: PrizeStartRound;
   /** West/Midwest: outer round on the right, finishes toward center (Final Four). */
   progressDirection?: "ltr" | "rtl";
   /** When set (e.g. East region), reports slot size so Final Four can match. */
@@ -159,6 +166,7 @@ type Props = {
 export function BirdseyeMiniBracket({
   columns,
   renderSlot,
+  prizeStartRound = DEFAULT_PRIZE_START_ROUND,
   progressDirection = "ltr",
   onLayoutMetrics,
   naturalDimensions,
@@ -280,6 +288,7 @@ export function BirdseyeMiniBracket({
                 slotWidthPx={slotWidthPx}
                 slotHeightPx={slotHeightPx}
                 renderSlot={renderSlot}
+                prizeStartRound={prizeStartRound}
               />
               {showBridge ? (
                 <div

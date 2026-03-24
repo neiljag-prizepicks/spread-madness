@@ -88,7 +88,7 @@ export const PRIZE_RULES_SECTIONS: PoolRulesSection[] = [
   {
     paragraphs: [
       "Games can be either free-to-play or played with a buy-in. In buy-in games, the total prize pool is split across key tournament milestones—so you can win multiple times as your team advances.",
-      "**How payouts work:**",
+      "**Default payouts work as follows:**",
     ],
     bullets: [
       "**Elite 8 (8 teams):** 25% of the pool (split evenly)",

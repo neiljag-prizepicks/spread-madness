@@ -17,6 +17,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import type { GroupMemberCap } from "../groupConstants";
+import type { PrizeStartRound } from "../prizeStartRound";
 
 export type GroupVisibility = "public" | "private";
 
@@ -31,6 +32,11 @@ export type GroupDoc = {
   createdAt: Timestamp;
   memberCount: number;
   maxMembers: number;
+  /**
+   * Private groups: first tournament round where prize payouts apply in the overview.
+   * Default elite_8 when omitted. Ignored for public groups in UI.
+   */
+  prizeStartRound?: PrizeStartRound;
   /**
    * When true, a fair random assignment is committed once the group is full and
    * ownership is still empty (see tryCommitAutoAssignWhenFull). Default false / omitted.
@@ -120,6 +126,7 @@ export async function createGroup(
       createdAt: now,
       memberCount: 1,
       maxMembers: params.memberCap,
+      prizeStartRound: "elite_8",
       autoAssignWhenFull: false,
       ownershipLocked: false,
     } satisfies GroupDoc);
@@ -507,6 +514,27 @@ export async function updateGroupAutoAssignWhenFull(
   const gSnap = await getDoc(gRef);
   if (!gSnap.exists()) throw new Error("Group not found.");
   await updateDoc(gRef, { autoAssignWhenFull: enabled });
+}
+
+export async function updateGroupPrizeStartRound(
+  firestore: Firestore,
+  groupId: string,
+  adminUid: string,
+  value: PrizeStartRound
+): Promise<void> {
+  const adminRef = doc(firestore, "groups", groupId, "members", adminUid);
+  const adminSnap = await getDoc(adminRef);
+  if (!adminSnap.exists() || (adminSnap.data() as MemberDoc).role !== "admin") {
+    throw new Error("Only group admins can change prize settings.");
+  }
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+  const g = gSnap.data() as GroupDoc;
+  if (g.visibility !== "private") {
+    throw new Error("Prize start round applies to private groups only.");
+  }
+  await updateDoc(gRef, { prizeStartRound: value });
 }
 
 export async function unlockGroupOwnershipForEditing(

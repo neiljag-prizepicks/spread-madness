@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import type { OwnershipRow } from "../lib/ownershipMap";
 import {
+  DEFAULT_PRIZE_START_ROUND,
+  type PrizeStartRound,
+} from "../lib/prizeStartRound";
+import {
   BracketBirdseye,
   BracketPrivateInviteLines,
   type BracketPane,
@@ -62,6 +66,7 @@ type Props = MProps & {
   onFocusGameConsumed?: () => void;
   groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
   bracketPrivateInvite?: { joinCode: string; password: string } | null;
+  prizeStartRound?: PrizeStartRound;
 };
 
 export function MobileBracketExperience({
@@ -76,6 +81,7 @@ export function MobileBracketExperience({
   onFocusGameConsumed,
   groupTeamsUnassigned = null,
   bracketPrivateInvite = null,
+  prizeStartRound = DEFAULT_PRIZE_START_ROUND,
 }: Props) {
   const [pane, setPane] = useState<BracketPane>("overview");
 
@@ -154,6 +160,7 @@ export function MobileBracketExperience({
     onOpenZone: openZone,
     groupTeamsUnassigned,
     bracketPrivateInvite,
+    prizeStartRound,
   };
 
   if (pane === "overview") {
