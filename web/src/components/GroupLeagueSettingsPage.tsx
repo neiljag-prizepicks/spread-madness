@@ -132,6 +132,23 @@ function IconTrash({ className }: { className?: string }) {
   );
 }
 
+function IconPlus({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"
+      />
+    </svg>
+  );
+}
+
 function CopyClipboardIcon() {
   return (
     <svg
@@ -321,6 +338,11 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
       ? groupDoc.maxMembers - groupDoc.memberCount
       : 0;
 
+  const inviteSlotCount =
+    groupDoc != null && groupDoc.maxMembers > 0
+      ? Math.max(0, groupDoc.maxMembers - members.length)
+      : 0;
+
   const teamsAssigned = ownershipRows.length > 0;
   const tournamentStarted = anyBracketGameStarted(bracketResults);
   const prizeRoundLocked = teamsAssigned && tournamentStarted;
@@ -452,7 +474,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   }
 
   return (
-    <div className="group-settings group-settings-v2">
+    <div className="group-settings group-settings-v2 group-settings-v2--figma-handoff">
       <header className="group-settings-v2-header">
         <h1 className="group-settings-v2-title">Group Settings</h1>
       </header>
@@ -467,40 +489,50 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
         className="group-settings-v2-card"
         aria-labelledby="group-name-h"
       >
-        <h2 id="group-name-h" className="group-settings-v2-card-title">
-          Group name
+        <h2 id="group-name-h" className="group-settings-v2-section-heading">
+          Group Name
         </h2>
         {isAdmin ? (
-          <div className="group-settings-v2-name-row">
-            <input
-              id="group-settings-name"
-              className="group-hub-input group-settings-v2-name-input"
-              value={nameDraft}
-              onChange={(e) => setNameDraft(e.target.value)}
-              maxLength={80}
-              placeholder="Group name"
-              aria-label="Group name"
-            />
-            <button
-              type="button"
-              className="group-settings-v2-icon-btn"
-              aria-label="Focus group name field"
-              onClick={() =>
-                document.getElementById("group-settings-name")?.focus()
-              }
+          <div className="group-settings-v2-name-block">
+            <label
+              className="group-settings-v2-field-label-lg"
+              htmlFor="group-settings-name"
             >
-              <IconPencil />
-            </button>
-            {nameDirty ? (
-              <button
-                type="button"
-                className="btn-primary group-settings-v2-save-name"
-                disabled={savingName || !nameDraft.trim()}
-                onClick={() => void handleSaveName()}
-              >
-                {savingName ? "Saving…" : "Save name"}
-              </button>
-            ) : null}
+              Group Name
+            </label>
+            <div className="group-settings-v2-name-row group-settings-v2-name-row--figma">
+              <div className="group-settings-v2-input-shell">
+                <input
+                  id="group-settings-name"
+                  className="group-settings-v2-input-shell-field"
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  maxLength={80}
+                  placeholder="Group name"
+                  aria-label="Group name"
+                />
+                <button
+                  type="button"
+                  className="group-settings-v2-input-shell-btn"
+                  aria-label="Focus group name field"
+                  onClick={() =>
+                    document.getElementById("group-settings-name")?.focus()
+                  }
+                >
+                  <IconPencil />
+                </button>
+              </div>
+              {nameDirty ? (
+                <button
+                  type="button"
+                  className="btn-primary group-settings-v2-save-name"
+                  disabled={savingName || !nameDraft.trim()}
+                  onClick={() => void handleSaveName()}
+                >
+                  {savingName ? "Saving…" : "Save name"}
+                </button>
+              ) : null}
+            </div>
           </div>
         ) : (
           <p className="group-settings-v2-name-readonly">{groupDoc?.name ?? "—"}</p>
@@ -512,14 +544,14 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
           className="group-settings-v2-card"
           aria-labelledby="prizes-h"
         >
-          <h2 id="prizes-h" className="group-settings-v2-card-title">
+          <h2 id="prizes-h" className="group-settings-v2-section-heading">
             Prizes
           </h2>
-          <p className="group-settings-v2-desc">
+          <p className="group-settings-v2-desc group-settings-v2-desc--tight">
             View default prize structure and rules{" "}
             <Link
               to="/rules#prize-structure-h"
-              className="group-hub-rules-link"
+              className="group-settings-v2-inline-link"
             >
               here
             </Link>
@@ -527,7 +559,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
           </p>
           <div className="group-settings-v2-prize-field">
             <label
-              className="group-settings-v2-field-label"
+              className="group-settings-v2-kicker-label"
               htmlFor="prize-start-round"
             >
               Prizes start in
@@ -579,7 +611,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
           className="group-settings-v2-card"
           aria-labelledby="private-invite-h"
         >
-          <h2 id="private-invite-h" className="group-settings-v2-card-title">
+          <h2 id="private-invite-h" className="group-settings-v2-section-heading">
             Join code &amp; password
           </h2>
           <p className="group-settings-v2-desc">
@@ -634,43 +666,54 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
         </section>
       ) : null}
 
-      {isAdmin && waitingCount > 0 ? (
-        <div
-          className="group-settings-v2-alert"
-          role="status"
-          aria-live="polite"
-        >
-          <IconWarning className="group-settings-v2-alert-icon" />
-          <p>
-            Waiting for {waitingCount} more member
-            {waitingCount === 1 ? "" : "s"} before assignment can be made.
-          </p>
-        </div>
-      ) : null}
-
       {isAdmin ? (
         <section
-          className="group-settings-v2-card"
-          aria-labelledby="manual-team-assignment-h"
+          className="group-settings-v2-card group-settings-v2-card--assign-teams"
+          aria-labelledby="assign-teams-card-h"
         >
           <h2
-            id="manual-team-assignment-h"
-            className="group-settings-v2-card-title"
+            id="assign-teams-card-h"
+            className="group-settings-v2-section-heading"
           >
-            Manual team assignment
-          </h2>
-          <p className="group-settings-v2-desc">
-            Manually draft or assign tournament teams to group members. After
-            you save, assignments lock until you unlock from the Assign teams
-            page.
-          </p>
-          <Link
-            className="btn-primary group-settings-v2-assign-btn"
-            to={groupAssignPath(groupId)}
-          >
-            <IconUserPlus className="group-settings-v2-assign-btn-icon" />
             Assign teams
-          </Link>
+          </h2>
+          {waitingCount > 0 ? (
+            <div
+              className="group-settings-v2-alert group-settings-v2-alert--amber"
+              role="status"
+              aria-live="polite"
+            >
+              <IconWarning className="group-settings-v2-alert-icon" />
+              <p>
+                Waiting for {waitingCount} more member
+                {waitingCount === 1 ? "" : "s"} before assignment can be made
+              </p>
+            </div>
+          ) : null}
+          <div className="group-settings-v2-team-assign-block">
+            <p className="group-settings-v2-subheading" id="team-assignment-h">
+              Team assignment
+            </p>
+            <div
+              className="group-settings-v2-assign-inline"
+              aria-labelledby="team-assignment-h"
+            >
+              <p className="group-settings-v2-assign-inline-desc">
+                Assign teams to group members.
+              </p>
+              <Link
+                className="btn-primary group-settings-v2-assign-btn group-settings-v2-assign-btn--pill"
+                to={groupAssignPath(groupId)}
+              >
+                <IconUserPlus className="group-settings-v2-assign-btn-icon" />
+                Assign teams
+              </Link>
+            </div>
+            <p className="group-settings-v2-assign-footnote">
+              After you save on the Assign teams page, assignments lock until you
+              unlock there.
+            </p>
+          </div>
         </section>
       ) : null}
 
@@ -678,38 +721,37 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
         className="group-settings-v2-card"
         aria-labelledby="members-h"
       >
-        <h2 id="members-h" className="group-settings-v2-card-title">
+        <h2 id="members-h" className="group-settings-v2-section-heading">
           Members
         </h2>
-        <p className="group-settings-v2-desc">
+        <p className="group-settings-v2-desc group-settings-v2-desc--after-heading">
           {isAdmin
             ? "Remove a player only if they have no teams assigned, or reassign their teams first in Assign teams."
             : "People in this pool. Only admins can remove members."}
         </p>
-        {members.length === 0 ? (
+        {members.length === 0 && inviteSlotCount === 0 ? (
           <p className="group-hub-muted">No members loaded.</p>
         ) : (
-          <ul className="group-settings-member-list group-settings-v2-member-list">
+          <ul className="group-settings-v2-member-slots" role="list">
             {members.map((m) => {
               const isSelf = m.uid === uid;
               const soleAdmin = m.data.role === "admin" && adminCount <= 1;
               const disableRemove = isSelf || soleAdmin;
               return (
-                <li key={m.uid} className="group-settings-member-row">
-                  <div>
-                    <span className="group-settings-member-name">
+                <li key={m.uid} className="group-settings-v2-member-slot">
+                  <div className="group-settings-v2-member-slot-main">
+                    <span className="group-settings-v2-member-slot-name">
                       {m.data.displayName}
                       {isSelf ? " (You)" : ""}
                     </span>
-                    <span className="group-settings-member-role">
-                      {" "}
-                      · {m.data.role === "admin" ? "Admin" : "Member"}
+                    <span className="group-settings-v2-member-slot-role">
+                      {m.data.role === "admin" ? "Admin" : "Member"}
                     </span>
                   </div>
                   {isAdmin ? (
                     <button
                       type="button"
-                      className="btn-ghost btn-sm group-settings-remove group-settings-v2-remove"
+                      className={`group-settings-v2-slot-remove${disableRemove || removingId === m.uid ? " group-settings-v2-slot-remove--disabled" : ""}`}
                       disabled={disableRemove || removingId === m.uid}
                       onClick={() => void handleRemove(m.uid, m.data.displayName)}
                       title={
@@ -726,6 +768,25 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
                 </li>
               );
             })}
+            {Array.from({ length: inviteSlotCount }, (_, j) => {
+              const inviteN = members.length + j + 1;
+              return (
+                <li
+                  key={`invite-slot-${j}`}
+                  className="group-settings-v2-member-slot group-settings-v2-member-slot--invite"
+                >
+                  <span className="group-settings-v2-member-slot-invite-label">
+                    Invite Player {inviteN}
+                  </span>
+                  <span
+                    className="group-settings-v2-member-slot-invite-icon"
+                    aria-hidden
+                  >
+                    <IconPlus />
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -735,7 +796,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
           className="group-settings-v2-card group-settings-danger"
           aria-labelledby="leave-group-member-h"
         >
-          <h2 id="leave-group-member-h" className="group-settings-v2-card-title">
+          <h2 id="leave-group-member-h" className="group-settings-v2-section-heading">
             Leave group
           </h2>
           <p className="group-settings-v2-desc">
@@ -756,25 +817,27 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
 
       {isAdmin ? (
         <section
-          className="group-settings-v2-card group-settings-danger"
+          className="group-settings-v2-card group-settings-danger group-settings-v2-card--delete-inline"
           aria-labelledby="delete-group-h"
         >
-          <h2 id="delete-group-h" className="group-settings-v2-card-title">
+          <h2 id="delete-group-h" className="group-settings-v2-section-heading">
             Delete group
           </h2>
-          <p className="group-settings-v2-desc">
-            Permanently delete this group for everyone. This removes member links
-            and team ownership for this group.
-          </p>
-          <button
-            type="button"
-            className="group-settings-delete-btn group-settings-v2-delete-btn"
-            disabled={deleting}
-            onClick={() => void handleDeleteGroup()}
-          >
-            <IconTrash className="group-settings-v2-delete-icon" />
-            {deleting ? "Deleting…" : "Delete group"}
-          </button>
+          <div className="group-settings-v2-delete-row">
+            <p className="group-settings-v2-desc group-settings-v2-desc--flush">
+              Permanently delete this group for everyone. This removes member
+              links and team ownership for this group.
+            </p>
+            <button
+              type="button"
+              className="group-settings-delete-btn group-settings-v2-delete-btn group-settings-v2-delete-btn--pill"
+              disabled={deleting}
+              onClick={() => void handleDeleteGroup()}
+            >
+              <IconTrash className="group-settings-v2-delete-icon" />
+              {deleting ? "Deleting…" : "Delete group"}
+            </button>
+          </div>
         </section>
       ) : null}
     </div>
