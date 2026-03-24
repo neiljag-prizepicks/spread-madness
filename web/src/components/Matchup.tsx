@@ -6,7 +6,6 @@ import {
   getOwnerUserIdForSide,
 } from "../lib/ats";
 import type { OwnershipRow } from "../lib/ownershipMap";
-import { buildTeamToUserId } from "../lib/ownershipMap";
 import { getMatchupTooltipRegion } from "../lib/matchupTooltip";
 import {
   feederSourceGameIdForSide,
@@ -210,26 +209,7 @@ export function Matchup({
       )
     : null;
 
-  /** Bold line: covered spread (ATS), or advances / won game for edge cases. */
-  const outcomeHeadline =
-    final && outcome && ta && tb
-      ? (() => {
-          const teamToUser = buildTeamToUserId(ownershipRows);
-          const oa = teamToUser.get(ta);
-          const ob = teamToUser.get(tb);
-          if (oa && ob && oa === ob) {
-            return `${teamAbbrev(outcome.ncaaWinnerId, teamsById)} advances!`;
-          }
-          if (noLine) {
-            return `${teamAbbrev(outcome.ncaaWinnerId, teamsById)} won the game!`;
-          }
-          const covered = outcome.coveredTeamId;
-          const other = covered === ta ? tb : ta;
-          return `${teamAbbrev(covered, teamsById)} covered the spread vs. ${teamAbbrev(other, teamsById)}!`;
-        })()
-      : null;
-
-  /** Grey subtext: scoreboard winner margin (no final score sentence on bracket cards). */
+  /** Bold / grey lines from pool outcome (headline uses slot controllers via computePoolOutcome). */
   const outcomeDetailLine =
     final && outcome ? outcome.bracketMarginLine : null;
 
@@ -364,9 +344,9 @@ export function Matchup({
         </div>
         {final && outcome && (
           <div className="matchup-outcome">
-            {outcomeHeadline && (
+            {outcome.bracketHeadline && (
               <span className="matchup-margin matchup-margin--headline">
-                {outcomeHeadline}
+                {outcome.bracketHeadline}
               </span>
             )}
             {outcomeDetailLine && (
