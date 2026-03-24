@@ -1,6 +1,11 @@
 import type { User } from "../types";
 
-export type OwnershipRow = { user_id: string; team_id: string };
+export type OwnershipRow = {
+  team_id: string;
+  user_id: string;
+  /** ISO time when this team was last assigned to `user_id` (Firestore `assignedAt`). Omitted for legacy rows. */
+  assigned_at?: string | null;
+};
 
 export function buildTeamToUserId(rows: OwnershipRow[]): Map<string, string> {
   const m = new Map<string, string>();

@@ -18,6 +18,8 @@ export type RegionalTreeProps = {
   >;
 };
 
+type RegionalBracketSharedProps = Omit<RegionalTreeProps, "games">;
+
 function sortByOrder(gs: BracketGame[]) {
   return [...gs].sort((a, b) => a.bracket_order - b.bracket_order);
 }
@@ -36,7 +38,7 @@ export function feedersOf(
 
 type MProps = RegionalTreeProps;
 
-function MatchupCol(props: { game: BracketGame } & MProps) {
+function MatchupCol(props: { game: BracketGame } & RegionalBracketSharedProps) {
   return (
     <Matchup
       game={props.game}
@@ -54,7 +56,8 @@ function R64ToR32Block({
   r32Game,
   registerColumnAnchors,
   ...rest
-}: { r32Game: BracketGame; registerColumnAnchors?: boolean } & MProps) {
+}: { r32Game: BracketGame; registerColumnAnchors?: boolean } &
+  RegionalBracketSharedProps) {
   const { roundAnchorRefs } = rest;
   const r64 = feedersOf(rest.allGames, r32Game.id, "round_of_64");
   const feedersRef =
@@ -103,7 +106,8 @@ function S16Block({
   s16Game,
   registerColumnAnchors,
   ...rest
-}: { s16Game: BracketGame; registerColumnAnchors?: boolean } & MProps) {
+}: { s16Game: BracketGame; registerColumnAnchors?: boolean } &
+  RegionalBracketSharedProps) {
   const { roundAnchorRefs } = rest;
   const r32Games = feedersOf(rest.allGames, s16Game.id, "round_of_32");
   const s16Ref =

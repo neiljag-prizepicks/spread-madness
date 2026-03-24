@@ -124,7 +124,7 @@ export async function deleteAccountAndFirestoreMemberships(
       continue;
     }
 
-    const member = mSnap.data() as MemberDoc;
+    const member = mSnap.data() as MemberDocWithLegacy;
 
     if (member.role === "member") {
       await leaveGroupAsMember(firestore, groupId, uid);
@@ -133,7 +133,7 @@ export async function deleteAccountAndFirestoreMemberships(
         collection(firestore, "groups", groupId, "members")
       );
       const adminCount = membersSnap.docs.filter(
-        (d) => (d.data() as MemberDoc).role === "admin"
+        (d) => (d.data() as MemberDocWithLegacy).role === "admin"
       ).length;
       if (adminCount <= 1) {
         await deleteGroup(firestore, groupId, uid);

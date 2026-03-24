@@ -1,5 +1,6 @@
 import type { BracketGame, GameResult, Team, User } from "../types";
 import {
+  assignmentEligibleForTeamAtGame,
   computePoolOutcome,
   getOwnerDisplayForSide,
   getPoolOwnerForSide,
@@ -358,6 +359,19 @@ function findFirstLostControlGame(
     const w = ncaaWinner(g, gm, results);
     if (w == null) return null;
 
+    if (w !== teamId) {
+      return g;
+    }
+
+    if (!assignmentEligibleForTeamAtGame(teamId, g, ownershipRows)) {
+      const fiSkip = g.feeds_into;
+      if (!fiSkip?.game_id) return null;
+      const childSkip = gm.get(fiSkip.game_id);
+      if (!childSkip) return null;
+      g = childSkip;
+      continue;
+    }
+
     const out = computePoolOutcome(
       g,
       games,
@@ -367,10 +381,6 @@ function findFirstLostControlGame(
       dn
     );
     if (!out) return g;
-
-    if (w !== teamId) {
-      return g;
-    }
 
     if (out.poolOwnerUserId !== viewerId) {
       return g;

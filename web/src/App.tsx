@@ -42,6 +42,13 @@ import {
   type UserGroupLinkDoc,
 } from "./lib/firestore/groupsApi";
 import { tryCommitAutoAssignWhenFull } from "./lib/autoAssignWhenFull";
+import {
+  assignablePhysicalTeamRowCount,
+  assignableTeamIdsSet,
+  buildAssignmentOwnershipUnits,
+  filterOwnershipRowsForSurvivorPools,
+  shouldRestrictToSurvivingTeams,
+} from "./lib/assignableTeams";
 import { PHYSICAL_TEAM_ID_COUNT } from "./lib/groupConstants";
 import {
   groupAssignPath,
@@ -813,6 +820,10 @@ export default function App() {
     () => new Map(teams.map((t) => [t.id, t])),
     [teams]
   );
+  const allTeamIds = useMemo(
+    () => [...teams.map((t) => t.id)].sort(),
+    [teams]
+  );
   const usersById = useMemo(
     () => new Map(users.map((u) => [u.id, u])),
     [users]
@@ -825,24 +836,73 @@ export default function App() {
   }, [usersById, memberUsers]);
 
   const effectiveOwnership = useMemo(() => {
-    if (session?.kind === "mock") return ownership;
-    if (
+    let rows: OwnershipRow[];
+    if (session?.kind === "mock") {
+      rows = ownership;
+    } else if (
       session?.kind === "google" &&
       isFirebaseConfigured() &&
       session.uid &&
       activeGroupId
     ) {
-      return firestoreOwnership;
+      rows = firestoreOwnership;
+    } else {
+      rows = ownership;
     }
-    return ownership;
-  }, [session, ownership, firestoreOwnership, activeGroupId]);
+
+    if (
+      session?.kind === "google" &&
+      activeGroupDoc &&
+      games.length > 0 &&
+      allTeamIds.length > 0
+    ) {
+      const restrict = shouldRestrictToSurvivingTeams(
+        activeGroupDoc.visibility,
+        activeGroupDoc.allowAssignEliminatedTeams
+      );
+      rows = filterOwnershipRowsForSurvivorPools(
+        rows,
+        allTeamIds,
+        games,
+        results,
+        restrict
+      );
+    }
+    return rows;
+  }, [
+    session,
+    ownership,
+    firestoreOwnership,
+    activeGroupId,
+    activeGroupDoc,
+    games,
+    allTeamIds,
+    results,
+  ]);
 
   const groupTeamsUnassigned = useMemo(() => {
-    if (
-      !firebaseGroupMode ||
-      !activeGroupId ||
-      effectiveOwnership.length >= PHYSICAL_TEAM_ID_COUNT
-    ) {
+    if (!firebaseGroupMode || !activeGroupId) return null;
+
+    const restrict = activeGroupDoc
+      ? shouldRestrictToSurvivingTeams(
+          activeGroupDoc.visibility,
+          activeGroupDoc.allowAssignEliminatedTeams
+        )
+      : true;
+    const assignable = assignableTeamIdsSet(
+      allTeamIds,
+      games,
+      results,
+      restrict
+    );
+    const units = buildAssignmentOwnershipUnits(
+      games,
+      allTeamIds,
+      teamsById,
+      assignable
+    );
+    const needRows = assignablePhysicalTeamRowCount(units);
+    if (needRows === 0 || effectiveOwnership.length >= needRows) {
       return null;
     }
     const row = userGroupRows.find((r) => r.id === activeGroupId);
@@ -856,10 +916,15 @@ export default function App() {
   }, [
     firebaseGroupMode,
     activeGroupId,
-    effectiveOwnership,
+    effectiveOwnership.length,
     userGroupRows,
     memberUsers,
     bracketPrivateInvite,
+    activeGroupDoc,
+    allTeamIds,
+    games,
+    results,
+    teamsById,
   ]);
 
   const leaderboardUsers = useMemo(() => {
@@ -888,11 +953,6 @@ export default function App() {
     return undefined;
   }, [session, memberUsers]);
 
-  const allTeamIds = useMemo(
-    () => [...teams.map((t) => t.id)].sort(),
-    [teams]
-  );
-
   const autoAssignAttemptedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -919,7 +979,8 @@ export default function App() {
         session.uid!,
         games,
         allTeamIds,
-        teamsById
+        teamsById,
+        results
       );
       if (!result.ok) {
         autoAssignAttemptedRef.current.delete(activeGroupId);
@@ -938,6 +999,7 @@ export default function App() {
     games,
     teamsById,
     userGroupRows,
+    results,
   ]);
 
   const googleClientId = String(
@@ -1424,6 +1486,7 @@ export default function App() {
                   games={games}
                   allTeamIds={allTeamIds}
                   teamsById={teamsById}
+                  results={results}
                 />
               ) : (
                 <Navigate to="/groups" replace />
