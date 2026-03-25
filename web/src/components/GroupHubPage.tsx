@@ -568,9 +568,9 @@ export function GroupHubPage({
             </div>
             <button
               type="button"
-              className={`group-hub-switch${createVis === "private" ? " group-hub-switch--on" : ""}`}
+              className={`group-hub-switch${createVis === "public" ? " group-hub-switch--on" : ""}`}
               role="switch"
-              aria-checked={createVis === "private"}
+              aria-checked={createVis === "public"}
               aria-labelledby="group-hub-vis-label"
               aria-describedby="group-hub-vis-desc"
               onClick={() =>
