@@ -408,7 +408,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     try {
       await leaveGroupAsMember(db, groupId, uid);
       writeStoredActiveGroupId(null);
-      navigate("/groups", { replace: true });
+      navigate("/groups/my", { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -430,7 +430,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     try {
       await deleteGroup(db, groupId, uid);
       writeStoredActiveGroupId(null);
-      navigate("/groups", { replace: true });
+      navigate("/groups/my", { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -466,7 +466,7 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     return (
       <div className="group-hub">
         <p className="group-hub-error">You do not have access to this group.</p>
-        <Link to="/groups" className="btn-ghost">
+        <Link to="/groups/my" className="btn-ghost">
           Back to groups
         </Link>
       </div>

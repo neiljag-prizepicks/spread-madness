@@ -301,7 +301,7 @@ function coveredSpreadButLostNcaa(
   );
 }
 
-function lastSettledGameForTeam(
+export function lastSettledGameForTeam(
   teamId: string,
   games: BracketGame[],
   results: Map<string, GameResult>

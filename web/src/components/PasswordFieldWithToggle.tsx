@@ -40,6 +40,7 @@ type Props = {
   required?: boolean;
   name?: string;
   autoComplete?: string;
+  /** e.g. "password" for Figma-style empty states */
   placeholder?: string;
 };
 

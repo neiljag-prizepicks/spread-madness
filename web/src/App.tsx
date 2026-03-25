@@ -72,6 +72,7 @@ import { LeaderboardPage } from "./components/LeaderboardPage";
 import { MyTeamsPage } from "./components/MyTeamsPage";
 import { PoolRulesPage } from "./components/PoolRulesPage";
 import { normalizeUserRow } from "./lib/normalizeUserRow";
+import { userInitialsFromUser } from "./lib/userInitials";
 import {
   DEFAULT_PRIZE_START_ROUND,
   parsePrizeStartRound,
@@ -110,11 +111,17 @@ function UserAccountMenu({
   onSignOut,
   showRulesLink = true,
   showAccountLink = false,
+  avatarOnly = false,
+  avatarInitials,
 }: {
   displayName: string;
   onSignOut: () => void;
   showRulesLink?: boolean;
   showAccountLink?: boolean;
+  /** Groups hub Figma: initials in a ringed circle, no name row */
+  avatarOnly?: boolean;
+  /** Shown in the circle when `avatarOnly`; from {@link userInitialsFromUser} + session */
+  avatarInitials?: string;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -143,27 +150,36 @@ function UserAccountMenu({
       <button
         id={triggerId}
         type="button"
-        className="app-header-user-trigger"
+        className={`app-header-user-trigger${avatarOnly ? " app-header-user-trigger--avatar-only" : ""}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
+        aria-label={avatarOnly ? `${displayName}, account menu` : undefined}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="app-header-user-name">{displayName}</span>
-        <svg
-          className="app-header-user-chevron"
-          viewBox="0 0 12 12"
-          aria-hidden
-        >
-          <path
-            d="M3 4.5 L6 7.5 L9 4.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {avatarOnly ? (
+          <span className="app-header-user-initials" aria-hidden>
+            {avatarInitials ?? "?"}
+          </span>
+        ) : (
+          <>
+            <span className="app-header-user-name">{displayName}</span>
+            <svg
+              className="app-header-user-chevron"
+              viewBox="0 0 12 12"
+              aria-hidden
+            >
+              <path
+                d="M3 4.5 L6 7.5 L9 4.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </>
+        )}
       </button>
       {open ? (
         <div
@@ -213,10 +229,13 @@ function SpreadMadnessBrandMenu({
   userGroupRows,
   activeGroupId,
   onSelectGroup,
+  figmaHubStyle = false,
 }: {
   userGroupRows: { id: string; data: UserGroupLinkDoc }[];
   activeGroupId: string | null;
   onSelectGroup: (groupId: string) => void;
+  /** Match Figma groups hub: purple mark, MADNESS HOME, chevron in ring */
+  figmaHubStyle?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -247,57 +266,110 @@ function SpreadMadnessBrandMenu({
     !inGroupsSection && activeGroupId === groupId;
 
   const triggerLabel = useMemo(() => {
-    if (inGroupsSection) return "Spread Madness Home";
+    if (inGroupsSection) {
+      return figmaHubStyle ? "MADNESS HOME" : "Spread Madness Home";
+    }
     const row = activeGroupId
       ? userGroupRows.find((r) => r.id === activeGroupId)
       : undefined;
     if (row) return row.data.name;
     return "Spread Madness";
-  }, [inGroupsSection, activeGroupId, userGroupRows]);
+  }, [inGroupsSection, activeGroupId, userGroupRows, figmaHubStyle]);
 
   const isMobile = useMediaQuery("(max-width: 699px)");
+  /** Purple P + ring chevron on /groups/* and /group/:id/* (Figma header nav) */
+  const figmaBrandChrome = figmaHubStyle;
+  const hubFigmaTitle = figmaHubStyle && inGroupsSection;
   const displayLabel = useMemo(() => {
+    if (hubFigmaTitle) return "MADNESS HOME";
     if (!isMobile || triggerLabel.length <= MOBILE_BRAND_MAX_CHARS) {
       return triggerLabel;
     }
     return `${triggerLabel.slice(0, MOBILE_BRAND_MAX_CHARS - 1)}\u2026`;
-  }, [isMobile, triggerLabel]);
+  }, [hubFigmaTitle, isMobile, triggerLabel]);
+
+  const ariaMenuLabel = hubFigmaTitle
+    ? "Open menu: Madness Home and groups"
+    : figmaBrandChrome
+      ? `Open menu: ${triggerLabel}`
+      : displayLabel !== triggerLabel
+        ? triggerLabel
+        : undefined;
 
   return (
-    <div className="app-header-brand-menu" ref={rootRef}>
+    <div
+      className={`app-header-brand-menu${figmaBrandChrome ? " app-header-brand-menu--figma-hub" : ""}`}
+      ref={rootRef}
+    >
       <button
         id={triggerId}
         type="button"
-        className="app-header-brand-trigger pp-brand-sm"
+        className={`app-header-brand-trigger${figmaBrandChrome ? " app-header-brand-trigger--figma-hub" : " pp-brand-sm"}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
         title={triggerLabel}
-        aria-label={
-          displayLabel !== triggerLabel ? triggerLabel : undefined
-        }
+        aria-label={ariaMenuLabel}
       >
-        <span className="pp-mark">P</span>
-        <span
-          className={`app-header-brand-title${isMobile ? " app-header-brand-title--mobile" : ""}`}
-        >
-          {displayLabel}
-        </span>
-        <svg
-          className="app-header-brand-chevron"
-          viewBox="0 0 12 12"
-          aria-hidden
-        >
-          <path
-            d="M3 4.5 L6 7.5 L9 4.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {figmaBrandChrome ? (
+          <>
+            <img
+              src="/brand-picker-logomark.svg"
+              alt=""
+              width={32}
+              height={32}
+              className="app-header-brand-logomark"
+              decoding="async"
+            />
+            <span className="app-header-brand-picker-text">
+              <span
+                className={`app-header-brand-title${hubFigmaTitle ? " app-header-brand-title--figma-hub" : " app-header-brand-title--figma-group"}`}
+              >
+                {displayLabel}
+              </span>
+              <span className="app-header-brand-chevron-ring">
+                <svg
+                  className="app-header-brand-chevron"
+                  viewBox="0 0 12 12"
+                  aria-hidden
+                >
+                  <path
+                    d="M3 4.5 L6 7.5 L9 4.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="pp-mark">P</span>
+            <span
+              className={`app-header-brand-title${isMobile ? " app-header-brand-title--mobile" : ""}`}
+            >
+              {displayLabel}
+            </span>
+            <svg
+              className="app-header-brand-chevron"
+              viewBox="0 0 12 12"
+              aria-hidden
+            >
+              <path
+                d="M3 4.5 L6 7.5 L9 4.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </>
+        )}
       </button>
       {open ? (
         <div
@@ -312,10 +384,10 @@ function SpreadMadnessBrandMenu({
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              navigate("/groups");
+              navigate("/groups/my");
             }}
           >
-            Spread Madness Home
+            {figmaHubStyle ? "MADNESS HOME" : "Spread Madness Home"}
           </button>
           {userGroupRows.length > 0 ? (
             <>
@@ -359,7 +431,7 @@ function LegacyMyTeamsUserRedirect({
 }) {
   const { userId } = useParams<{ userId: string }>();
   if (!activeGroupId || !userId) {
-    return <Navigate to="/groups" replace />;
+    return <Navigate to="/groups/my" replace />;
   }
   return (
     <Navigate to={groupMyTeamsUserPath(activeGroupId, userId)} replace />
@@ -703,7 +775,7 @@ export default function App() {
       if (userGroupRows.some((r) => r.id === urlId)) {
         setActiveGroupId(urlId);
       } else {
-        navigate("/groups", { replace: true });
+        navigate("/groups/my", { replace: true });
       }
       return;
     }
@@ -806,7 +878,7 @@ export default function App() {
       p.startsWith("/leaderboard") ||
       p.startsWith("/group/")
     ) {
-      navigate("/groups", { replace: true });
+      navigate("/groups/my", { replace: true });
     }
   }, [
     firebaseGroupMode,
@@ -834,6 +906,22 @@ export default function App() {
     for (const [id, u] of memberUsers) m.set(id, u);
     return m;
   }, [usersById, memberUsers]);
+
+  const headerViewerUser = useMemo(() => {
+    if (!session) return undefined;
+    if (session.kind === "mock") {
+      return mergedUsersById.get(session.userId);
+    }
+    if (session.kind === "google" && session.uid) {
+      return mergedUsersById.get(session.uid);
+    }
+    return undefined;
+  }, [session, mergedUsersById]);
+
+  const headerAvatarInitials = useMemo(() => {
+    if (!session) return "?";
+    return userInitialsFromUser(headerViewerUser, session.label) || "?";
+  }, [headerViewerUser, session]);
 
   const effectiveOwnership = useMemo(() => {
     let rows: OwnershipRow[];
@@ -1012,7 +1100,7 @@ export default function App() {
       try {
         const credential = GoogleAuthProvider.credential(cred.credential);
         await signInWithCredential(auth, credential);
-        navigate("/groups", { replace: true });
+        navigate("/groups/my", { replace: true });
       } catch (e) {
         console.warn("Firebase sign-in failed", e);
       }
@@ -1022,7 +1110,7 @@ export default function App() {
         kind: "google",
         label: p.name ?? p.email ?? "Google user",
       });
-      navigate("/groups", { replace: true });
+      navigate("/groups/my", { replace: true });
     }
   };
 
@@ -1069,8 +1157,33 @@ export default function App() {
 
   const isRulesPage = location.pathname === "/rules";
   const isAccountPage = location.pathname === "/account";
-  const isGroupsHome = location.pathname === "/groups";
-  const groupsNavHash = isGroupsHome ? location.hash : "";
+  const isGroupHubRoute =
+    location.pathname === "/groups" ||
+    location.pathname.startsWith("/groups/");
+  /** True only on `/group/:id/...` — not on `/groups/*` listing (activeGroupId may still be set for Firestore). */
+  const isInsideGroupAppRoute = Boolean(
+    matchPath({ path: "/group/:groupId/*", end: false }, location.pathname)
+  );
+  /**
+   * Figma top bar: same chrome on /groups/* and inside /group/:id/* —
+   * MADNESS HOME + avatar on hub; group name + avatar in group (node 340:9819).
+   */
+  const figmaHubHeader =
+    firebaseGroupMode &&
+    !isRulesPage &&
+    !isAccountPage &&
+    (isGroupHubRoute || Boolean(groupNavBase));
+  /** Dark blurred header shell + sticky tab row (hub, in-group, or rules) */
+  const useGroupHubHeaderChrome =
+    !isAccountPage &&
+    (isRulesPage ||
+      (firebaseGroupMode && (isGroupHubRoute || Boolean(groupNavBase))));
+  /** Dark main background for hub + in-group (not rules) */
+  const groupHubMainChrome =
+    firebaseGroupMode &&
+    !isAccountPage &&
+    !isRulesPage &&
+    (isGroupHubRoute || Boolean(groupNavBase));
   const rulesNavHash = isRulesPage ? location.hash : "";
   const rulesGameRulesTabActive =
     isRulesPage && (!rulesNavHash || rulesNavHash === "#game-rules-h");
@@ -1118,7 +1231,7 @@ export default function App() {
                         userId: u.id,
                         label: u.display_name,
                       });
-                      navigate("/groups", { replace: true });
+                      navigate("/groups/my", { replace: true });
                     })();
                   }
                 }}
@@ -1194,7 +1307,7 @@ export default function App() {
     : "/leaderboard";
   const settingsNavPath = groupNavBase
     ? groupSettingsPath(groupNavBase)
-    : "/groups";
+    : "/groups/my";
 
   const isActiveGroupAdmin = Boolean(
     groupNavBase &&
@@ -1223,9 +1336,11 @@ export default function App() {
   return (
     <div className="app">
       <header
-        className={`app-header${(isGroupsHome || isRulesPage) && !isAccountPage ? " app-header--groups-top" : ""}`}
+        className={`app-header${useGroupHubHeaderChrome ? " app-header--groups-top app-header--group-hub" : ""}`}
       >
-        <div className="app-header-top">
+        <div
+          className={`app-header-top${figmaHubHeader ? " app-header-top--figma-hub" : ""}`}
+        >
           {isRulesPage ? (
             <div className="app-header-rules-lead">
               <button
@@ -1270,7 +1385,7 @@ export default function App() {
                   if (typeof window !== "undefined" && window.history.length > 1) {
                     navigate(-1);
                   } else {
-                    navigate("/groups");
+                    navigate("/groups/my");
                   }
                 }}
               >
@@ -1298,6 +1413,7 @@ export default function App() {
             </div>
           ) : firebaseGroupMode ? (
             <SpreadMadnessBrandMenu
+              figmaHubStyle={figmaHubHeader}
               userGroupRows={userGroupRows}
               activeGroupId={activeGroupId}
               onSelectGroup={(id) => {
@@ -1312,13 +1428,15 @@ export default function App() {
             </div>
           )}
           <UserAccountMenu
+            avatarOnly={figmaHubHeader}
+            avatarInitials={headerAvatarInitials}
             displayName={session.label}
             onSignOut={() => void handleSignOut()}
             showRulesLink={!isRulesPage}
             showAccountLink={firebaseGroupMode && !isAccountPage}
           />
         </div>
-        {!isRulesPage && !isAccountPage && !isGroupsHome ? (
+        {!isRulesPage && !isAccountPage && !isGroupHubRoute && !groupNavBase ? (
           <nav
             className="app-header-tabs"
             role="navigation"
@@ -1399,62 +1517,102 @@ export default function App() {
           </Link>
         </nav>
       ) : null}
-      {!isRulesPage && !isAccountPage && isGroupsHome ? (
+      {!isRulesPage && !isAccountPage && isGroupHubRoute ? (
         <nav
-          className="app-header-tabs app-header-tabs--groups-hub"
+          className="app-header-tabs app-header-tabs--groups-hub app-header-tabs--hub-directory"
           role="navigation"
           aria-label="Group page sections"
         >
-          <a
-            href="/groups#my-groups-h"
-            className={`app-header-tab${groupsNavHash === "#my-groups-h" ? " app-header-tab--active" : ""}`}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/groups#my-groups-h", { replace: true });
-            }}
+          <NavLink
+            to="/groups/my"
+            className={({ isActive }) =>
+              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            }
+            end
           >
             My Groups
-          </a>
-          <a
-            href="/groups#create-h"
-            className={`app-header-tab${groupsNavHash === "#create-h" ? " app-header-tab--active" : ""}`}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/groups#create-h", { replace: true });
-            }}
+          </NavLink>
+          <NavLink
+            to="/groups/create"
+            className={({ isActive }) =>
+              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            }
           >
             Create Group
-          </a>
-          <a
-            href="/groups#market-h"
-            className={`app-header-tab${groupsNavHash === "#market-h" ? " app-header-tab--active" : ""}`}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/groups#market-h", { replace: true });
-            }}
+          </NavLink>
+          <NavLink
+            to="/groups/join"
+            className={({ isActive }) =>
+              `app-header-tab${isActive ? " app-header-tab--active" : ""}`
+            }
           >
-            Public Groups
-          </a>
-          <a
-            href="/groups#priv-join-h"
-            className={`app-header-tab${groupsNavHash === "#priv-join-h" ? " app-header-tab--active" : ""}`}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/groups#priv-join-h", { replace: true });
-            }}
+            Join Group
+          </NavLink>
+        </nav>
+      ) : null}
+      {!isRulesPage &&
+      !isAccountPage &&
+      groupNavBase &&
+      isInsideGroupAppRoute ? (
+        <nav
+          className="app-header-tabs app-header-tabs--groups-hub app-header-tabs--group-app"
+          role="navigation"
+          aria-label="Group sections"
+        >
+          <NavLink
+            to={bracketNavPath}
+            role="tab"
+            aria-selected={bracketTabActive}
+            className={() =>
+              `app-header-tab${bracketTabActive ? " app-header-tab--active" : ""}`
+            }
           >
-            Private Groups
-          </a>
+            Bracket
+          </NavLink>
+          <NavLink
+            to={myTeamsNavPath}
+            role="tab"
+            aria-selected={myTeamsTabActive}
+            className={() =>
+              `app-header-tab${myTeamsTabActive ? " app-header-tab--active" : ""}`
+            }
+          >
+            My Teams
+          </NavLink>
+          <NavLink
+            to={leaderboardNavPath}
+            role="tab"
+            aria-selected={leaderboardTabActive}
+            className={() =>
+              `app-header-tab${leaderboardTabActive ? " app-header-tab--active" : ""}`
+            }
+          >
+            Leaderboard
+          </NavLink>
+          {isActiveGroupMember ? (
+            <NavLink
+              to={settingsNavPath}
+              role="tab"
+              aria-selected={settingsTabActive}
+              className={() =>
+                `app-header-tab${settingsTabActive ? " app-header-tab--active" : ""}`
+              }
+            >
+              Settings
+            </NavLink>
+          ) : null}
         </nav>
       ) : null}
 
-      <main className="bracket-main">
+      <main
+        className={`bracket-main${groupHubMainChrome ? " bracket-main--group-hub" : ""}`}
+      >
         <Routes>
           <Route
             path="/"
             element={
               firebaseGroupMode ? (
-                <Navigate to="/groups" replace />
+                <Navigate to="/groups/my" replace />
               ) : (
                 <Navigate to="/bracket" replace />
               )
@@ -1462,11 +1620,19 @@ export default function App() {
           />
           <Route
             path="/groups"
+            element={<Navigate to="/groups/my" replace />}
+          />
+          <Route
+            path="/groups/:hubTab"
             element={
               session.kind === "google" && session.uid ? (
                 <GroupHubPage
                   uid={session.uid}
                   displayName={session.label}
+                  games={games}
+                  teams={teams}
+                  results={results}
+                  usersById={mergedUsersById}
                   onEnterGroup={(id) => {
                     setActiveGroupId(id);
                     navigate(groupBracketPath(id), { replace: true });
@@ -1489,7 +1655,7 @@ export default function App() {
                   results={results}
                 />
               ) : (
-                <Navigate to="/groups" replace />
+                <Navigate to="/groups/my" replace />
               )
             }
           />
@@ -1503,7 +1669,7 @@ export default function App() {
               session.kind === "google" && session.uid ? (
                 <GroupLeagueSettingsPage uid={session.uid} />
               ) : (
-                <Navigate to="/groups" replace />
+                <Navigate to="/groups/my" replace />
               )
             }
           />
@@ -1576,7 +1742,7 @@ export default function App() {
                 activeGroupId ? (
                   <Navigate to={groupBracketPath(activeGroupId)} replace />
                 ) : (
-                  <Navigate to="/groups" replace />
+                  <Navigate to="/groups/my" replace />
                 )
               ) : (
                 <KalshiBracketArena {...bracketArenaProps} />
@@ -1608,7 +1774,7 @@ export default function App() {
                 activeGroupId ? (
                   <Navigate to={groupMyTeamsPath(activeGroupId)} replace />
                 ) : (
-                  <Navigate to="/groups" replace />
+                  <Navigate to="/groups/my" replace />
                 )
               ) : (
                 <MyTeamsRoute
@@ -1630,7 +1796,7 @@ export default function App() {
                 activeGroupId ? (
                   <Navigate to={groupLeaderboardPath(activeGroupId)} replace />
                 ) : (
-                  <Navigate to="/groups" replace />
+                  <Navigate to="/groups/my" replace />
                 )
               ) : (
                 <LeaderboardPage
@@ -1672,7 +1838,7 @@ export default function App() {
                   }}
                 />
               ) : (
-                <Navigate to="/groups" replace />
+                <Navigate to="/groups/my" replace />
               )
             }
           />
@@ -1680,7 +1846,7 @@ export default function App() {
             path="*"
             element={
               firebaseGroupMode ? (
-                <Navigate to="/groups" replace />
+                <Navigate to="/groups/my" replace />
               ) : (
                 <Navigate to="/bracket" replace />
               )

@@ -234,6 +234,7 @@
    */
   position: relative;
   z-index: 80;
+  font-family: var(--pp-font-header);
 }
 
 .app-header-top {
@@ -347,7 +348,27 @@
   padding-bottom: 0.35rem;
 }
 
+/*
+ * Figma Header Navigation 332:13423 (metadata): Top Nav frame 72px, Tabs 44px.
+ * Remove default header padding so the figma top row owns vertical rhythm.
+ */
+.app-header--group-hub.app-header--groups-top:has(.app-header-top--figma-hub) {
+  padding: 0;
+  gap: 0;
+}
+
+.app-header--group-hub.app-header--groups-top:has(.app-header-top--figma-hub)
+  .app-header-top--figma-hub {
+  box-sizing: border-box;
+  height: 72px;
+  min-height: 72px;
+  padding: 8px calc(16px + env(safe-area-inset-right, 0px)) 16px
+    calc(16px + env(safe-area-inset-left, 0px));
+}
+
 .app-header-tabs--groups-hub {
+  /* Outside <header> on /groups and /rules — match top bar (Figma 332:13426) */
+  font-family: var(--pp-font-header);
   position: -webkit-sticky;
   position: sticky;
   top: 0;
@@ -395,6 +416,991 @@
   color: var(--pp-fg-primary);
   border-color: rgba(90, 127, 216, 0.55);
   box-shadow: 0 0 0 1px rgba(90, 127, 216, 0.2);
+}
+
+/* Figma-style dark shell for /groups/* (tabs + main) */
+.app-header--group-hub {
+  background: rgba(5, 6, 20, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.app-header--group-hub + .app-header-tabs--groups-hub {
+  background: #0a0a0c;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/*
+ * Groups hub tab row: Figma Tabs (same component) for
+ * — directory Header Navigation (343:8311 → 343:8325)
+ * — in-group Header Navigation (340:9819 → 340:9833)
+ * 44px bar, text + Stankonia #8000FF bottom indicator, So Clean #FBF9FF active label
+ * (subheading/sm-style). Rules-only nav keeps base --groups-hub pill styles.
+ */
+.app-header--group-hub + .app-header-tabs--groups-hub.app-header-tabs--hub-directory,
+.app-header--group-hub + .app-header-tabs--group-app.app-header-tabs--groups-hub {
+  box-sizing: border-box;
+  align-items: stretch;
+  gap: 0;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) 0
+    calc(16px + env(safe-area-inset-left, 0px));
+  background: #050614;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+.app-header--group-hub + .app-header-tabs--groups-hub.app-header-tabs--hub-directory .app-header-tab,
+.app-header--group-hub + .app-header-tabs--group-app .app-header-tab {
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: rgba(251, 249, 255, 0.72);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+/* Directory: inactive labels read closer to primary (Figma 343:8325). */
+.app-header--group-hub + .app-header-tabs--groups-hub.app-header-tabs--hub-directory .app-header-tab {
+  color: rgba(251, 249, 255, 0.88);
+}
+
+.app-header--group-hub + .app-header-tabs--groups-hub.app-header-tabs--hub-directory .app-header-tab:hover,
+.app-header--group-hub + .app-header-tabs--group-app .app-header-tab:hover {
+  color: #fbf9ff;
+  background: transparent;
+}
+
+.app-header--group-hub + .app-header-tabs--groups-hub.app-header-tabs--hub-directory .app-header-tab:focus-visible,
+.app-header--group-hub + .app-header-tabs--group-app .app-header-tab:focus-visible {
+  outline: 2px solid rgba(128, 0, 255, 0.65);
+  outline-offset: -2px;
+}
+
+.app-header--group-hub + .app-header-tabs--groups-hub.app-header-tabs--hub-directory .app-header-tab--active,
+.app-header--group-hub + .app-header-tabs--group-app .app-header-tab--active {
+  color: #fbf9ff;
+  background: transparent;
+  border-bottom-color: #8000ff;
+}
+
+.bracket-main--group-hub {
+  background: #0a0a0c;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.group-hub--figma {
+  /* Align primary actions with Figma (Neil's Playground create-group) */
+  --gh-purple: #7c00ff;
+  --gh-purple-hover: #9038ff;
+  --gh-surface: #12121a;
+  --gh-card: #18181f;
+  --gh-border: rgba(255, 255, 255, 0.08);
+  --gh-muted: rgba(255, 255, 255, 0.55);
+  --gh-input-bg: #12121e;
+  --gh-input-border: #2c2c39;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.group-hub--figma .group-hub-muted {
+  color: var(--gh-muted);
+}
+
+.group-hub--figma .group-hub-error {
+  background: rgba(220, 80, 80, 0.15);
+  border-color: rgba(220, 80, 80, 0.4);
+  color: #fecaca;
+}
+
+.group-hub--figma .group-hub-toggle-block,
+.group-hub--figma .group-hub-form--panel {
+  background: var(--gh-card);
+  border-color: var(--gh-border);
+}
+
+/* Create group: stacked fields on canvas (Figma frame 333:25731), not a full card */
+.group-hub--figma .group-hub-form--create.group-hub-form--panel {
+  color-scheme: dark;
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  gap: 10px;
+  max-width: none;
+  width: 100%;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-label {
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.14;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-input,
+.group-hub--figma .group-hub-form--create .group-hub-select-native {
+  min-height: 48px;
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 400;
+  background: var(--gh-input-bg);
+  border: 1px solid var(--gh-input-border);
+  border-radius: 8px;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-input:focus-visible,
+.group-hub--figma .group-hub-form--create .group-hub-select-native:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gh-purple) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-input--adorned:focus-visible {
+  outline: none;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-adorned-field:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--gh-purple) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-password-field:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--gh-purple) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-input::placeholder {
+  color: #a0a0a0;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-select-native {
+  color: #c7c6ce;
+  cursor: pointer;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-select-native {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid rgba(255, 255, 255, 0.45);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.45);
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-toggle-block {
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 0;
+  background: transparent;
+  border: 1px solid var(--gh-input-border);
+  border-radius: 8px;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-switch:not(.group-hub-switch--on) {
+  background: #2c2c39;
+  border-color: #2c2c39;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-adorned-field {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--gh-input-border);
+  border-radius: 8px;
+  background: var(--gh-input-bg);
+  overflow: hidden;
+  min-height: 48px;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-input--adorned {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  min-height: unset;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-adorned-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--gh-input-border);
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-adorned-btn:hover {
+  color: #fbf9ff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-password-field {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 48px;
+  border: 1px solid var(--gh-input-border);
+  border-radius: 8px;
+  background: var(--gh-input-bg);
+  overflow: hidden;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-password-field .group-hub-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: unset;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-password-field .group-hub-password-toggle {
+  flex-shrink: 0;
+  width: 48px;
+  min-width: 48px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--gh-input-border);
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-password-field .group-hub-password-toggle:hover {
+  color: #fbf9ff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.group-hub--figma .group-hub-form--create .group-hub-submit-wide {
+  margin-top: 6px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* Join tab — private groups (Figma 333:26453): same field stack as create */
+.group-hub--figma .group-hub-subsection-title--private-join {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  color: #fbf9ff;
+  margin: 0 0 10px;
+}
+
+.group-hub--figma .group-hub-form--join-private.group-hub-form--panel {
+  color-scheme: dark;
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  gap: 10px;
+  max-width: none;
+  width: 100%;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-label {
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.14;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 400;
+  background: var(--gh-input-bg);
+  border: 1px solid var(--gh-input-border);
+  border-radius: 8px;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-input:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gh-purple) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-input--adorned:focus-visible {
+  outline: none;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-adorned-field:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--gh-purple) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-password-field:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--gh-purple) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-input::placeholder {
+  color: #a0a0a0;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-adorned-field {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--gh-input-border);
+  border-radius: 8px;
+  background: var(--gh-input-bg);
+  overflow: hidden;
+  min-height: 48px;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-input--adorned {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  min-height: unset;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-adorned-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--gh-input-border);
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-adorned-btn:hover {
+  color: #fbf9ff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-password-field {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 48px;
+  border: 1px solid var(--gh-input-border);
+  border-radius: 8px;
+  background: var(--gh-input-bg);
+  overflow: hidden;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-password-field .group-hub-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: unset;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-password-field .group-hub-password-toggle {
+  flex-shrink: 0;
+  width: 48px;
+  min-width: 48px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid var(--gh-input-border);
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-password-field .group-hub-password-toggle:hover {
+  color: #fbf9ff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.group-hub--figma .group-hub-form--join-private .group-hub-submit-wide {
+  margin-top: 6px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.group-hub--figma .group-hub-lineup-card {
+  background: #121320;
+  border: 1px solid #2c2c39;
+  border-radius: 8px;
+}
+
+.group-hub--figma .group-hub-input {
+  background: #0f0f14;
+  border-color: var(--gh-border);
+  color: #fff;
+}
+
+.group-hub--figma .group-hub-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.group-hub--figma .btn-primary,
+.group-hub--figma .group-hub-empty-hero-cta,
+.group-hub--figma .group-hub-submit-wide {
+  background: var(--gh-purple);
+  border-color: var(--gh-purple);
+  color: #fff;
+}
+
+.group-hub--figma .btn-primary:hover,
+.group-hub--figma .group-hub-empty-hero-cta:hover,
+.group-hub--figma .group-hub-submit-wide:hover {
+  background: var(--gh-purple-hover);
+  border-color: var(--gh-purple-hover);
+}
+
+.group-hub--figma .btn-ghost {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: var(--gh-border);
+}
+
+.group-hub--figma .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.group-hub--figma .group-hub-rules-link {
+  color: #c4b5fd;
+}
+
+.group-hub-empty-hero {
+  background: var(--gh-card, var(--pp-bg-secondary));
+  border-color: var(--gh-border, var(--pp-border));
+}
+
+.group-hub--figma .group-hub-empty-hero {
+  background: linear-gradient(180deg, #14141c 0%, #0e0e12 100%);
+  border: 1px solid var(--gh-border);
+}
+
+.group-hub-empty-hero-img {
+  display: block;
+  margin: 0 auto;
+  max-width: min(150px, 50vw);
+  height: auto;
+}
+
+.group-hub-empty-hero-rules {
+  margin: 0 0 1.25rem;
+  font-size: 0.88rem;
+  color: var(--gh-muted, var(--pp-fg-secondary));
+  text-align: left;
+}
+
+.group-hub-toggle-block {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-bg-secondary);
+}
+
+.group-hub-toggle-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.group-hub-toggle-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--pp-fg-primary);
+}
+
+.group-hub-toggle-desc {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.33;
+  color: var(--pp-fg-secondary);
+  /* Keep row height stable when public vs private copy wraps differently */
+  min-height: calc(2 * 1.33em);
+}
+
+.group-hub--figma .group-hub-toggle-title {
+  font-weight: 500;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-toggle-desc {
+  color: #c7c6ce;
+}
+
+.group-hub--figma .group-hub-toggle-block {
+  border-color: #2c2c39;
+}
+
+.group-hub-icon-btn {
+  flex-shrink: 0;
+  min-width: 2.5rem;
+  padding: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.group-hub-lineup-members {
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.group-hub--figma .group-hub-lineup-top {
+  align-items: center;
+  padding: 12px 16px 8px;
+  gap: 12px;
+}
+
+.group-hub--figma .group-hub-card-name {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-lineup-members {
+  margin-top: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-lineup-actions {
+  gap: 8px;
+}
+
+.group-hub--figma .group-hub-lineup-settings-round.group-hub-trophy-link {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1.5px solid #fbf9ff;
+  background: #121320;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-lineup-settings-round.group-hub-trophy-link:hover {
+  background: #1a1c2e;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-settings-gear-icon.group-hub-trophy-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.group-hub--figma .group-hub-lineup-divider {
+  margin: 0 16px;
+  height: 1px;
+  background: #2c2c39;
+  border: none;
+}
+
+.group-hub--figma .group-hub-lineup-bottom {
+  display: block;
+  padding: 12px 16px;
+}
+
+.group-hub--figma .group-hub-lineup-bottom--join-public {
+  padding: 6px 16px 8px;
+}
+
+.group-hub--figma .group-hub-join-public-summary {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.33;
+  font-weight: 450;
+  color: #c7c6ce;
+}
+
+.group-hub--figma .group-hub-join-plus {
+  --gh-join-public: #7f00ff;
+  --gh-join-public-hover: #9038ff;
+  background: var(--gh-join-public);
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-join-plus:hover:not(:disabled) {
+  background: var(--gh-join-public-hover);
+}
+
+.group-hub--figma .group-hub-join-plus:focus-visible {
+  outline-color: var(--gh-join-public);
+}
+
+.group-hub--figma .group-hub-join-plus--joined {
+  --gh-join-done: #22c55e;
+  --gh-join-done-hover: #16a34a;
+  background: var(--gh-join-done);
+  color: #fff;
+}
+
+.group-hub--figma .group-hub-join-plus--joined:hover:not(:disabled) {
+  background: var(--gh-join-done-hover);
+}
+
+.group-hub--figma .group-hub-join-plus--joined:focus-visible {
+  outline-color: var(--gh-join-done);
+}
+
+.group-hub--figma .group-hub-lineup-bottom-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Figma "Bottom" (343:8378): row with left column (badges + names) + right tags/lineup */
+.group-hub--figma .group-hub-lineup-avatars-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+.group-hub--figma .group-hub-lineup-players-names {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.group-hub--figma .group-hub-lineup-players-names .group-hub-team-avatar-stack {
+  flex-shrink: 0;
+}
+
+.group-hub--figma .group-hub-team-avatar-stack {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-right: 4px;
+}
+
+.group-hub--figma .group-hub-team-avatar {
+  box-sizing: border-box;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  margin-right: -8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+}
+
+.group-hub--figma .group-hub-team-avatar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  font-family: "Jersey 10", "Jersey 15", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-align: center;
+  color: #fff;
+}
+
+.group-hub--figma .group-hub-team-avatar--live {
+  background: #ffb800;
+  border-color: #ffce6f;
+}
+
+.group-hub--figma .group-hub-team-avatar--scheduled {
+  background: #4d0099;
+  border-color: #8000ff;
+}
+
+.group-hub--figma .group-hub-team-avatar--recent_win {
+  background: #393945;
+  border-color: #acff79;
+}
+
+.group-hub--figma .group-hub-team-avatar--recent_loss {
+  background: #c43135;
+  border-color: #fb3640;
+}
+
+.group-hub--figma .group-hub-team-avatar--neutral {
+  background: #393945;
+  border-color: #5c5c6a;
+}
+
+.group-hub--figma .group-hub-team-avatar--more {
+  background: #2a2a36;
+  border-color: #3d3d4a;
+}
+
+.group-hub--figma .group-hub-team-avatar--more .group-hub-team-avatar-inner {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #c7c6ce;
+}
+
+.group-hub--figma .group-hub-lineup-players-names .group-hub-lineup-team-names {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  font-size: 10px;
+  line-height: 14px;
+  color: #c7c6ce;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-hub--figma .group-hub-lineup-control-block {
+  flex-shrink: 0;
+  width: 55px;
+  min-width: 55px;
+  text-align: right;
+}
+
+.group-hub--figma .group-hub-lineup-control-line1 {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: #fbf9ff;
+}
+
+.group-hub--figma .group-hub-lineup-control-num {
+  font-weight: 700;
+}
+
+.group-hub--figma .group-hub-lineup-control-label {
+  font-weight: 400;
+}
+
+@media (max-width: 420px) {
+  .group-hub--figma .group-hub-lineup-avatars-row {
+    gap: 12px;
+  }
+}
+
+.group-hub-trophy-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--gh-border, var(--pp-border));
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.group-hub--figma .group-hub-trophy-link {
+  border-color: var(--gh-border);
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.group-hub-trophy-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.group-hub-trophy-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: block;
+}
+
+.group-hub-lineup-names-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.55rem;
+}
+
+.group-hub-lineup-team-names {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--gh-muted, var(--pp-fg-tertiary));
+  flex: 1;
+  min-width: 0;
+}
+
+.group-hub--figma .group-hub-lineup-team-names {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.group-hub-lineup-control-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.group-hub-lineup-caption--stats {
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.group-hub-join-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  background: var(--gh-purple, var(--pp-action));
+  color: #fff;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.group-hub-join-plus:hover:not(:disabled) {
+  background: var(--gh-purple-hover, var(--pp-action-hover));
+}
+
+.group-hub-join-plus:focus-visible {
+  outline: 2px solid var(--gh-purple, var(--pp-action));
+  outline-offset: 2px;
+}
+
+.group-hub-join-plus:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.group-hub-join-plus--joined {
+  min-width: 2rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.group-hub-join-plus-icon {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  flex-shrink: 0;
+}
+
+.group-hub--figma .group-hub-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--gh-border);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.group-hub--figma .group-hub-pill--admin {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #e9d5ff;
+}
+
+.group-hub--figma .group-hub-switch--on {
+  background: var(--gh-purple);
+  border-color: var(--gh-purple);
+}
+
+.group-hub--figma .group-hub-password-toggle {
+  color: rgba(255, 255, 255, 0.65);
+  border-color: var(--gh-border);
+  background: #0f0f14;
+}
+
+.group-hub-submit-wide {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 699px) {
+  .group-hub:not(.group-hub--figma) .group-hub-lineup-actions .group-hub-trophy-link {
+    display: none;
+  }
 }
 
 .app-header-user-menu {
@@ -895,26 +1901,35 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
+/* Figma Team Card 339:13438 — tokens aligned to design file */
 .my-teams-card {
-  display: block;
+  --mt-card-bg: #121320;
+  --mt-panel-bg: #1f202d;
+  --mt-border: #2c2c39;
+  --mt-label-muted: #93939c;
+  --mt-fg-secondary: #c7c6ce;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   width: 100%;
   text-align: left;
-  padding: 0.75rem 0.85rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--mt-border);
+  background: var(--mt-card-bg);
   color: inherit;
   font: inherit;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .my-teams-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(199, 198, 206, 0.35);
 }
 
 .my-teams-card:focus-visible {
@@ -922,106 +1937,244 @@
   outline-offset: 2px;
 }
 
-.my-teams-card-top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 0.65rem;
-  row-gap: 0.2rem;
-  margin-bottom: 0.35rem;
-  align-items: start;
-}
-
-.my-teams-card-head-line {
-  grid-column: 1;
-  grid-row: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.5rem;
-  min-width: 0;
-}
-
-.my-teams-card-affordance {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: center;
+.my-teams-card-event-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.25rem 0.75rem;
+  background: var(--mt-panel-bg);
+  border-bottom: 1px solid var(--mt-border);
+}
+
+.my-teams-card-event-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.my-teams-sport-badge {
   flex-shrink: 0;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--mt-fg-secondary);
+  border: 1px solid var(--mt-border);
+  border-radius: 4px;
+  background: var(--mt-panel-bg);
+}
+
+.my-teams-card-matchup {
+  font-size: 0.625rem;
+  line-height: 1.4;
+  color: var(--mt-fg-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.my-teams-card-event-time {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  color: var(--pp-fg-primary);
   white-space: nowrap;
 }
 
-.my-teams-mascot-row {
-  grid-column: 1 / -1;
-  grid-row: 2;
-}
-
-.my-teams-card-affordance-text {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--pp-fg-secondary);
-}
-
-.my-teams-card:hover .my-teams-card-affordance-text,
-.my-teams-card:focus-visible .my-teams-card-affordance-text {
-  color: var(--pp-fg-primary);
-}
-
-.my-teams-card-affordance-chevron {
-  width: 0.7rem;
-  height: 0.7rem;
-  flex-shrink: 0;
-  color: var(--pp-fg-secondary);
-  opacity: 0.9;
-}
-
-.my-teams-card:hover .my-teams-card-affordance-chevron,
-.my-teams-card:focus-visible .my-teams-card-affordance-chevron {
-  color: #ffd54f;
-  opacity: 1;
-}
-
-.my-teams-seed {
-  font-size: 0.8rem;
-  color: var(--pp-fg-secondary);
-  font-weight: 600;
-}
-
-.my-teams-school {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--pp-fg-primary);
-}
-
-.my-teams-mascot {
-  font-size: 0.85rem;
-  color: var(--pp-fg-secondary);
-}
-
-.my-teams-meta {
+.my-teams-card-body {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.my-teams-card-pick-row {
+  display: flex;
   align-items: center;
-  gap: 0.45rem 0.5rem;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.my-teams-card-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.my-teams-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--mt-border);
+  background: var(--pp-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.8rem;
-  color: var(--pp-fg-secondary);
-  margin-bottom: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--pp-fg-primary);
+}
+
+.my-teams-card-avatar-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--mt-panel-bg);
+  border: 1px solid var(--mt-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.my-teams-card-avatar-clock {
+  width: 10px;
+  height: 10px;
+  color: var(--mt-fg-secondary);
+}
+
+.my-teams-card-avatar-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffd54f;
+  box-shadow: 0 0 0 1px var(--mt-panel-bg);
+}
+
+.my-teams-card-titles {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.125rem;
+}
+
+.my-teams-card-team-name {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--pp-fg-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-teams-card-region-seed {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--mt-fg-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-teams-card-spread-box {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.125rem;
+  min-height: 46px;
+  padding: 0.5rem;
+  border: 1px solid var(--mt-border);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.my-teams-card-spread-value {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--pp-fg-primary);
+  text-align: right;
+}
+
+.my-teams-card-spread-label {
+  margin: 0;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  color: var(--mt-fg-secondary);
+  text-align: right;
+}
+
+.my-teams-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--mt-panel-bg);
+}
+
+.my-teams-card-detail-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.my-teams-card-detail-label {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--mt-label-muted);
+}
+
+.my-teams-card-detail-value {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--pp-fg-primary);
+  width: 100%;
+  word-wrap: break-word;
+}
+
+.my-teams-card-detail-bullets {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--pp-fg-primary);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.my-teams-card-detail-bullets li {
+  margin: 0 0 0.2rem;
+}
+
+.my-teams-card-detail-bullets li:last-child {
+  margin-bottom: 0;
 }
 
 /* Same yellow treatment as .matchup--live / .overview-slot--live */
 .my-teams-card--live {
   border-color: rgba(255, 213, 79, 0.55);
-  background: rgba(255, 213, 79, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 213, 79, 0.12);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 213, 79, 0.12) 0%,
+      var(--mt-card-bg) 38%
+    ),
+    var(--mt-card-bg);
 }
 
 .my-teams-card--live:hover {
-  background: rgba(255, 213, 79, 0.2);
   border-color: rgba(255, 213, 79, 0.65);
 }
 
@@ -1034,7 +2187,15 @@
 }
 
 .my-teams-live-board {
-  margin: 0 0 0.5rem;
+  margin: 0;
+  padding: 0.35rem 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--mt-border);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.my-teams-card--live .my-teams-live-board {
+  background: rgba(255, 213, 79, 0.08);
+  border-bottom-color: rgba(255, 213, 79, 0.25);
 }
 
 .my-teams-live-score {
@@ -1050,80 +2211,6 @@
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--pp-fg-secondary);
-}
-
-.my-teams-dl {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.4rem 0.75rem;
-  margin: 0;
-  font-size: 0.82rem;
-}
-
-.my-teams-dl--stacked {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.my-teams-dl--split {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1rem 1.25rem;
-}
-
-.my-teams-dl-split-col {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.my-teams-dl-field {
-  display: block;
-}
-
-.my-teams-dl-field dt {
-  margin: 0;
-  color: var(--pp-fg-secondary);
-  font-weight: 500;
-}
-
-.my-teams-dl-field dd {
-  margin: 0;
-  color: var(--pp-fg-primary);
-}
-
-.my-teams-dl dt {
-  margin: 0;
-  color: var(--pp-fg-secondary);
-  font-weight: 500;
-}
-
-.my-teams-dl dd {
-  margin: 0;
-  color: var(--pp-fg-primary);
-}
-
-.my-teams-dl-fullwidth {
-  grid-column: 1 / -1;
-}
-
-.my-teams-dl-fullwidth dd {
-  line-height: 1.45;
-}
-
-.my-teams-outcome {
-  margin: 0.5rem 0 0;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: var(--pp-fg-secondary);
-}
-
-.my-teams-outcome--emphasis {
-  color: var(--pp-fg-primary);
 }
 
 .leaderboard-page {
@@ -3105,51 +4192,67 @@
     min-height: 0;
   }
 
+  /* Bracket region tabs — Figma choice chips (row_leagues) */
   .desktop-bracket-tabs {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.4rem;
+    gap: 8px;
+    min-height: 56px;
     margin: 0 0 0.15rem;
-    padding: 0 0 0.55rem;
+    padding: 0 12px 10px;
+    box-sizing: border-box;
     border-bottom: 1px solid var(--pp-border);
   }
 
   .desktop-bracket-tab {
     margin: 0;
-    padding: 0.45rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--pp-fg-tertiary);
-    background: transparent;
-    border: none;
-    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 84px;
+    min-height: 44px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #fbf9ff;
+    background: rgba(251, 249, 255, 0.1);
+    border: 1.5px solid transparent;
+    border-radius: 999px;
     cursor: pointer;
   }
 
   .desktop-bracket-tab:hover {
-    color: var(--pp-fg-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(251, 249, 255, 0.14);
+    color: #fbf9ff;
   }
 
   .desktop-bracket-tab--active {
-    color: var(--pp-fg-primary);
-    box-shadow: inset 0 -2px 0 0 var(--pp-action);
+    color: #fbf9ff;
+    background: #26004c;
+    border-color: #8000ff;
+    box-shadow: none;
+  }
+
+  .desktop-bracket-tab:focus-visible {
+    outline: 2px solid var(--pp-action);
+    outline-offset: 2px;
   }
 
   .desktop-bracket-tabs--scroll {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.65rem;
     scrollbar-width: thin;
-    gap: 0.35rem;
-    margin-left: -0.15rem;
-    margin-right: -0.15rem;
-    padding-left: 0.15rem;
-    padding-right: 0.15rem;
+    gap: 8px;
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .desktop-bracket-tabs--scroll .desktop-bracket-tab {
@@ -3330,13 +4433,15 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: 8px;
+  min-height: 56px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0.25rem 0 0.75rem;
-  margin: 0 -0.25rem 0.5rem;
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
+  padding: 6px 0 10px;
+  margin: 0 -12px 0.5rem;
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
   border-bottom: 1px solid var(--pp-border);
   scrollbar-width: thin;
 }
@@ -3344,34 +4449,49 @@
 .mobile-bracket-tab {
   flex-shrink: 0;
   margin: 0;
-  padding: 0.45rem 0.65rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--pp-fg-tertiary);
-  background: transparent;
-  border: none;
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  min-height: 44px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #fbf9ff;
+  background: rgba(251, 249, 255, 0.1);
+  border: 1.5px solid transparent;
+  border-radius: 999px;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .mobile-bracket-tab:hover {
-  color: var(--pp-fg-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(251, 249, 255, 0.14);
+  color: #fbf9ff;
 }
 
 .mobile-bracket-tab--back {
+  min-width: auto;
   color: var(--pp-link);
-  font-weight: 700;
-  padding-left: 0.35rem;
-  padding-right: 0.5rem;
+  font-weight: 600;
+  padding-left: 14px;
+  padding-right: 16px;
 }
 
 .mobile-bracket-tab--active {
-  color: var(--pp-fg-primary);
-  box-shadow: inset 0 -2px 0 0 var(--pp-action);
+  color: #fbf9ff;
+  background: #26004c;
+  border-color: #8000ff;
+  box-shadow: none;
+}
+
+.mobile-bracket-tab:focus-visible {
+  outline: 2px solid var(--pp-action);
+  outline-offset: 2px;
 }
 
 .mobile-bracket-detail {
@@ -3409,8 +4529,8 @@
  */
 @media (max-width: 699px) {
   :root {
-    /* Header + main padding — keeps overview birdseye ~one screen tall */
-    --mobile-app-chrome: 6.5rem;
+    /* Group hub: Figma top 72px + tabs 44px ≈ 7.25rem (+ main padding heuristic) */
+    --mobile-app-chrome: 7.25rem;
   }
 
   .app {
@@ -3464,9 +4584,8 @@
    * the bracket. Requires quadrant overflow visible so sticky tracks the page scrollport.
    */
   .mobile-bracket-root--detail {
-    --mobile-bracket-sticky-tabs-height: calc(
-      0.35rem + 0.65rem + 0.45rem + 0.45rem + 0.85em
-    );
+    /* Sticky region tabs: vertical padding + chip row (see .mobile-bracket-root--detail .mobile-bracket-tabs-scroll) */
+    --mobile-bracket-sticky-tabs-height: calc(0.35rem + 0.65rem + 56px);
   }
 
   .mobile-bracket-detail .kalshi-quadrant {
@@ -3511,6 +4630,8 @@
     padding-right: calc(0.65rem + env(safe-area-inset-right, 0px));
     padding-top: 0.35rem;
     padding-bottom: 0.65rem;
+    min-height: 56px;
+    gap: 8px;
     background: var(--pp-bg-primary);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
   }
@@ -3613,8 +4734,118 @@
   border: none;
 }
 
+/* —— Groups hub Figma top bar (node 332:13423) —— */
+.app-header-top--figma-hub {
+  align-items: center;
+}
+
+.app-header-brand-menu--figma-hub {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Game picker lockup (Figma GameMode_Lockups / Game_Picker 332:13427) */
+.app-header-brand-trigger--figma-hub {
+  gap: 12px;
+  padding: 8px 10px 8px 8px;
+  border-radius: 999px;
+  color: #fbf9ff;
+  max-width: 100%;
+}
+
+.app-header-brand-trigger--figma-hub:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-header-brand-logomark {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+}
+
+.app-header-brand-picker-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.app-header-brand-title--figma-hub {
+  font-size: clamp(0.875rem, 4.2vw, 1.375rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: #fbf9ff;
+  line-height: 1.15;
+}
+
+/* In-group picker label (Figma Header Navigation 340:9819) */
+.app-header-brand-title--figma-group {
+  font-size: clamp(0.9rem, 3.8vw, 1.125rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  color: #fbf9ff;
+  line-height: 1.2;
+}
+
+.app-header-brand-chevron-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1px solid rgba(251, 249, 255, 0.38);
+  border-radius: 50%;
+  color: rgba(251, 249, 255, 0.92);
+}
+
+.app-header-brand-trigger--figma-hub .app-header-brand-chevron-ring .app-header-brand-chevron {
+  width: 8px;
+  height: 8px;
+  opacity: 1;
+}
+
+.app-header-user-trigger--avatar-only {
+  width: 40px;
+  height: 40px;
+  max-width: none;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid #8b5cf6;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fbf9ff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.app-header-user-trigger--avatar-only:hover,
+.app-header-user-trigger--avatar-only[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.app-header-user-initials {
+  line-height: 1;
+}
+
 .group-hub,
 .group-assign {
+  --group-hub-badge-live: #d4a20c;
+  --group-hub-badge-scheduled: #7b5fb8;
+  --group-hub-badge-recent-win: #2e9d5c;
+  --group-hub-badge-recent-loss: #d14b4b;
+  --group-hub-badge-neutral: var(--pp-fg-tertiary);
+  --group-hub-badge-fg: #0f0f0f;
+  --group-hub-badge-fg-on-dark: #fff;
+
   max-width: 720px;
   margin: 0 auto;
   padding: 1rem 1rem 2.5rem;
@@ -3772,9 +5003,312 @@
 
 /* Groups home: admins still have Settings in the header tab on mobile */
 @media (max-width: 699px) {
-  .group-hub-card-actions .group-hub-settings-link {
+  .group-hub-card-actions .group-hub-settings-link,
+  .group-hub-lineup-actions .group-hub-settings-link {
     display: none;
   }
+}
+
+.group-hub-empty-hero {
+  margin: 0.5rem 0 1.25rem;
+  padding: 1.25rem 1.1rem 1.35rem;
+  border-radius: 14px;
+  border: 1px solid var(--pp-border);
+  background: linear-gradient(
+    165deg,
+    var(--pp-bg-secondary) 0%,
+    var(--pp-bg-tertiary) 100%
+  );
+  text-align: center;
+}
+
+.group-hub-empty-hero-art {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.group-hub-empty-hero-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 0.65rem;
+  letter-spacing: -0.02em;
+}
+
+.group-hub-empty-hero-body {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--pp-fg-secondary);
+  line-height: 1.45;
+  text-align: left;
+}
+
+.group-hub-empty-hero-cta {
+  width: 100%;
+  max-width: 320px;
+}
+
+.group-hub-my-lede {
+  margin-bottom: 0.85rem;
+}
+
+.group-hub-list--lineup {
+  gap: 0.85rem;
+}
+
+.group-hub-lineup-card {
+  border: 1px solid var(--pp-border);
+  border-radius: 12px;
+  background: var(--pp-bg-secondary);
+  overflow: hidden;
+}
+
+.group-hub-lineup-card--tap-enter {
+  position: relative;
+}
+
+.group-hub-lineup-card-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.group-hub-lineup-card-hit:focus {
+  outline: none;
+}
+
+.group-hub-lineup-card--tap-enter:has(.group-hub-lineup-card-hit:focus-visible) {
+  outline: 2px solid var(--pp-action);
+  outline-offset: 2px;
+}
+
+.group-hub--figma .group-hub-lineup-card--tap-enter:has(.group-hub-lineup-card-hit:focus-visible) {
+  outline-color: var(--gh-purple);
+}
+
+.group-hub-lineup-card-surface {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.group-hub-lineup-card-surface a {
+  pointer-events: auto;
+}
+
+.group-hub-lineup-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem 0.65rem;
+}
+
+.group-hub-lineup-head {
+  flex: 1;
+  min-width: 0;
+}
+
+.group-hub-lineup-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.group-hub-lineup-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.group-hub-pill {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  background: var(--pp-bg-tertiary);
+  color: var(--pp-fg-secondary);
+  border: 1px solid var(--pp-border);
+}
+
+.group-hub-pill--muted {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.group-hub-pill--admin {
+  background: rgba(120, 90, 200, 0.15);
+  border-color: rgba(120, 90, 200, 0.35);
+  color: var(--pp-fg-primary);
+}
+
+.group-hub-lineup-meta {
+  margin-top: 0.25rem;
+}
+
+.group-hub-lineup-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.group-hub-lineup-divider {
+  height: 1px;
+  background: var(--pp-border);
+  margin: 0 1rem;
+}
+
+.group-hub-lineup-bottom {
+  padding: 0.65rem 1rem 0.85rem;
+}
+
+.group-hub-team-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.group-hub-team-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--group-hub-badge-fg-on-dark);
+  border: 1px solid transparent;
+}
+
+.group-hub-team-badge--live {
+  background: var(--group-hub-badge-live);
+  color: var(--group-hub-badge-fg);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.group-hub-team-badge--scheduled {
+  background: var(--group-hub-badge-scheduled);
+}
+
+.group-hub-team-badge--recent_win {
+  background: var(--group-hub-badge-recent-win);
+}
+
+.group-hub-team-badge--recent_loss {
+  background: var(--group-hub-badge-recent-loss);
+}
+
+.group-hub-team-badge--neutral {
+  background: var(--pp-bg-tertiary);
+  color: var(--pp-fg-primary);
+  border-color: var(--pp-border);
+}
+
+.group-hub-team-badge--more {
+  background: var(--pp-bg-tertiary);
+  color: var(--pp-fg-secondary);
+  font-weight: 700;
+  font-size: 0.7rem;
+  border-color: var(--pp-border);
+}
+
+.group-hub-lineup-caption {
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  color: var(--pp-fg-tertiary);
+}
+
+.group-hub-switch {
+  position: relative;
+  box-sizing: border-box;
+  width: 3rem;
+  min-width: 3rem;
+  max-width: 3rem;
+  height: 1.65rem;
+  min-height: 1.65rem;
+  max-height: 1.65rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-bg-tertiary);
+  cursor: pointer;
+  padding: 2px;
+  overflow: hidden;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.group-hub-switch:focus-visible {
+  outline: 2px solid var(--pp-action);
+  outline-offset: 2px;
+}
+
+.group-hub-switch--on {
+  background: var(--pp-action);
+  border-color: var(--pp-action);
+}
+
+.group-hub-switch-thumb {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.group-hub-switch--on .group-hub-switch-thumb {
+  transform: translateX(1.35rem);
+}
+
+.group-hub-join-lede {
+  margin-bottom: 1rem;
+}
+
+.group-hub-join-subsection {
+  margin-bottom: 1.75rem;
+}
+
+.group-hub-join-subsection:last-child {
+  margin-bottom: 0;
+}
+
+.group-hub-subsection-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.65rem;
+  color: var(--pp-fg-primary);
+}
+
+.group-hub-section-head .group-hub-subsection-title {
+  margin: 0;
+}
+
+.group-hub-lineup-card--public .group-hub-lineup-top--public {
+  align-items: center;
+}
+
+.group-hub-list--join-public {
+  gap: 0.65rem;
 }
 
 .group-settings {

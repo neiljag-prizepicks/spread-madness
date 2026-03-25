@@ -570,9 +570,8 @@ export function BracketBirdseye({
             <BracketPrivateInviteLines {...bracketPrivateInvite} />
           ) : null}
           <p className="birdseye-hint">
-            <span className="birdseye-prize-dollar-below">$</span> = this game is on
-            your pool’s prize path (including the matchup you must win to reach the
-            first prize round). Need a rules refresher?{" "}
+            <span className="birdseye-prize-dollar-below">$</span> = winning this game
+            qualifies you for a prize. Need a rules refresher?{" "}
             <Link to="/rules#game-rules-h" className="group-hub-rules-link">
               Check here
             </Link>

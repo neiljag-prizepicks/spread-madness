@@ -1,23 +1,21 @@
 import type { User } from "../types";
 
-/** Two-letter initials from a display name (e.g. "Neil Jag" → "NJ"). */
-export function userInitialsFromDisplayName(displayName: string): string {
-  const t = displayName.trim();
+/**
+ * First two characters of the string (trimmed), uppercased.
+ * Single character is duplicated (e.g. "A" → "AA").
+ */
+export function twoLettersFromText(text: string): string {
+  const t = text.trim();
   if (!t) return "";
-  const parts = t.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) {
-    const w = parts[0];
-    if (w.length >= 2) return w.slice(0, 2).toUpperCase();
-    return `${w[0] ?? ""}${w[0] ?? ""}`.toUpperCase();
-  }
-  const first = parts[0][0] ?? "";
-  const last = parts[parts.length - 1][0] ?? "";
-  return `${first}${last}`.toUpperCase();
+  if (t.length >= 2) return t.slice(0, 2).toUpperCase();
+  return `${t[0]!}${t[0]!}`.toUpperCase();
 }
 
 /**
- * Prefer first + last initial when both are set; otherwise derive from display name
- * (see {@link userInitialsFromDisplayName}).
+ * Canonical user “initials” for UI (header circle, bracket overview, etc.):
+ * - Both first and last name set → first letter of each (uppercase).
+ * - Exactly one set → first two letters of that field ({@link twoLettersFromText}).
+ * - Neither set → first two letters of display name (user profile or fallback string).
  */
 export function userInitialsFromUser(
   user: Pick<User, "display_name" | "first_name" | "last_name"> | undefined,
@@ -28,9 +26,13 @@ export function userInitialsFromUser(
   if (f && l) {
     return `${f[0]!}${l[0]!}`.toUpperCase();
   }
+  if (f && !l) {
+    return twoLettersFromText(f);
+  }
+  if (!f && l) {
+    return twoLettersFromText(l);
+  }
   const dn = user?.display_name?.trim() || displayNameFallback.trim();
   if (!dn) return "";
-  return (
-    userInitialsFromDisplayName(dn) || dn.slice(0, 2).toUpperCase()
-  );
+  return twoLettersFromText(dn);
 }

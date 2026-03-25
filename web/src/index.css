@@ -1,6 +1,6 @@
 :root {
-  /* Sticky hub tabs (.app-header-tabs--groups-hub): keep section titles visible below the bar when scrolling to #anchors */
-  --app-hub-scroll-margin: calc(3.35rem + env(safe-area-inset-top, 0px));
+  /* Sticky hub: Figma Header Navigation 332:13423 — Top Nav 72px + Tabs 44px */
+  --app-hub-scroll-margin: calc(7.25rem + env(safe-area-inset-top, 0px));
   --pp-bg-primary: #0e0e0e;
   --pp-bg-secondary: #1a1a1a;
   --pp-bg-tertiary: #242424;
@@ -18,6 +18,8 @@
   --pp-negative: #ff4d4d;
   --pp-warning: #ffc107;
   --pp-font: "Inter", system-ui, sans-serif;
+  /* Top nav / game picker (Figma 332:13426 — Poppins ExtraBold on title) */
+  --pp-font-header: "Poppins", var(--pp-font);
   /* Regional tree + center hub: all matchup tiles match R64 feeder column width */
   --bracket-matchup-card-width: 264px;
 }

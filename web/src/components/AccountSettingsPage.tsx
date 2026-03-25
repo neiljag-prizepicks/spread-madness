@@ -156,9 +156,11 @@ export function AccountSettingsPage({
     <div className="account-settings-page">
       <p className="account-settings-lead">
         Your <strong>display name</strong> is what other players see in each
-        group. <strong>First name</strong> and <strong>last name</strong> are
-        optional; we use them for your initials in the bracket overview when both
-        are set. Otherwise initials come from your display name.
+        group. <strong>First name</strong> and <strong>last name</strong> drive
+        your <strong>initials</strong> everywhere (header, bracket overview, and
+        similar): when both are set you get the first letter of each; when only one
+        is set you get the first two letters of that name; when neither is set you
+        get the first two letters of your display name.
       </p>
 
       {formError ? (
