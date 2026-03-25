@@ -10,12 +10,12 @@
 .login-screen {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2rem;
+  padding: 4rem 1rem 2rem;
   background: radial-gradient(
-      ellipse 80% 50% at 50% -20%,
-      var(--pp-bg-accent),
+      ellipse 95% 60% at 50% -18%,
+      color-mix(in srgb, var(--pp-bg-accent) 40%, transparent),
       transparent
     ),
     var(--pp-bg-primary);
@@ -23,12 +23,11 @@
 
 .login-card {
   width: 100%;
-  max-width: 420px;
-  background: var(--pp-bg-secondary);
-  border: 1px solid var(--pp-border);
-  border-radius: 16px;
-  padding: 2rem;
-  /* GSI renders a fixed-width iframe; guard any edge-case overflow on narrow viewports */
+  max-width: 430px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   overflow-x: hidden;
 }
 
@@ -62,9 +61,31 @@
   font-size: 1rem;
 }
 
-.login-card .pp-brand {
-  font-size: 1.65rem;
-  margin-bottom: 0.35rem;
+/* Login only: Figma GameMode_Lockups/Game_Picker (node 345:9644) — logomark + wordmark */
+.login-card .pp-brand.login-brand-lockup {
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 8px 8px 8px 0;
+  border-radius: 999px;
+  overflow: clip;
+}
+
+.login-brand-logomark {
+  flex-shrink: 0;
+  display: block;
+}
+
+.login-brand-wordmark {
+  font-family: "Poppins", var(--pp-font-header), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.375rem, 4.2vw, 2rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--pp-fg-primary);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .login-sub {
@@ -74,9 +95,280 @@
 }
 
 .login-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--pp-border);
+  margin-top: 1rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+.login-section--first {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/**
+ * Figma 345:9841 — mock login block: column gap 16px; secondary + DemiBold CTA.
+ */
+.login-mock-login-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.login-google-account-notice {
+  margin: 0;
+  max-width: 100%;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--pp-fg-secondary);
+}
+
+.login-demo-gate-copy {
+  margin: 0;
+  max-width: 100%;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--pp-fg-secondary);
+}
+
+.login-demo-gate-lead {
+  font-weight: 400;
+}
+
+/* Figma 346:8580 — post-unlock header: same line, “Enter Password” as emphasis (not a control) */
+.login-demo-gate-emphasis {
+  font-weight: 600;
+  color: var(--pp-fg-primary);
+}
+
+.login-enter-password-trigger {
+  border: none;
+  background: none;
+  color: var(--pp-fg-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  vertical-align: baseline;
+}
+
+.login-enter-password-trigger:hover {
+  text-decoration: underline;
+}
+
+.login-enter-password-trigger:focus-visible {
+  outline: 2px solid var(--pp-action);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.login-demo-password-panel {
+  margin-top: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+
+/* Figma 345:9841 — Cancel (secondary) + Enter (primary), gap 12px, equal width */
+.login-demo-password-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.login-demo-password-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  font-family: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.login-demo-password-btn--cancel {
+  background: #1a1f2e;
+  color: var(--pp-fg-primary);
+  border: 1px solid #2d313f;
+}
+
+.login-demo-password-btn--cancel:hover {
+  background: color-mix(in srgb, #1a1f2e 85%, #fff);
+  border-color: color-mix(in srgb, #2d313f 80%, #fff);
+}
+
+.login-demo-password-btn--cancel:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--pp-fg-primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.login-demo-password-btn--enter {
+  background: var(--pp-action);
+  color: #fff;
+  border: none;
+}
+
+.login-demo-password-btn--enter:hover {
+  background: var(--pp-action-hover);
+}
+
+.login-demo-password-btn--enter:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--pp-fg-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* Figma 345:9776 — TextInput: label + field + trailing eye */
+.login-demo-password-field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  align-self: stretch;
+}
+
+.login-demo-password-label {
+  align-self: flex-start;
+  margin: 0;
+  color: var(--pp-fg-primary);
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.login-password-field-shell {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid #2d313f;
+  background: #0f111a;
+  padding: 0 10px 0 0;
+  transition: border-color 0.15s ease, outline 0.15s ease;
+}
+
+.login-password-field-shell:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--pp-action) 50%, transparent);
+  outline-offset: 0;
+  border-color: var(--pp-action);
+}
+
+.login-password-field-shell:has(.login-demo-password-input[aria-invalid="true"]) {
+  border-color: var(--pp-danger, #e85d5d);
+}
+
+.login-demo-password-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--pp-fg-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+  padding: 12px 8px 12px 14px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.login-demo-password-input::placeholder {
+  color: #8e919e;
+  opacity: 1;
+}
+
+.login-demo-password-input:focus {
+  outline: none;
+}
+
+/* Figma 346:8580 — native select styled like demo password field + chevron */
+.login-mock-user-select-shell {
+  padding-right: 0.5rem;
+}
+
+.login-mock-user-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--pp-fg-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+  padding: 12px 4px 12px 14px;
+  min-height: 44px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.login-mock-user-select:focus {
+  outline: none;
+}
+
+.login-mock-user-select-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--pp-fg-primary);
+  pointer-events: none;
+}
+
+.login-password-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--pp-fg-primary);
+  padding: 0.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  cursor: pointer;
+}
+
+.login-password-toggle-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.login-password-toggle:hover {
+  color: var(--pp-fg-primary);
+}
+
+.login-password-toggle:focus-visible {
+  outline: 2px solid var(--pp-action);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.login-demo-password-error {
+  color: var(--pp-danger, #e85d5d);
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .login-section h2 {
@@ -85,6 +377,10 @@
   letter-spacing: 0.06em;
   color: var(--pp-fg-tertiary);
   margin: 0 0 0.75rem;
+}
+
+.login-section-title {
+  display: none;
 }
 
 .mock-row {
@@ -97,8 +393,8 @@
 .mock-select {
   flex: 1 1 auto;
   min-width: 160px;
-  padding: 0.65rem 0.75rem;
-  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
   border: 1px solid var(--pp-border);
   background: var(--pp-bg-tertiary);
   color: var(--pp-fg-primary);
@@ -112,31 +408,73 @@
   }
 }
 
-/** Google GSI width is set in px from layout; span the same track as `.mock-row`. */
-.login-google-button-host {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+/**
+ * Login Google CTA — Figma node 345:9663 (brand purple pill, 48px, full width).
+ * Official GSI iframe is invisible but receives taps; surface + label match design.
+ */
+.login-google-button-stack {
+  position: relative;
   width: 100%;
-  max-width: 100%;
   min-width: 0;
+  min-height: 48px;
 }
 
-/* GSI sets a fixed iframe width; nudge height toward mock select / primary button on small screens */
-@media (max-width: 520px) {
-  .login-google-button-host > div {
-    min-height: 44px;
-  }
+.login-google-button-surface {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--pp-action);
+  pointer-events: none;
+  transition: background 0.15s ease;
+}
 
-  .login-google-button-host iframe {
-    min-height: 44px !important;
-  }
+.login-google-button-stack:hover .login-google-button-surface {
+  background: var(--pp-action-hover);
+}
+
+.login-google-button-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.33;
+  color: var(--pp-fg-primary);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.login-google-button-gsi {
+  position: absolute !important;
+  inset: 0;
+  z-index: 2;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100% !important;
+  /* Redundant with inline style: keeps GSI subtree invisible if iframe paints first */
+  opacity: 0 !important;
+  pointer-events: auto;
+}
+
+.login-google-button-gsi iframe {
+  height: 48px !important;
+  max-height: 48px !important;
+}
+
+.login-google-button-stack:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--pp-fg-primary) 55%, transparent);
+  outline-offset: 3px;
+  border-radius: 999px;
 }
 
 .login-hint {
   font-size: 0.8rem;
   color: var(--pp-fg-tertiary);
-  margin-top: 1.5rem;
+  margin-top: 1rem;
+  text-align: center;
 }
 
 .login-hint code {
@@ -923,14 +1261,127 @@
   color: #c4b5fd;
 }
 
+/* My Groups empty state (Figma 333:31086): cyan underlined link on dark sheet */
+.group-hub--figma .group-hub-rules-link--on-dark {
+  color: #00bfff;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+}
+
+.group-hub--figma .group-hub-rules-link--on-dark:hover {
+  color: #5dffff;
+}
+
 .group-hub-empty-hero {
   background: var(--gh-card, var(--pp-bg-secondary));
   border-color: var(--gh-border, var(--pp-border));
 }
 
-.group-hub--figma .group-hub-empty-hero {
+.group-hub--figma .group-hub-empty-hero:not(.group-hub-empty-hero--figma-sheet) {
   background: linear-gradient(180deg, #14141c 0%, #0e0e12 100%);
   border: 1px solid var(--gh-border);
+}
+
+/* Figma Home / My Groups empty: dark sheet; hero art ~150px (not full-viewport scale) */
+.group-hub--figma .group-hub-empty-hero--figma-sheet {
+  --gh-empty-sheet-bg: #121320;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  width: calc(100% + 2rem);
+  max-width: none;
+  border: none;
+  border-radius: 0;
+  padding: 0 0 1rem;
+  overflow: hidden;
+  text-align: center;
+  /* Full shorthand so generic .group-hub-empty-hero gradient does not layer in */
+  background: var(--gh-empty-sheet-bg);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 1px rgba(0, 0, 0, 0.16);
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 130% 70% at 50% 100%,
+      rgba(128, 0, 255, 0.42) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 90% 55% at 50% 108%,
+      rgba(0, 191, 255, 0.1) 0%,
+      transparent 45%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 3px,
+      rgba(120, 140, 255, 0.045) 3px,
+      rgba(120, 140, 255, 0.045) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 3px,
+      rgba(120, 140, 255, 0.045) 3px,
+      rgba(120, 140, 255, 0.045) 4px
+    );
+  opacity: 1;
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -35%;
+  z-index: 0;
+  width: 140%;
+  height: 70%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(128, 0, 255, 0.18) 0%,
+    transparent 72%
+  );
+}
+
+.group-hub--figma .group-hub-empty-hero-visual {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 2.25rem 0.75rem 0.5rem;
+  box-sizing: border-box;
+}
+
+.group-hub--figma .group-hub-empty-hero-sheet-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 332px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  gap: 0;
+  box-sizing: border-box;
 }
 
 .group-hub-empty-hero-img {
@@ -940,11 +1391,70 @@
   height: auto;
 }
 
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-img {
+  width: min(150px, 42vw);
+  max-width: 150px;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
 .group-hub-empty-hero-rules {
   margin: 0 0 1.25rem;
   font-size: 0.88rem;
   color: var(--gh-muted, var(--pp-fg-secondary));
   text-align: left;
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-body,
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-rules {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: #fbf9ff;
+  text-align: center;
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-body {
+  margin-bottom: 0;
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-rules {
+  margin-top: 0;
+  padding-top: 0.5rem;
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-title {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+  letter-spacing: -0.56px;
+  color: #fbf9ff;
+  margin: 0 0 8px;
+}
+
+.group-hub--figma .group-hub-empty-hero-cta-row {
+  width: 100%;
+  padding-top: 12px;
+}
+
+.group-hub--figma .group-hub-empty-hero--figma-sheet .group-hub-empty-hero-cta {
+  width: 100%;
+  max-width: none;
+  border-radius: 999px;
+  min-height: 48px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .group-hub-toggle-block {
@@ -1095,19 +1605,23 @@
   outline-color: var(--gh-join-public);
 }
 
+/* Join Groups — public row joined control (Figma 346:8912): lime pill, black check */
 .group-hub--figma .group-hub-join-plus--joined {
-  --gh-join-done: #22c55e;
-  --gh-join-done-hover: #16a34a;
+  --gh-join-done: #7cff00;
+  --gh-join-done-hover: color-mix(in srgb, #7cff00 82%, #000000);
   background: var(--gh-join-done);
-  color: #fff;
+  color: #0a0a0a;
+  min-width: 5.25rem;
+  padding: 0.35rem 0.85rem;
 }
 
 .group-hub--figma .group-hub-join-plus--joined:hover:not(:disabled) {
   background: var(--gh-join-done-hover);
+  color: #0a0a0a;
 }
 
 .group-hub--figma .group-hub-join-plus--joined:focus-visible {
-  outline-color: var(--gh-join-done);
+  outline-color: #0a0a0a;
 }
 
 .group-hub--figma .group-hub-lineup-bottom-stack {

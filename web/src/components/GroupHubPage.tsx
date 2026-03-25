@@ -350,37 +350,45 @@ export function GroupHubPage({
       {hubTab === "my" ? (
         <>
           {myGroups.length === 0 ? (
-            <div className="group-hub-empty-hero">
-              <div className="group-hub-empty-hero-art">
+            <div className="group-hub-empty-hero group-hub-empty-hero--figma-sheet">
+              <div className="group-hub-empty-hero-visual" aria-hidden>
                 <img
-                  src="/groups-empty-mascot.png"
-                  alt="Madness mascot"
-                  width={300}
-                  height={300}
+                  src="/groups-empty-state-figma.png"
+                  alt=""
+                  width={150}
+                  height={150}
                   className="group-hub-empty-hero-img"
+                  decoding="async"
                 />
               </div>
-              <h2 className="group-hub-empty-hero-title">
-                A new way to play…
-              </h2>
-              <p className="group-hub-empty-hero-body">
-                Welcome{firstName ? `, ${firstName}` : ""}! You are not part of
-                any groups yet. Join or create a group to spread the madness!
-              </p>
-              <p className="group-hub-empty-hero-rules">
-                New here? Need a rules refresher? Check out the{" "}
-                <Link to="/rules#game-rules-h" className="group-hub-rules-link">
-                  rules
-                </Link>{" "}
-                page.
-              </p>
-              <button
-                type="button"
-                className="btn-primary group-hub-empty-hero-cta"
-                onClick={() => navigate("/groups/join", { replace: true })}
-              >
-                Join a group
-              </button>
+              <div className="group-hub-empty-hero-sheet-inner">
+                <h2 className="group-hub-empty-hero-title">A new way to play...</h2>
+                <div className="group-hub-empty-hero-copy">
+                  <p className="group-hub-empty-hero-body">
+                    Welcome{firstName ? `, ${firstName}` : ""}! You are not part of
+                    any groups yet. Join or create a group to spread the madness!
+                  </p>
+                  <p className="group-hub-empty-hero-rules">
+                    New here? Need a rules refresher? Checkout the{" "}
+                    <Link
+                      to="/rules#game-rules-h"
+                      className="group-hub-rules-link group-hub-rules-link--on-dark"
+                    >
+                      rules
+                    </Link>{" "}
+                    page.
+                  </p>
+                </div>
+                <div className="group-hub-empty-hero-cta-row">
+                  <button
+                    type="button"
+                    className="btn-primary group-hub-empty-hero-cta"
+                    onClick={() => navigate("/groups/join", { replace: true })}
+                  >
+                    Join a group
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <ul className="group-hub-list group-hub-list--lineup">

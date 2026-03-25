@@ -86,6 +86,10 @@ import "./App.css";
 /** Mobile brand line matches this reference length (see SpreadMadnessBrandMenu). */
 const MOBILE_BRAND_MAX_CHARS = "Spread Madness Home".length;
 
+/** Gate for mock / internal demo user picker on the login screen (not for production secrets). */
+const DEMO_MOCK_ACCESS_PASSWORD = "Bracketology2026";
+const DEMO_MOCK_UNLOCK_STORAGE_KEY = "spread_madness_demo_mock_unlocked";
+
 type Session =
   | { kind: "mock"; userId: string; label: string }
   | { kind: "google"; label: string; uid?: string };
@@ -587,7 +591,16 @@ export default function App() {
   const [activeGroupDoc, setActiveGroupDoc] = useState<GroupDoc | null>(null);
 
   const mockSelectRef = useRef<HTMLSelectElement>(null);
+  const demoPasswordMeasureRef = useRef<HTMLInputElement>(null);
   const loginCardRef = useRef<HTMLDivElement>(null);
+  const [demoMockUnlocked, setDemoMockUnlocked] = useState(() => {
+    if (typeof sessionStorage === "undefined") return false;
+    return sessionStorage.getItem(DEMO_MOCK_UNLOCK_STORAGE_KEY) === "1";
+  });
+  const [showDemoPasswordPanel, setShowDemoPasswordPanel] = useState(false);
+  const [demoPasswordDraft, setDemoPasswordDraft] = useState("");
+  const [demoPasswordError, setDemoPasswordError] = useState(false);
+  const [demoPasswordVisible, setDemoPasswordVisible] = useState(false);
   const [googleLoginWidth, setGoogleLoginWidth] = useState(() => {
     if (typeof window === "undefined") return 280;
     return Math.min(400, Math.max(200, window.innerWidth - 120));
@@ -600,8 +613,14 @@ export default function App() {
   useLayoutEffect(() => {
     if (session !== null) return;
     const selectEl = mockSelectRef.current;
+    const passwordEl = demoPasswordMeasureRef.current;
+    const measureEl = demoMockUnlocked
+      ? selectEl
+      : showDemoPasswordPanel
+        ? passwordEl
+        : loginCardRef.current;
     const cardEl = loginCardRef.current;
-    if (!selectEl || !cardEl) return;
+    if (!measureEl || !cardEl) return;
 
     const cardContentWidth = (card: HTMLElement) => {
       const s = getComputedStyle(card);
@@ -615,8 +634,8 @@ export default function App() {
     const sync = () => {
       const inner = cardContentWidth(cardEl);
       if (inner <= 0) return;
-      const selectW = selectEl.getBoundingClientRect().width;
-      const w = Math.min(selectW, inner, 400);
+      const trackW = measureEl.getBoundingClientRect().width;
+      const w = Math.min(trackW, inner, 400);
       setGoogleLoginWidth(Math.round(Math.max(200, w)));
     };
 
@@ -626,7 +645,7 @@ export default function App() {
       requestAnimationFrame(sync);
     });
     const ro = new ResizeObserver(sync);
-    ro.observe(selectEl);
+    ro.observe(measureEl);
     ro.observe(cardEl);
     const onResize = () => sync();
     window.addEventListener("resize", onResize);
@@ -634,7 +653,12 @@ export default function App() {
       ro.disconnect();
       window.removeEventListener("resize", onResize);
     };
-  }, [session]);
+  }, [session, demoMockUnlocked, showDemoPasswordPanel]);
+
+  useEffect(() => {
+    if (!showDemoPasswordPanel || demoMockUnlocked) return;
+    demoPasswordMeasureRef.current?.focus();
+  }, [showDemoPasswordPanel, demoMockUnlocked]);
 
   /** Signed-out and logged-out states still matched deep URLs; normalize to `/` for a clean address bar. */
   useEffect(() => {
@@ -1189,62 +1213,51 @@ export default function App() {
     isRulesPage && (!rulesNavHash || rulesNavHash === "#game-rules-h");
   const rulesPrizeTabActive = isRulesPage && rulesNavHash === "#prize-structure-h";
 
+  const attemptDemoMockUnlock = () => {
+    if (demoPasswordDraft === DEMO_MOCK_ACCESS_PASSWORD) {
+      try {
+        sessionStorage.setItem(DEMO_MOCK_UNLOCK_STORAGE_KEY, "1");
+      } catch {
+        /* ignore quota / private mode */
+      }
+      setDemoMockUnlocked(true);
+      setDemoPasswordError(false);
+      setDemoPasswordDraft("");
+      setDemoPasswordVisible(false);
+    } else {
+      setDemoPasswordError(true);
+    }
+  };
+
   if (!session) {
     return (
       <div className="login-screen">
         <div ref={loginCardRef} className="login-card">
           <h1 className="sr-only">Spread Madness</h1>
-          <div className="pp-brand">
-            <span className="pp-mark">P</span>
-            <span>Spread Madness</span>
-          </div>
-          <p className="login-sub">POC — March Madness group (ATS)</p>
-
-          <div className="login-section">
-            <h2>Mock login (internal demo)</h2>
-            <div className="mock-row">
-              <select
-                ref={mockSelectRef}
-                id="mock-user"
-                className="mock-select"
-                defaultValue="1"
-              >
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.display_name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => {
-                  const sel = document.getElementById(
-                    "mock-user"
-                  ) as HTMLSelectElement;
-                  const u = users.find((x) => x.id === sel.value);
-                  if (u) {
-                    void (async () => {
-                      if (auth) await signOut(auth);
-                      setSession({
-                        kind: "mock",
-                        userId: u.id,
-                        label: u.display_name,
-                      });
-                      navigate("/groups/my", { replace: true });
-                    })();
-                  }
-                }}
-              >
-                Enter group
-              </button>
-            </div>
+          <div className="pp-brand login-brand-lockup" aria-hidden>
+            <img
+              src="/brand-picker-logomark.svg"
+              alt=""
+              width={32}
+              height={32}
+              className="login-brand-logomark"
+              decoding="async"
+            />
+            <span className="login-brand-wordmark">SPREAD MADNESS</span>
           </div>
 
           {googleClientId && (
-            <div className="login-section">
-              <h2>Google</h2>
-              <div className="login-google-button-host">
+            <div className="login-section login-section--first">
+              <h2 className="sr-only">Sign in with Google</h2>
+              {/*
+                Figma 345:9663: purple pill + centered label. GSI iframe cannot be styled to brand purple;
+                we paint the surface + label underneath and keep the official iframe on top (opacity 0) for clicks.
+              */}
+              <div className="login-google-button-stack">
+                <div className="login-google-button-surface" aria-hidden />
+                <span className="login-google-button-label" aria-hidden>
+                  Sign in with Google
+                </span>
                 <GoogleLogin
                   onSuccess={onGoogleSuccess}
                   onError={() => console.warn("Google login failed")}
@@ -1252,15 +1265,251 @@ export default function App() {
                   use_fedcm_for_button={false}
                   width={googleLoginWidth}
                   type="standard"
-                  theme="outline"
+                  theme="filled_blue"
                   size="large"
                   text="signin_with"
-                  shape="rectangular"
-                  logo_alignment="left"
+                  shape="pill"
+                  logo_alignment="center"
+                  containerProps={{
+                    className: "login-google-button-gsi",
+                    /* Hide entire GSI output from frame 1 — iframe-only opacity can flash blue before paint. */
+                    style: {
+                      width: "100%",
+                      height: 48,
+                      minHeight: 48,
+                      opacity: 0,
+                    },
+                  }}
                 />
               </div>
             </div>
           )}
+
+          <div
+            className={`login-section${googleClientId ? "" : " login-section--first"}`}
+          >
+            <h2 className="login-section-title">Mock login (internal demo)</h2>
+            {!demoMockUnlocked ? (
+              <div className="login-mock-login-stack">
+                {googleClientId ? (
+                  <p className="login-google-account-notice">
+                    PrizePicks emails currently do not work with Google Sign-In.
+                    Please use a personal Google account.
+                  </p>
+                ) : null}
+                <p className="login-demo-gate-copy">
+                  <span className="login-demo-gate-lead">
+                    Looking for the Mock Login?{" "}
+                  </span>
+                  <button
+                    type="button"
+                    className="login-enter-password-trigger"
+                    onClick={() => setShowDemoPasswordPanel(true)}
+                  >
+                    Enter Password
+                  </button>
+                </p>
+                {showDemoPasswordPanel ? (
+                  <div className="login-demo-password-panel">
+                    <div className="login-demo-password-field-block">
+                      <label className="login-demo-password-label" htmlFor="demo-mock-password">
+                        Demo password
+                      </label>
+                      <div className="login-password-field-shell">
+                        <input
+                          ref={demoPasswordMeasureRef}
+                          id="demo-mock-password"
+                          type={demoPasswordVisible ? "text" : "password"}
+                          name="demo-mock-password"
+                          autoComplete="off"
+                          className="login-demo-password-input"
+                          placeholder="password"
+                          value={demoPasswordDraft}
+                          aria-invalid={demoPasswordError}
+                          onChange={(e) => {
+                            setDemoPasswordDraft(e.target.value);
+                            if (demoPasswordError) setDemoPasswordError(false);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              attemptDemoMockUnlock();
+                            }
+                          }}
+                        />
+                      <button
+                        type="button"
+                        className="login-password-toggle"
+                        aria-label={demoPasswordVisible ? "Hide password" : "Show password"}
+                        onClick={() => setDemoPasswordVisible((v) => !v)}
+                      >
+                        {demoPasswordVisible ? (
+                          <svg
+                            className="login-password-toggle-icon"
+                            viewBox="0 0 24 24"
+                            width={22}
+                            height={22}
+                            aria-hidden
+                            fill="none"
+                          >
+                            <path
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19 12 19c.769 0 1.518-.073 2.246-.212M15.5 6.5a10.053 10.053 0 00-3.5-.5C7.244 4.5 3.226 7.162 1.934 11.5c-.21.615-.21 1.23 0 1.5M3 3l18 18"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="login-password-toggle-icon"
+                            viewBox="0 0 24 24"
+                            width={22}
+                            height={22}
+                            aria-hidden
+                            fill="none"
+                          >
+                            <path
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                            />
+                            <path
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                    </div>
+                    <div className="login-demo-password-actions">
+                      <button
+                        type="button"
+                        className="login-demo-password-btn login-demo-password-btn--cancel"
+                        onClick={() => {
+                          setShowDemoPasswordPanel(false);
+                          setDemoPasswordDraft("");
+                          setDemoPasswordError(false);
+                          setDemoPasswordVisible(false);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="login-demo-password-btn login-demo-password-btn--enter"
+                        onClick={() => attemptDemoMockUnlock()}
+                      >
+                        Enter
+                      </button>
+                    </div>
+                    {demoPasswordError ? (
+                      <p className="login-demo-password-error" role="alert">
+                        Incorrect password.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="login-mock-login-stack">
+                {googleClientId ? (
+                  <p className="login-google-account-notice">
+                    PrizePicks emails currently do not work with Google Sign-In.
+                    Please use a personal Google account.
+                  </p>
+                ) : null}
+                <p className="login-demo-gate-copy">
+                  <span className="login-demo-gate-lead">
+                    Looking for the Mock Login?{" "}
+                  </span>
+                  <span className="login-demo-gate-emphasis">Enter Password</span>
+                </p>
+                <div className="login-demo-password-panel">
+                  <div className="login-demo-password-field-block">
+                    <label className="login-demo-password-label" htmlFor="mock-user">
+                      Select user
+                    </label>
+                    <div className="login-password-field-shell login-mock-user-select-shell">
+                      <select
+                        ref={mockSelectRef}
+                        id="mock-user"
+                        className="login-mock-user-select"
+                        defaultValue={users[0]?.id ?? ""}
+                      >
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.display_name}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="login-mock-user-select-chevron" aria-hidden>
+                        <svg
+                          viewBox="0 0 12 12"
+                          width={16}
+                          height={16}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={1.6}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 4.5 L6 7.5 L9 4.5" />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="login-demo-password-actions">
+                    <button
+                      type="button"
+                      className="login-demo-password-btn login-demo-password-btn--cancel"
+                      onClick={() => {
+                        try {
+                          sessionStorage.removeItem(DEMO_MOCK_UNLOCK_STORAGE_KEY);
+                        } catch {
+                          /* ignore */
+                        }
+                        setDemoMockUnlocked(false);
+                        setShowDemoPasswordPanel(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="login-demo-password-btn login-demo-password-btn--enter"
+                      onClick={() => {
+                        const sel = document.getElementById(
+                          "mock-user"
+                        ) as HTMLSelectElement | null;
+                        if (!sel) return;
+                        const u = users.find((x) => x.id === sel.value);
+                        if (u) {
+                          void (async () => {
+                            if (auth) await signOut(auth);
+                            setSession({
+                              kind: "mock",
+                              userId: u.id,
+                              label: u.display_name,
+                            });
+                            navigate("/groups/my", { replace: true });
+                          })();
+                        }
+                      }}
+                    >
+                      View user
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {!googleClientId && (
             <p className="login-hint">
