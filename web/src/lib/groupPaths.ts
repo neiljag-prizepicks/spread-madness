@@ -26,3 +26,9 @@ export function groupAssignPath(groupId: string): string {
 export function groupSettingsPath(groupId: string): string {
   return `/group/${seg(groupId)}/settings`;
 }
+
+/** Groups hub join tab; same path used for invite deeplinks. */
+export function groupsJoinPath(search?: string): string {
+  if (!search) return "/groups/join";
+  return `/groups/join${search.startsWith("?") ? search : `?${search}`}`;
+}

@@ -351,6 +351,72 @@ export async function joinPrivateGroup(
   return groupId;
 }
 
+export async function joinPrivateGroupFromInviteLink(
+  firestore: Firestore,
+  groupId: string,
+  joinCode: string,
+  password: string,
+  uid: string,
+  displayName: string
+): Promise<void> {
+  const code = joinCode.trim().toUpperCase();
+  const gRef = doc(firestore, "groups", groupId);
+  await runTransaction(firestore, async (transaction) => {
+    const gSnap = await transaction.get(gRef);
+    if (!gSnap.exists()) throw new Error("Group not found.");
+    const g = gSnap.data() as GroupDoc;
+    if (g.visibility !== "private") {
+      throw new Error("This invite link doesn't match a private group.");
+    }
+    if ((g.joinCode || "").trim().toUpperCase() !== code) {
+      throw new Error("Join code doesn't match this group.");
+    }
+    if (g.joinPassword !== password) throw new Error("Incorrect password.");
+    if (g.memberCount >= g.maxMembers) throw new Error("This group is full.");
+    const mRef = doc(firestore, "groups", groupId, "members", uid);
+    const mSnap = await transaction.get(mRef);
+    if (mSnap.exists()) throw new Error("You are already in this group.");
+
+    transaction.update(gRef, { memberCount: increment(1) });
+    transaction.set(mRef, {
+      role: "member",
+      displayName,
+      joinedAt: Timestamp.now(),
+    } satisfies MemberDoc);
+    transaction.set(doc(firestore, "users", uid, "groups", groupId), {
+      groupId,
+      role: "member",
+      name: g.name,
+      memberCap: g.memberCap,
+      visibility: g.visibility,
+      joinedAt: Timestamp.now(),
+    } satisfies UserGroupLinkDoc);
+  });
+}
+
+/** Public invite: optional URL `code` must match stored joinCode when the group has one. */
+export async function joinPublicGroupFromInviteLink(
+  firestore: Firestore,
+  groupId: string,
+  codeFromUrl: string,
+  uid: string,
+  displayName: string
+): Promise<void> {
+  const gRef = doc(firestore, "groups", groupId);
+  const gSnap = await getDoc(gRef);
+  if (!gSnap.exists()) throw new Error("Group not found.");
+  const data = gSnap.data() as GroupDoc;
+  if (data.visibility !== "public") {
+    throw new Error("This invite link doesn't match a public group.");
+  }
+  const docCode = (data.joinCode || "").trim();
+  const urlCode = codeFromUrl.trim();
+  if (docCode && urlCode !== docCode) {
+    throw new Error("Invite link doesn't match this group.");
+  }
+  await joinPublicGroup(firestore, groupId, uid, displayName);
+}
+
 export async function fetchPublicGroups(
   firestore: Firestore
 ): Promise<{ id: string; data: GroupDoc }[]> {

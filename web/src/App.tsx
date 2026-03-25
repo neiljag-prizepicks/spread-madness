@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -58,6 +58,12 @@ import {
   groupMyTeamsUserPath,
   groupSettingsPath,
 } from "./lib/groupPaths";
+import {
+  buildGroupInviteUrl,
+  buildPrivateInviteClipboardLines,
+  buildPublicInviteClipboardLines,
+} from "./lib/groupInviteLink";
+import { clearNewGroupBadge } from "./lib/newGroupBadgeStorage";
 import { applyScheduleLineOverlayToGames } from "./lib/mergeGameOverlay";
 import type { OwnershipRow } from "./lib/ownershipMap";
 import {
@@ -562,6 +568,8 @@ function MyTeamsRoute({
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  /** Preserves `/groups/join?...` query across Google sign-in (see onGoogleSuccess). */
+  const inviteJoinSearchRef = useRef("");
   const [session, setSession] = useState<Session | null>(null);
   /** Bracket template only (no schedule/line overlay) — reapplied when live overlay updates. */
   const [gameTemplate, setGameTemplate] = useState<BracketGame[]>([]);
@@ -660,13 +668,23 @@ export default function App() {
     demoPasswordMeasureRef.current?.focus();
   }, [showDemoPasswordPanel, demoMockUnlocked]);
 
-  /** Signed-out and logged-out states still matched deep URLs; normalize to `/` for a clean address bar. */
+  /** Signed-out: normalize deep URLs except invite join (needs query string for post-auth). */
   useEffect(() => {
     if (session !== null) return;
     if (isFirebaseConfigured() && !authReady) return;
     if (location.pathname === "/") return;
+    if (location.pathname === "/groups/join") return;
     navigate("/", { replace: true });
   }, [session, authReady, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (session !== null) return;
+    if (location.pathname === "/groups/join") {
+      inviteJoinSearchRef.current = location.search;
+    } else {
+      inviteJoinSearchRef.current = "";
+    }
+  }, [session, location.pathname, location.search]);
 
   /** Apply focus from router state (e.g. My Teams → bracket) and clear state so refresh/back behave. */
   useEffect(() => {
@@ -885,6 +903,54 @@ export default function App() {
     return DEFAULT_PRIZE_START_ROUND;
   }, [firebaseGroupMode, activeGroupDoc]);
 
+  const bracketInviteSlot = useMemo(() => {
+    if (!firebaseGroupMode || !activeGroupId || !activeGroupDoc) return null;
+    if (activeGroupDoc.memberCount >= activeGroupDoc.maxMembers) return null;
+    return {
+      visibility: activeGroupDoc.visibility,
+      joinCode: activeGroupDoc.joinCode?.trim() || "",
+      password: activeGroupDoc.joinPassword || "",
+      groupId: activeGroupId,
+    };
+  }, [firebaseGroupMode, activeGroupId, activeGroupDoc]);
+
+  const handleBracketInviteClick = useCallback(async () => {
+    if (!activeGroupId || !activeGroupDoc) return false;
+    const code = (activeGroupDoc.joinCode || "").trim();
+    const url = buildGroupInviteUrl({
+      groupId: activeGroupId,
+      code,
+      password:
+        activeGroupDoc.visibility === "private"
+          ? activeGroupDoc.joinPassword || ""
+          : undefined,
+    });
+    const text =
+      activeGroupDoc.visibility === "private"
+        ? buildPrivateInviteClipboardLines(
+            url,
+            code || "—",
+            activeGroupDoc.joinPassword || ""
+          )
+        : buildPublicInviteClipboardLines(url);
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [activeGroupId, activeGroupDoc]);
+
+  useEffect(() => {
+    if (!session || session.kind !== "google" || !session.uid) return;
+    const m = matchPath(
+      { path: "/group/:groupId/*", end: false },
+      location.pathname
+    );
+    const gid = m?.params.groupId;
+    if (gid) clearNewGroupBadge(decodeURIComponent(gid));
+  }, [session, location.pathname]);
+
   useEffect(() => {
     if (!firebaseGroupMode || !userGroupsLoaded || userGroupRows.length > 0)
       return;
@@ -1023,7 +1089,6 @@ export default function App() {
       max: row?.data.memberCap ?? memberUsers.size,
       isAdmin: row?.data.role === "admin",
       assignPath: groupAssignPath(activeGroupId),
-      privateInvite: bracketPrivateInvite ?? undefined,
     };
   }, [
     firebaseGroupMode,
@@ -1031,7 +1096,6 @@ export default function App() {
     effectiveOwnership.length,
     userGroupRows,
     memberUsers,
-    bracketPrivateInvite,
     activeGroupDoc,
     allTeamIds,
     games,
@@ -1120,11 +1184,26 @@ export default function App() {
 
   const onGoogleSuccess = async (cred: CredentialResponse) => {
     if (!cred.credential) return;
+    const qs = inviteJoinSearchRef.current;
+    const hasInviteGroup =
+      qs &&
+      (() => {
+        try {
+          const q = qs.startsWith("?") ? qs.slice(1) : qs;
+          return Boolean(new URLSearchParams(q).get("groupId"));
+        } catch {
+          return false;
+        }
+      })();
+    const afterAuth =
+      hasInviteGroup && qs
+        ? `/groups/join${qs.startsWith("?") ? qs : `?${qs}`}`
+        : "/groups/my";
     if (isFirebaseConfigured() && auth) {
       try {
         const credential = GoogleAuthProvider.credential(cred.credential);
         await signInWithCredential(auth, credential);
-        navigate("/groups/my", { replace: true });
+        navigate(afterAuth, { replace: true });
       } catch (e) {
         console.warn("Firebase sign-in failed", e);
       }
@@ -1134,7 +1213,7 @@ export default function App() {
         kind: "google",
         label: p.name ?? p.email ?? "Google user",
       });
-      navigate("/groups/my", { replace: true });
+      navigate(afterAuth, { replace: true });
     }
   };
 
@@ -1245,6 +1324,12 @@ export default function App() {
             />
             <span className="login-brand-wordmark">SPREAD MADNESS</span>
           </div>
+
+          {location.pathname === "/groups/join" ? (
+            <p className="login-invite-lede">
+              You’re joining a group — sign in with Google to continue.
+            </p>
+          ) : null}
 
           {googleClientId && (
             <div className="login-section login-section--first">
@@ -1541,7 +1626,9 @@ export default function App() {
     focusGameId: bracketFocusGameId,
     onFocusGameConsumed: () => setBracketFocusGameId(null),
     groupTeamsUnassigned,
-    bracketPrivateInvite: groupTeamsUnassigned ? null : bracketPrivateInvite,
+    bracketPrivateInvite: null,
+    bracketInviteSlot,
+    onBracketInviteClick: handleBracketInviteClick,
     prizeStartRound: bracketPrizeStartRound,
   } satisfies KalshiBracketArenaProps;
 

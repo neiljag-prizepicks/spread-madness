@@ -1,6 +1,6 @@
-import { doc, onSnapshot } from "firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { BracketGame, GameResult, Team, User } from "../types";
 import { requireDb } from "../lib/firebase";
 import { buildGroupHubTeamBadges } from "../lib/groupHubTeamBadges";
@@ -14,7 +14,9 @@ import {
   createGroup,
   fetchPublicGroups,
   joinPrivateGroup,
+  joinPrivateGroupFromInviteLink,
   joinPublicGroup,
+  joinPublicGroupFromInviteLink,
   leavePublicGroup,
   subscribeGroupOwnership,
   subscribeUserGroups,
@@ -25,6 +27,11 @@ import type { OwnershipRow } from "../lib/ownershipMap";
 
 import { PasswordFieldWithToggle } from "./PasswordFieldWithToggle";
 import { writeStoredActiveGroupId } from "../lib/activeGroupStorage";
+import { parseGroupInviteSearchString } from "../lib/groupInviteLink";
+import {
+  isGroupNewBadgeActive,
+  markGroupAsNewOnInvite,
+} from "../lib/newGroupBadgeStorage";
 import { groupSettingsPath } from "../lib/groupPaths";
 import type { GroupHubTeamBadgeStatus } from "../lib/groupHubTeamBadges";
 import {
@@ -83,6 +90,8 @@ export function GroupHubPage({
 }: Props) {
   const { hubTab } = useParams<{ hubTab: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteRunRef = useRef(false);
   const db = useMemo(() => requireDb(), []);
   const teamsById = useMemo(
     () => new Map(teams.map((t) => [t.id, t])),
@@ -106,6 +115,7 @@ export function GroupHubPage({
 
   const [privCode, setPrivCode] = useState("");
   const [privPass, setPrivPass] = useState("");
+  const [inviteJoinBusy, setInviteJoinBusy] = useState(false);
 
   /** Public Join / Joined button async guard */
   const [publicActionGroupId, setPublicActionGroupId] = useState<string | null>(
@@ -138,6 +148,78 @@ export function GroupHubPage({
       for (const u of unsubs) u();
     };
   }, [db, myGroupIdsKey]);
+
+  const inviteSearchKey = searchParams.toString();
+
+  useEffect(() => {
+    if (hubTab !== "join") return;
+    const q = inviteSearchKey ? `?${inviteSearchKey}` : "";
+    const parsed = parseGroupInviteSearchString(q);
+    if (!parsed?.groupId) return;
+    setPrivCode((prev) => (prev ? prev : parsed.code));
+    if (parsed.password) setPrivPass((prev) => (prev ? prev : parsed.password));
+  }, [hubTab, inviteSearchKey]);
+
+  useEffect(() => {
+    if (hubTab !== "join") return;
+    const q = inviteSearchKey ? `?${inviteSearchKey}` : "";
+    const parsed = parseGroupInviteSearchString(q);
+    if (!parsed?.groupId) return;
+    if (inviteRunRef.current) return;
+    let cancelled = false;
+    (async () => {
+      setInviteJoinBusy(true);
+      setError(null);
+      try {
+        const gSnap = await getDoc(doc(db, "groups", parsed.groupId));
+        if (!gSnap.exists()) throw new Error("Group not found.");
+        const data = gSnap.data() as GroupDoc;
+        if (data.memberCount >= data.maxMembers) {
+          throw new Error("This group is full.");
+        }
+        if (data.visibility === "private") {
+          if (!parsed.password) throw new Error("Invalid invite link.");
+          await joinPrivateGroupFromInviteLink(
+            db,
+            parsed.groupId,
+            parsed.code,
+            parsed.password,
+            uid,
+            displayName
+          );
+        } else {
+          await joinPublicGroupFromInviteLink(
+            db,
+            parsed.groupId,
+            parsed.code,
+            uid,
+            displayName
+          );
+        }
+        if (cancelled) return;
+        inviteRunRef.current = true;
+        markGroupAsNewOnInvite(parsed.groupId);
+        writeStoredActiveGroupId(parsed.groupId);
+        navigate("/groups/my", { replace: true });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (
+          msg.includes("already in this group") ||
+          msg.includes("You're already in")
+        ) {
+          inviteRunRef.current = true;
+          navigate("/groups/my", { replace: true });
+          return;
+        }
+        if (!cancelled) setError(msg);
+      } finally {
+        if (!cancelled) setInviteJoinBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hubTab, inviteSearchKey, db, uid, displayName, navigate]);
 
   const badgeByGroupId = useMemo(() => {
     const m = new Map<
@@ -412,7 +494,12 @@ export function GroupHubPage({
                     <div className="group-hub-lineup-card-surface">
                     <div className="group-hub-lineup-top">
                       <div className="group-hub-lineup-head">
-                        <div className="group-hub-card-name">{g.name}</div>
+                        <div className="group-hub-lineup-name-row">
+                          <div className="group-hub-card-name">{g.name}</div>
+                          {isGroupNewBadgeActive(g.id) ? (
+                            <span className="group-hub-new-badge">New</span>
+                          ) : null}
+                        </div>
                         <div className="group-hub-card-meta group-hub-lineup-members">
                           {(() => {
                             const fill = groupMemberFill[g.id];
@@ -751,32 +838,12 @@ export function GroupHubPage({
             >
               <label className="group-hub-label">
                 Join code
-                <div className="group-hub-adorned-field">
-                  <input
-                    className="group-hub-input group-hub-input--adorned"
-                    value={privCode}
-                    onChange={(e) => setPrivCode(e.target.value.toUpperCase())}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    className="group-hub-adorned-btn"
-                    onClick={() => setPrivCode("")}
-                    aria-label="Reset join code"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="20"
-                      height="20"
-                      aria-hidden
-                    >
-                      <path
-                        fill="currentColor"
-                        d="M17.65 6.35A7.958 7.958 0 0012 4c-1.48 0-2.89.39-4.11 1.07l1.65 1.65A5.97 5.97 0 0112 6c3.31 0 6 2.69 6 6h-3l4 4 4-4h-3a7.99 7.99 0 00-6.35-8.65zM6.35 17.65A7.958 7.958 0 0012 20c1.48 0 2.89-.39 4.11-1.07l-1.65-1.65A5.97 5.97 0 0112 18c-3.31 0-6-2.69-6-6h3L5 8l-4 4h3a7.99 7.99 0 006.35 8.65z"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                <input
+                  className="group-hub-input"
+                  value={privCode}
+                  onChange={(e) => setPrivCode(e.target.value.toUpperCase())}
+                  autoComplete="off"
+                />
               </label>
               <label className="group-hub-label">
                 Group password

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { requireDb } from "../lib/firebase";
 import { anyBracketGameStarted } from "../lib/bracketGameStarted";
@@ -23,6 +23,11 @@ import {
 } from "../lib/prizeStartRound";
 import type { GameResult } from "../types";
 import { writeStoredActiveGroupId } from "../lib/activeGroupStorage";
+import {
+  buildGroupInviteUrl,
+  buildPrivateInviteClipboardLines,
+  buildPublicInviteClipboardLines,
+} from "../lib/groupInviteLink";
 import { groupAssignPath } from "../lib/groupPaths";
 import { PasswordFieldWithToggle } from "./PasswordFieldWithToggle";
 
@@ -149,6 +154,24 @@ function IconPlus({ className }: { className?: string }) {
   );
 }
 
+
+function IconCheck({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41L9 16.17z"
+      />
+    </svg>
+  );
+}
+
 function CopyClipboardIcon() {
   return (
     <svg
@@ -250,6 +273,18 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
     Map<string, GameResult>
   >(() => new Map());
   const [savingPrizeRound, setSavingPrizeRound] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const inviteCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  useEffect(() => {
+    return () => {
+      if (inviteCopiedTimerRef.current) {
+        clearTimeout(inviteCopiedTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const unsub = subscribeGroupMembers(
@@ -347,6 +382,43 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
   const tournamentStarted = anyBracketGameStarted(bracketResults);
   const prizeRoundLocked = teamsAssigned && tournamentStarted;
   const prizeSelectDisabled = !isAdmin || prizeRoundLocked || savingPrizeRound;
+
+  const poolHasOpenSlots =
+    groupDoc != null && groupDoc.memberCount < groupDoc.maxMembers;
+
+  const handleCopyFullInvite = async () => {
+    if (!groupDoc) return;
+    const code = (groupDoc.joinCode || "").trim();
+    const url = buildGroupInviteUrl({
+      groupId,
+      code,
+      password:
+        groupDoc.visibility === "private"
+          ? groupDoc.joinPassword || ""
+          : undefined,
+    });
+    const copyText =
+      groupDoc.visibility === "private"
+        ? buildPrivateInviteClipboardLines(
+            url,
+            code || "—",
+            groupDoc.joinPassword || ""
+          )
+        : buildPublicInviteClipboardLines(url);
+    try {
+      await navigator.clipboard.writeText(copyText);
+    } catch {
+      return;
+    }
+    if (inviteCopiedTimerRef.current) {
+      clearTimeout(inviteCopiedTimerRef.current);
+    }
+    setInviteCopied(true);
+    inviteCopiedTimerRef.current = setTimeout(() => {
+      setInviteCopied(false);
+      inviteCopiedTimerRef.current = null;
+    }, 3000);
+  };
 
   const handlePrizeStartChange = async (value: PrizeStartRound) => {
     if (!isAdmin || prizeRoundLocked) return;
@@ -609,11 +681,39 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
       {groupDoc?.visibility === "private" ? (
         <section
           className="group-settings-v2-card"
-          aria-labelledby="private-invite-h"
+          aria-labelledby="invite-members-private-h"
         >
-          <h2 id="private-invite-h" className="group-settings-v2-section-heading">
-            Join code &amp; password
+          <h2
+            id="invite-members-private-h"
+            className="group-settings-v2-section-heading"
+          >
+            Invite Members
           </h2>
+          {poolHasOpenSlots ? (
+            <div className="group-settings-invite-friends-row">
+              <p className="group-settings-invite-friends-label">
+                Invite your friends
+              </p>
+              <button
+                type="button"
+                className={
+                  "btn-primary group-settings-invite-pill-btn" +
+                  (inviteCopied ? " group-settings-invite-pill-btn--copied" : "")
+                }
+                onClick={() => void handleCopyFullInvite()}
+                aria-label={
+                  inviteCopied ? "Invite link copied" : "Copy full invite to clipboard"
+                }
+              >
+                {inviteCopied ? (
+                  <IconCheck className="group-settings-invite-pill-icon" />
+                ) : (
+                  <IconPlus className="group-settings-invite-pill-icon" aria-hidden />
+                )}
+                Invite
+              </button>
+            </div>
+          ) : null}
           <p className="group-settings-v2-desc">
             Share these so people can join from the groups home until the pool
             is full. Everyone in the group can copy; only admins can change the
@@ -663,6 +763,43 @@ export function GroupLeagueSettingsPage({ uid }: Props) {
               </button>
             </form>
           ) : null}
+        </section>
+      ) : null}
+
+      {groupDoc?.visibility === "public" && poolHasOpenSlots ? (
+        <section
+          className="group-settings-v2-card"
+          aria-labelledby="invite-members-public-h"
+        >
+          <h2
+            id="invite-members-public-h"
+            className="group-settings-v2-section-heading"
+          >
+            Invite Members
+          </h2>
+          <div className="group-settings-invite-friends-row">
+            <p className="group-settings-invite-friends-label">
+              Invite your friends
+            </p>
+            <button
+              type="button"
+              className={
+                "btn-primary group-settings-invite-pill-btn" +
+                (inviteCopied ? " group-settings-invite-pill-btn--copied" : "")
+              }
+              onClick={() => void handleCopyFullInvite()}
+              aria-label={
+                inviteCopied ? "Invite link copied" : "Copy full invite to clipboard"
+              }
+            >
+              {inviteCopied ? (
+                <IconCheck className="group-settings-invite-pill-icon" />
+              ) : (
+                <IconPlus className="group-settings-invite-pill-icon" aria-hidden />
+              )}
+              Invite
+            </button>
+          </div>
         </section>
       ) : null}
 

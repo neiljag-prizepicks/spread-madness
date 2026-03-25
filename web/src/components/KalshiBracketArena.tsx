@@ -15,8 +15,10 @@ import {
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import {
   BracketBirdseye,
+  BracketInviteActions,
   BracketPrivateInviteLines,
   type BracketPane,
+  type BracketInviteSlot,
   type GroupTeamsUnassignedHintProps,
 } from "./BracketBirdseye";
 import { BracketCenterHub } from "./BracketCenterHub";
@@ -42,6 +44,8 @@ export type KalshiBracketArenaProps = MProps & {
   groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
   /** Private group not full: show invite lines when teams are already assigned (no unassigned hint). */
   bracketPrivateInvite?: { joinCode: string; password: string } | null;
+  bracketInviteSlot?: BracketInviteSlot | null;
+  onBracketInviteClick?: () => boolean | Promise<boolean>;
   /** Private pool: where overview prize ($) hints start; mock/public default Elite 8. */
   prizeStartRound?: PrizeStartRound;
 };
@@ -93,6 +97,8 @@ export function KalshiBracketArena({
   onFocusGameConsumed,
   groupTeamsUnassigned = null,
   bracketPrivateInvite = null,
+  bracketInviteSlot = null,
+  onBracketInviteClick,
   prizeStartRound = DEFAULT_PRIZE_START_ROUND,
 }: KalshiBracketArenaProps) {
   const isMobile = useMediaQuery("(max-width: 699px)");
@@ -216,6 +222,8 @@ export function KalshiBracketArena({
         onFocusGameConsumed={onFocusGameConsumed}
         groupTeamsUnassigned={groupTeamsUnassigned}
         bracketPrivateInvite={bracketPrivateInvite}
+        bracketInviteSlot={bracketInviteSlot}
+        onBracketInviteClick={onBracketInviteClick}
         prizeStartRound={prizeStartRound}
       />
     );
@@ -250,6 +258,8 @@ export function KalshiBracketArena({
     onOpenZone: openZoneFromOverview,
     groupTeamsUnassigned,
     bracketPrivateInvite,
+    bracketInviteSlot,
+    onBracketInviteClick,
     prizeStartRound,
     variant: "desktop" as const,
   };
@@ -294,7 +304,14 @@ export function KalshiBracketArena({
             className="desktop-bracket-regional-detail"
             role="tabpanel"
           >
-            {bracketPrivateInvite ? (
+            {bracketInviteSlot && onBracketInviteClick ? (
+              <div className="desktop-bracket-private-invite">
+                <BracketInviteActions
+                  slot={bracketInviteSlot}
+                  onInviteClick={onBracketInviteClick}
+                />
+              </div>
+            ) : bracketPrivateInvite ? (
               <div className="desktop-bracket-private-invite">
                 <BracketPrivateInviteLines {...bracketPrivateInvite} />
               </div>

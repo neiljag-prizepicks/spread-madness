@@ -7,8 +7,10 @@ import {
 } from "../lib/prizeStartRound";
 import {
   BracketBirdseye,
+  BracketInviteActions,
   BracketPrivateInviteLines,
   type BracketPane,
+  type BracketInviteSlot,
   type GroupTeamsUnassignedHintProps,
 } from "./BracketBirdseye";
 import { BracketCenterHub } from "./BracketCenterHub";
@@ -66,6 +68,8 @@ type Props = MProps & {
   onFocusGameConsumed?: () => void;
   groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
   bracketPrivateInvite?: { joinCode: string; password: string } | null;
+  bracketInviteSlot?: BracketInviteSlot | null;
+  onBracketInviteClick?: () => boolean | Promise<boolean>;
   prizeStartRound?: PrizeStartRound;
 };
 
@@ -81,6 +85,8 @@ export function MobileBracketExperience({
   onFocusGameConsumed,
   groupTeamsUnassigned = null,
   bracketPrivateInvite = null,
+  bracketInviteSlot = null,
+  onBracketInviteClick,
   prizeStartRound = DEFAULT_PRIZE_START_ROUND,
 }: Props) {
   const [pane, setPane] = useState<BracketPane>("overview");
@@ -160,6 +166,8 @@ export function MobileBracketExperience({
     onOpenZone: openZone,
     groupTeamsUnassigned,
     bracketPrivateInvite,
+    bracketInviteSlot,
+    onBracketInviteClick,
     prizeStartRound,
   };
 
@@ -198,7 +206,14 @@ export function MobileBracketExperience({
       </div>
 
       <div className="mobile-bracket-detail" role="tabpanel">
-        {bracketPrivateInvite ? (
+        {bracketInviteSlot && onBracketInviteClick ? (
+          <div className="mobile-bracket-private-invite">
+            <BracketInviteActions
+              slot={bracketInviteSlot}
+              onInviteClick={onBracketInviteClick}
+            />
+          </div>
+        ) : bracketPrivateInvite ? (
           <div className="mobile-bracket-private-invite">
             <BracketPrivateInviteLines {...bracketPrivateInvite} />
           </div>
