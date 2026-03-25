@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -59,9 +60,85 @@ export type GroupTeamsUnassignedHintProps = {
   max: number;
   isAdmin: boolean;
   assignPath: string;
-  /** Private group, not full: show join code/password under the player count. */
-  privateInvite?: { joinCode: string; password: string } | null;
 };
+
+export type BracketInviteSlot = {
+  visibility: "public" | "private";
+  joinCode: string;
+  password: string;
+  groupId: string;
+};
+
+export function BracketInviteActions({
+  slot,
+  onInviteClick,
+}: {
+  slot: BracketInviteSlot;
+  onInviteClick: () => boolean | Promise<boolean>;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
+
+  const handleInvite = async () => {
+    const ok = await Promise.resolve(onInviteClick());
+    if (!ok) return;
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    setCopied(true);
+    copiedTimerRef.current = setTimeout(() => {
+      setCopied(false);
+      copiedTimerRef.current = null;
+    }, 3000);
+  };
+
+  return (
+    <div className="birdseye-invite-actions">
+      {slot.visibility === "private" ? (
+        <BracketPrivateInviteLines
+          joinCode={slot.joinCode}
+          password={slot.password}
+        />
+      ) : null}
+      <div className="birdseye-invite-actions-row">
+        <span className="birdseye-invite-friends">Invite your friends</span>
+        <button
+          type="button"
+          className={
+            "btn-primary birdseye-invite-cta" +
+            (copied ? " birdseye-invite-cta--copied" : "")
+          }
+          onClick={() => void handleInvite()}
+          aria-label={copied ? "Invite link copied" : "Copy invite to clipboard"}
+        >
+          {copied ? (
+            <svg
+              className="birdseye-invite-cta-check"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden
+            >
+              <path
+                fill="currentColor"
+                d="M9 16.17L4.83 12l-1.42 1.41L9 19l12-12-1.41-1.41L9 16.17z"
+              />
+            </svg>
+          ) : (
+            <span className="birdseye-invite-cta-plus" aria-hidden>
+              +
+            </span>
+          )}{" "}
+          Invite
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function CopyableInviteValue({
   value,
@@ -117,28 +194,11 @@ export function GroupTeamsUnassignedHint({
   max,
   isAdmin,
   assignPath,
-  privateInvite = null,
 }: GroupTeamsUnassignedHintProps) {
   return (
     <p className="birdseye-hint birdseye-hint--unassigned">
       <span className="birdseye-unassigned-line1">
         <strong>{joined}</strong> / <strong>{max}</strong> players joined.
-        {privateInvite ? (
-          <>
-            {" "}
-            Join Code:{" "}
-            <CopyableInviteValue
-              value={privateInvite.joinCode}
-              name="join code"
-            />
-            {" "}
-            - Group Password:{" "}
-            <CopyableInviteValue
-              value={privateInvite.password}
-              name="group password"
-            />
-          </>
-        ) : null}
       </span>
       <br />
       {isAdmin ? (
@@ -166,7 +226,10 @@ type Base = {
   onOpenZone: (pane: Exclude<BracketPane, "overview">) => void;
   /** When set, replaces the overview color key (teams not saved for this group yet). */
   groupTeamsUnassigned?: GroupTeamsUnassignedHintProps | null;
-  /** Private group not full, teams already assigned: invite lines under tab row (overview only here). */
+  /** Not full: invite row on overview (+ Invite). */
+  bracketInviteSlot?: BracketInviteSlot | null;
+  onBracketInviteClick?: () => boolean | Promise<boolean>;
+  /** @deprecated Prefer bracketInviteSlot */
   bracketPrivateInvite?: { joinCode: string; password: string } | null;
   /** Desktop: larger cells + wider round spacing (same UI as mobile). */
   variant?: "compact" | "desktop";
@@ -537,6 +600,8 @@ function CenterMini({
 export function BracketBirdseye({
   onOpenZone,
   groupTeamsUnassigned = null,
+  bracketInviteSlot = null,
+  onBracketInviteClick,
   bracketPrivateInvite = null,
   variant = "compact",
   prizeStartRound: prizeStartRoundProp,
@@ -563,10 +628,23 @@ export function BracketBirdseye({
       className={`birdseye-wrap${variant === "desktop" ? " birdseye-wrap--desktop" : ""}`}
     >
       {groupTeamsUnassigned ? (
-        <GroupTeamsUnassignedHint {...groupTeamsUnassigned} />
+        <>
+          <GroupTeamsUnassignedHint {...groupTeamsUnassigned} />
+          {bracketInviteSlot && onBracketInviteClick ? (
+            <BracketInviteActions
+              slot={bracketInviteSlot}
+              onInviteClick={onBracketInviteClick}
+            />
+          ) : null}
+        </>
       ) : (
         <>
-          {bracketPrivateInvite ? (
+          {bracketInviteSlot && onBracketInviteClick ? (
+            <BracketInviteActions
+              slot={bracketInviteSlot}
+              onInviteClick={onBracketInviteClick}
+            />
+          ) : bracketPrivateInvite ? (
             <BracketPrivateInviteLines {...bracketPrivateInvite} />
           ) : null}
           <p className="birdseye-hint">
